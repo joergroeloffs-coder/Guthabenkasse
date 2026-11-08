@@ -20,10 +20,18 @@ Rücknahme oder Korrektur ist eine Gegenbuchung, keine Löschung.
 
 | Reiter | wozu |
 | --- | --- |
-| **Aufbuchen** | Betrag tippen oder Taste (5/10/20/50 €), dann Karte scannen. Der Betrag bleibt stehen. |
-| **Abbuchen** | Betrag tippen, dann scannen. Der Betrag wird nach jeder Buchung geleert. Reicht das Guthaben nicht: rot, nichts wird gebucht, „es fehlen 3,50 €". |
+| **Aufbuchen** | Betrag mit dem Ziffernblock tippen (oder eine der Tasten 5/10/20/50 €), dann die Karte scannen. Das Urteil zeigt groß das **neue Guthaben**, klein was aufgebucht wurde. Der Betrag bleibt stehen, es geht mit der nächsten Karte weiter. |
+| **Abbuchen** | Betrag mit dem Ziffernblock tippen, groß auf dem Schirm, dann die Karte scannen. Das Urteil zeigt groß das **Guthaben, das noch auf der Karte ist**. Der Betrag wird nach jeder Buchung geleert. Reicht das Guthaben nicht: rot, nichts wird gebucht, „es fehlen 3,50 €". |
 | **Karten** | Neue Karten drucken (8 je A4, 85 × 54 mm), **Karten vorab aufladen** (Von/Bis/Betrag, etwa Karten 1–20 je 50 €), Liste aller Karten. Nummer antippen klappt die Karte auf: Guthaben direkt auf einen Betrag setzen, Verlauf, einzelne Buchungen zurücknehmen, Restguthaben auszahlen. Abschluss drucken. |
 | **Einstellungen** | Rolle des Geräts (beides / nur Aufbuchen / nur Abbuchen), Gerätezeichen, Anlass, Ablage, Sicherung. |
+
+Auf dem **Handy** geht es in drei Schritten, jeder mit dem ganzen Schirm:
+Betrag eintippen → Karte scannen (der Betrag steht groß da) → Ergebnis. Nach
+dem Ergebnis ruht die Kamera, bis „Nächster Gast" (oder „Nächste Karte")
+gedrückt oder das Urteil angetippt wird; sonst würde die nächste Karte, die
+zufällig ins Bild kommt, ungefragt gebucht. Auf **Tablet und Laptop** steht
+alles zugleich nebeneinander. Im Querformat am Handy ist der Schirm zu
+niedrig; dort rollt die Seite.
 
 Jedes Gerät braucht ein eigenes **Gerätezeichen** (ein Buchstabe). Es steht
 in der Kartennummer und bei jeder Buchung.
@@ -60,4 +68,5 @@ in der `index.html`.
 
 | | |
 | --- | --- |
+| **0.2** | Ziffernblock für den Betrag, Betrag und neues Guthaben groß; auf dem Handy in drei Schritten |
 | 0.1 | Aufbuchen, Abbuchen, Karten drucken, Stapel vorab aufladen, Korrektur je Karte, Abgleich über Ablage |

@@ -116,6 +116,15 @@ nav button[aria-current="true"]{
 
 /* ---------------------------- Karten ---------------------------- */
 main{padding-top:20px;padding-bottom:24px}
+/* Die Seite füllt mindestens den Schirm, und der Inhalt darf sich darauf
+   ausdehnen. Das braucht das Ergebnis am Handy: das Urteil soll den Rest des
+   Schirms einnehmen, statt oben zu kleben und unten Leere zu lassen.
+   `width:100%` ist nötig, weil `main` mit `margin:0 auto` in einer Spalte
+   sonst nur so breit wird wie sein Inhalt. */
+body{min-height:100dvh;display:flex;flex-direction:column}
+header{flex:0 0 auto}
+main{flex:1 1 auto;width:100%;display:flex;flex-direction:column}
+main>section{flex:0 0 auto}
 .karte{background:var(--flaeche);border:1px solid var(--linieFein);border-radius:var(--radius);
        box-shadow:0 1px 2px rgba(16,37,26,.04);margin-bottom:18px}
 .karte>.titel{
@@ -203,28 +212,46 @@ td.n,th.n{text-align:right}
 #meldung.an{opacity:1}
 
 /* ------------------- Die beiden Buchungsschirme -------------------
-   Aufbuchen und Abbuchen sind derselbe Schirm in zwei Richtungen: oben der
-   Betrag, darunter das Kamerabild, darunter das Urteil. Das Urteil nimmt
-   den Rest des Platzes und ist so groß, wie er hergibt — es soll aus zwei
-   Metern zu lesen sein, nicht nur aus einer Armlänge. */
+   Aufbuchen und Abbuchen sind derselbe Schirm in zwei Richtungen: der
+   Betrag mit eigenem Ziffernblock, das Kamerabild, das Urteil. Das Urteil
+   nimmt den Rest des Platzes und ist so groß, wie er hergibt — es soll aus
+   zwei Metern zu lesen sein, nicht nur aus einer Armlänge.
+
+   Auf einem breiten Schirm steht alles nebeneinander. Auf dem Handy ist
+   dafür kein Platz, dort geht es in drei Schritten, und jeder bekommt den
+   ganzen Schirm: Betrag eintippen, scannen, Ergebnis. */
 .schirm{display:flex;flex-direction:column;gap:10px}
 .betragKarte{margin:0}
 .betragKarte>.inhalt{padding:12px}
-.betragReihe{display:flex;gap:8px;align-items:stretch}
-.betragReihe .feld{flex:1;min-width:0}
+.kopfReihe{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.kopfReihe .feldTitel{margin:0}
+.anzeige{position:relative}
 #aufBetrag,#abBetrag{
-  height:56px;font-family:'Newsreader',Georgia,serif;font-size:32px;text-align:right;
-  padding:0 12px;line-height:54px}
+  height:64px;font-family:'Newsreader',Georgia,serif;font-size:44px;text-align:right;
+  padding:0 46px 0 12px;line-height:62px;border-width:2px}
+.anzeige .eurozeichen{position:absolute;right:14px;top:0;bottom:0;display:flex;align-items:center;
+  font-family:'Newsreader',Georgia,serif;font-size:34px;color:var(--tinteWeich);pointer-events:none}
+.tasten{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.tasten button{
+  height:50px;font:inherit;font-size:24px;border-radius:var(--radius);cursor:pointer;
+  background:var(--papier);color:var(--tinte);border:1px solid var(--linie);
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.tasten button:active{background:var(--wattHell);transform:translateY(1px)}
+.tasten button.zurueck{font-size:22px;color:var(--tinteWeich)}
 .schnell{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px}
 .schnell button{
-  height:44px;font:inherit;font-size:17px;border-radius:var(--radius);cursor:pointer;
-  background:var(--papier);color:var(--tinte);border:1px solid var(--linie)}
+  height:38px;font:inherit;font-size:15px;border-radius:var(--radius);cursor:pointer;
+  background:var(--papier);color:var(--tinte);border:1px solid var(--linie);touch-action:manipulation}
 .schnell button:active{transform:translateY(1px)}
 .schnell.auf button{border-color:var(--watt);color:var(--watt);background:var(--wattHell)}
 .schnell.ab button{border-color:var(--messingRand);color:var(--messing);background:var(--messingHell)}
 
+.nurHandy{display:none}
+
 #video,#video2{width:100%;max-height:22dvh;border-radius:var(--radius);background:#000;
        display:block;object-fit:cover}
+.bild{display:flex;flex-direction:column;gap:8px}
+.bild .knopf{width:100%}
 
 .befund{border-radius:var(--radius);padding:14px;font-family:'Newsreader',Georgia,serif;
         font-size:19px;min-height:150px;flex:1 1 auto;
@@ -244,8 +271,7 @@ td.n,th.n{text-align:right}
 .b-still .dazu{font-size:15px !important;max-width:34ch}
 /* Voll durchgefärbt: grün heißt "hat geklappt", rot "hat nicht geklappt".
    Beim Abbuchen ist ein Erfolg messingfarben — so ist an der Farbe zu sehen,
-   in welcher Richtung das Gerät gerade bucht, auch wenn der Gast schon
-   weitergegangen ist und nur noch das Gerät auf dem Tresen liegt. */
+   in welcher Richtung das Gerät gerade bucht. */
 .b-auf{background:var(--watt);color:#fff;border-color:var(--watt)}
 .b-ab{background:var(--messing);color:#fff;border-color:var(--messing)}
 .b-nein{background:var(--ziegel);color:#fff;border-color:var(--ziegel)}
@@ -256,21 +282,41 @@ td.n,th.n{text-align:right}
 .eingabe input{flex:1;min-width:0;height:40px;font-size:15px}
 .eingabe .knopf{height:40px}
 
-/* Der Kamera-Knopf füllt die Breite; als einsamer kleiner Knopf links
-   sah er aus wie ein Überbleibsel. */
-.bild{display:flex;flex-direction:column;gap:8px}
-.bild .knopf{width:100%}
-/* Auf einem breiten Schirm — Tablet quer, Laptop — steht das Bild links und
-   das Urteil rechts. Der Schirm ist breit und nicht hoch. */
+/* Breit: Tablet quer, Laptop. Links der Betrag mit Ziffernblock, rechts oben
+   das Kamerabild, darunter das Urteil. */
 @media(min-width:760px) and (min-height:480px){
-  .schirm.breit{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);
+  .schirm.breit{display:grid;grid-template-columns:minmax(0,330px) minmax(0,1fr);
     grid-template-rows:auto 1fr auto;gap:12px 16px;
-    height:calc(100dvh - 200px);min-height:380px}
-  .schirm.breit .betragKarte{grid-area:1/1/2/3}
-  .schirm.breit .bild{grid-area:2/1/3/2;display:flex;flex-direction:column;gap:8px}
-  .schirm.breit #video,.schirm.breit #video2{max-height:240px}
-  .schirm.breit .befund{grid-area:2/2/4/3}
-  .schirm.breit .eingabe{grid-area:3/1/4/2;align-self:end}
+    height:calc(100dvh - 200px);min-height:420px}
+  .schirm.breit .betragKarte{grid-area:1/1/4/2;overflow:auto}
+  .schirm.breit .bild{grid-area:1/2/2/3}
+  .schirm.breit #video,.schirm.breit #video2{max-height:200px}
+  .schirm.breit .befund{grid-area:2/2/3/3}
+  .schirm.breit .eingabe{grid-area:3/2/4/3}
+}
+
+/* Schmal: Handy. Drei Schritte, je einer sichtbar. */
+@media not all and (min-width:760px) and (min-height:480px){
+  main>.schirm{flex:1 1 auto}
+  .nurHandy{display:flex}
+  .schirm .sk,.schirm .ak,.schirm .wk{display:none}
+  /* 1. Betrag eintippen */
+  .phase-eingabe .bild,.phase-eingabe .befund,.phase-eingabe .eingabe{display:none}
+  .phase-eingabe .sk{display:flex}
+  .phase-eingabe .tasten button{height:46px}
+  /* 2. Karte scannen — der Betrag steht groß da, der Ziffernblock ist weg */
+  .phase-scan .tasten,.phase-scan .schnell,.phase-scan .kopfReihe .knopf{display:none}
+  .phase-scan .ak{display:flex}
+  .phase-scan #aufBetrag,.phase-scan #abBetrag{height:92px;font-size:64px;line-height:88px;
+    pointer-events:none}
+  .phase-scan .anzeige .eurozeichen{font-size:46px}
+  .phase-scan .befund{min-height:90px}
+  .phase-scan #btnKamera,.phase-scan #btnKamera2{display:none}
+  .phase-scan #video,.phase-scan #video2{max-height:30dvh}
+  /* 3. Ergebnis — nur das Urteil, so groß wie möglich */
+  .phase-ergebnis .betragKarte,.phase-ergebnis .bild,.phase-ergebnis .eingabe{display:none}
+  .phase-ergebnis .befund{min-height:240px}
+  .phase-ergebnis .wk{display:flex}
 }
 
 /* --------------------------- Kartenliste --------------------------- */
@@ -337,6 +383,26 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Auf einem ganz schmalen Handy ist ein Viertel der Breite zu wenig für
    "Einstellungen"; dort steht das kürzere Wort. */
 @media(max-width:400px){ nav button .lang{display:none} nav button .kurz{display:inline} }
+/* Kleine Handys im Hochformat (ein altes iPhone SE ist 568 Punkt hoch):
+   alles ein Stück enger, damit Betrag, Ziffernblock und Scannen-Knopf noch
+   ohne Rollen auf den Schirm passen. */
+@media(max-width:759px) and (max-height:620px){
+  .anlassZusatz{display:none}
+  .kopfzeile{padding-top:6px;padding-bottom:4px}
+  nav{padding-bottom:4px}
+  nav button{padding:6px 2px}
+  main{padding-top:8px;padding-bottom:12px}
+  .betragKarte>.inhalt{padding:10px}
+  .kopfReihe{margin-bottom:2px}
+  #aufBetrag,#abBetrag{height:52px;font-size:38px;line-height:50px}
+  .anzeige .eurozeichen{font-size:28px}
+  .tasten{gap:6px;margin-top:8px}
+  .phase-eingabe .tasten button{height:40px;font-size:22px}
+  .schnell{margin-top:6px}
+  .schnell button{height:32px}
+  .knopf.gross{height:44px}
+  .phase-scan #aufBetrag,.phase-scan #abBetrag{height:76px;font-size:54px;line-height:72px}
+}
 @media(max-width:520px){
   .seitenBreite{padding-left:12px;padding-right:12px}
   /* Auf dem Handy zählt jede Zeile: der Kopf schrumpft auf Anlass und Summe
@@ -381,24 +447,30 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 <main class="seitenBreite">
 
 <!-- =========================== AUFBUCHEN =========================== -->
-<section id="reiter-auf" class="schirm breit">
+<section id="reiter-auf" class="schirm breit phase-eingabe">
   <div class="karte betragKarte"><div class="inhalt">
-    <div class="betragReihe">
-      <label class="feld grow"><span>Betrag aufbuchen</span>
-        <input id="aufBetrag" inputmode="decimal" placeholder="0,00" autocomplete="off"></label>
-      <button class="knopf" id="aufNull" style="align-self:flex-end;height:56px">Leeren</button>
+    <div class="kopfReihe"><span class="feldTitel">Betrag aufbuchen</span>
+      <button class="knopf klein" id="aufNull">Leeren</button></div>
+    <div class="anzeige"><input id="aufBetrag" inputmode="none" placeholder="0,00" autocomplete="off"
+         aria-label="Betrag aufbuchen"><span class="eurozeichen">€</span></div>
+    <div class="tasten" data-fuer="aufBetrag">
+      <button data-taste="7">7</button><button data-taste="8">8</button><button data-taste="9">9</button>
+      <button data-taste="4">4</button><button data-taste="5">5</button><button data-taste="6">6</button>
+      <button data-taste="1">1</button><button data-taste="2">2</button><button data-taste="3">3</button>
+      <button data-taste=",">,</button><button data-taste="0">0</button>
+      <button data-taste="zurueck" class="zurueck" aria-label="Letzte Ziffer löschen">⌫</button>
     </div>
-    <div class="schnell auf" data-fuer="aufBetrag">
-      <button data-betrag="500">5 €</button><button data-betrag="1000">10 €</button>
-      <button data-betrag="2000">20 €</button><button data-betrag="5000">50 €</button>
-    </div>
+    <div class="schnell auf" data-fuer="aufBetrag"><button data-betrag="500">5 €</button><button data-betrag="1000">10 €</button><button data-betrag="2000">20 €</button><button data-betrag="5000">50 €</button></div>
+    <button class="knopf voll gross nurHandy sk" data-scan="auf" style="width:100%;margin-top:10px">Scannen</button>
   </div></div>
   <div class="bild">
     <video id="video" class="hide" playsinline muted></video>
     <div class="hinweis hide" id="kameraHinweis"></div>
     <button class="knopf" id="btnKamera">Kamera</button>
+    <button class="knopf nurHandy ak" data-aendern="auf">Betrag ändern</button>
   </div>
   <div class="befund b-still" id="befund"></div>
+  <button class="knopf voll gross nurHandy wk" data-weiter="auf">Nächste Karte</button>
   <div class="eingabe">
     <input id="aufCode" placeholder="Code eintippen oder scannen" autocomplete="off"
            autocapitalize="characters" spellcheck="false">
@@ -407,24 +479,30 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </section>
 
 <!-- =========================== ABBUCHEN =========================== -->
-<section id="reiter-ab" class="schirm breit hide">
+<section id="reiter-ab" class="schirm breit phase-eingabe hide">
   <div class="karte betragKarte"><div class="inhalt">
-    <div class="betragReihe">
-      <label class="feld grow"><span>Betrag abbuchen</span>
-        <input id="abBetrag" inputmode="decimal" placeholder="0,00" autocomplete="off"></label>
-      <button class="knopf" id="abNull" style="align-self:flex-end;height:56px">Leeren</button>
+    <div class="kopfReihe"><span class="feldTitel">Betrag abbuchen</span>
+      <button class="knopf klein" id="abNull">Leeren</button></div>
+    <div class="anzeige"><input id="abBetrag" inputmode="none" placeholder="0,00" autocomplete="off"
+         aria-label="Betrag abbuchen"><span class="eurozeichen">€</span></div>
+    <div class="tasten" data-fuer="abBetrag">
+      <button data-taste="7">7</button><button data-taste="8">8</button><button data-taste="9">9</button>
+      <button data-taste="4">4</button><button data-taste="5">5</button><button data-taste="6">6</button>
+      <button data-taste="1">1</button><button data-taste="2">2</button><button data-taste="3">3</button>
+      <button data-taste=",">,</button><button data-taste="0">0</button>
+      <button data-taste="zurueck" class="zurueck" aria-label="Letzte Ziffer löschen">⌫</button>
     </div>
-    <div class="schnell ab" data-fuer="abBetrag">
-      <button data-betrag="100">1 €</button><button data-betrag="200">2 €</button>
-      <button data-betrag="300">3 €</button><button data-betrag="500">5 €</button>
-    </div>
+    <div class="schnell ab" data-fuer="abBetrag"><button data-betrag="100">1 €</button><button data-betrag="200">2 €</button><button data-betrag="300">3 €</button><button data-betrag="500">5 €</button></div>
+    <button class="knopf voll gross nurHandy sk" data-scan="ab" style="width:100%;margin-top:10px;background:var(--messing);border-color:var(--messing)">Scannen</button>
   </div></div>
   <div class="bild">
     <video id="video2" class="hide" playsinline muted></video>
     <div class="hinweis hide" id="kameraHinweis2"></div>
     <button class="knopf" id="btnKamera2">Kamera</button>
+    <button class="knopf nurHandy ak" data-aendern="ab">Betrag ändern</button>
   </div>
   <div class="befund b-still" id="befund2"></div>
+  <button class="knopf voll gross nurHandy wk" data-weiter="ab" style="background:var(--messing);border-color:var(--messing)">Nächster Gast</button>
   <div class="eingabe">
     <input id="abCode" placeholder="Code eintippen oder scannen" autocomplete="off"
            autocapitalize="characters" spellcheck="false">
@@ -816,7 +894,7 @@ function qrSvg(text){
 /* Die Nummer steht oben in der Kopfzeile und ist dazu da, zwei Geräte
    nebeneinanderlegen zu können. Bei jeder Änderung, die man merkt,
    weiterdrehen. */
-var VERSION = "0.1";
+var VERSION = "0.2";
 
 /* ============================== Daten ==============================
 
@@ -1064,14 +1142,88 @@ function urteil(tab, art, titel, dazu){
   feld.classList.add("leuchtet");
 }
 
-function urteilBereit(tab){
+function urteilBereit(tab, text){
   var feld=$(tab==="ab"?"befund2":"befund");
   feld.className="befund b-still";
   feld.style.removeProperty("--urteilmass");
   feld.innerHTML='<div class="urteilblock"><div class="wort">Bereit</div>'+
-    '<div class="dazu">'+(tab==="ab"?"Betrag eintippen, dann die Karte vor die Kamera halten."
-                                    :"Betrag eintippen, dann die Karte vor die Kamera halten.")+
+    '<div class="dazu">'+esc(text||"Betrag eintippen, dann die Karte vor die Kamera halten.")+
     '</div></div>';
+}
+
+/* ========================= Aufbuchen und Abbuchen ========================= */
+/* ============================ Die drei Schritte ============================
+
+   Auf dem Handy ist für Ziffernblock, Kamerabild und Urteil zugleich kein
+   Platz. Also geht es der Reihe nach, und jeder Schritt hat den ganzen
+   Schirm:
+
+     eingabe   — der Betrag, mit Ziffernblock
+     scan      — der Betrag groß, dazu das Kamerabild
+     ergebnis  — das Urteil, so groß es geht, und ein Knopf "weiter"
+
+   Auf einem breiten Schirm steht alles zugleich da und die Schritte sind
+   ohne Wirkung (das regelt die Stilvorlage, nicht dieser Code). */
+var phase={auf:"eingabe", ab:"eingabe"};
+
+function istHandy(){
+  return !window.matchMedia("(min-width:760px) and (min-height:480px)").matches;
+}
+
+function setPhase(tab, p){
+  phase[tab]=p;
+  var el=$("reiter-"+tab);
+  el.className=el.className.replace(/\s*\bphase-\w+/g,"")+" phase-"+p;
+  urteilAnpassen($(tab==="ab"?"befund2":"befund"));
+}
+
+function kameraAn(tab){
+  if(liest && kameraTab===tab) return;
+  if(liest) kameraAus();
+  kameraUmschalten(tab);
+}
+
+function scanBeginnen(tab){
+  var cent=centAus($(tab==="ab"?"abBetrag":"aufBetrag").value);
+  if(!(cent>0)){ melden("Erst den Betrag eintippen"); return; }
+  klangWecken();
+  if(istHandy()){
+    setPhase(tab,"scan");
+    urteilBereit(tab,"Karte vor die Kamera halten.");
+    kameraAn(tab);
+  } else {
+    $(tab==="ab"?"abCode":"aufCode").focus();
+  }
+}
+
+function weiter(tab){
+  urteilBereit(tab);
+  if(tab==="auf"){
+    /* Beim Aufbuchen bleibt der Betrag stehen: es geht gleich mit der
+       nächsten Karte weiter. */
+    setPhase("auf","scan"); urteilBereit("auf","Karte vor die Kamera halten.");
+    kameraAn("auf");
+  } else {
+    setPhase("ab","eingabe");
+  }
+}
+
+/* ============================ Ziffernblock ============================
+   Zwei Nachkommastellen, höchstens sechs Stellen vor dem Komma — mehr hat
+   an einer Festkasse keiner auf einer Karte. */
+function tasteDruecken(feld, k){
+  var v=feld.value;
+  if(k==="zurueck") v=v.slice(0,-1);
+  else if(k===","){ if(v.indexOf(",")<0) v=(v===""?"0":v)+","; else return; }
+  else {
+    var t=v.split(",");
+    if(t.length>1 && t[1].length>=2) return;
+    if(t.length===1 && t[0].length>=6) return;
+    v=(v==="0") ? k : v+k;
+  }
+  feld.value=v;
+  if(feld.id==="aufBetrag"){ db.aufBetrag=v; sichern(); }
+  if(navigator.vibrate) navigator.vibrate(12);
 }
 
 /* ========================= Aufbuchen und Abbuchen ========================= */
@@ -1085,7 +1237,7 @@ function buche(tab, roh){
   var feldId = tab==="ab" ? "abBetrag" : "aufBetrag";
   var cent=centAus($(feldId).value);
   if(!(cent>0)){
-    urteil(tab,"b-nein","Erst den Betrag","Oben eintippen oder eine der Tasten drücken, dann scannen.");
+    urteil(tab,"b-nein","Erst den Betrag","Mit dem Ziffernblock eintippen, dann scannen.");
     klingen("nein"); return;
   }
   /* Ein Tippfehler im Betrag kostet hier echtes Geld: aus 5,00 wird 500. Bis
@@ -1094,11 +1246,14 @@ function buche(tab, roh){
     urteil(tab,"b-nein","Nicht gebucht","Betrag nicht bestätigt."); klingen("nein"); return;
   }
 
+  /* Das Urteil zeigt, was jetzt auf der Karte steht — das ist, was der Gast
+     und der Verkäufer wissen wollen. Was gebucht wurde, steht kleiner dabei. */
   if(tab==="auf"){
     var neu=!db.karten[nr];
     buchen(nr, cent, "auf");
-    urteil("auf","b-auf","Aufgebucht "+euro(cent)+"",
-           "Guthaben jetzt "+euro(saldo(nr))+" · Karte "+nr+(neu?" · neu angelegt":""));
+    if(istHandy()) setPhase("auf","ergebnis");
+    urteil("auf","b-auf","Guthaben "+euro(saldo(nr)),
+           "Aufgebucht "+euro(cent)+" · Karte "+nr+(neu?" · neu angelegt":""));
     klingen("auf");
     db.aufBetrag=$("aufBetrag").value; sichern();
   } else {
@@ -1110,8 +1265,9 @@ function buche(tab, roh){
       klingen("nein"); return;
     }
     buchen(nr, -cent, "ab");
-    urteil("ab","b-ab","Abgebucht "+euro(cent)+"",
-           "Rest "+euro(saldo(nr))+" · Karte "+nr);
+    if(istHandy()) setPhase("ab","ergebnis");
+    urteil("ab","b-ab","Guthaben "+euro(saldo(nr)),
+           "Abgebucht "+euro(cent)+" · Karte "+nr);
     klingen("ab");
     /* Beim Abbuchen wird der Betrag nach jeder Buchung geleert: der nächste
        Gast kauft etwas anderes, und ein vergessener Betrag würde ihm das
@@ -1119,6 +1275,10 @@ function buche(tab, roh){
        eine Reihe Gäste mit demselben Zehner. */
     $("abBetrag").value="";
   }
+  /* Nach einem Erfolg ruht die Kamera: sonst bucht die nächste Karte, die
+     zufällig ins Bild kommt, ungefragt noch einmal. Weiter geht es erst
+     mit dem Knopf. */
+  if(istHandy()) kameraAus();
   zeichneAlles();
   wolkeVormerken();
   if(navigator.vibrate) navigator.vibrate(60);
@@ -1172,6 +1332,7 @@ function kameraAus(){
    lang aus dem Bild war, zählt sie wieder als neu. */
 function treffer(text){
   if(!text) return;
+  if(istHandy() && phase[kameraTab]!=="scan") return;
   var jetzt=Date.now();
   if(text===letzterCode && jetzt-letzterTreffer<5000){
     letzterTreffer=jetzt; return;
@@ -1859,6 +2020,7 @@ function alleLoeschen(){
 
 /* ============================ Verdrahtung ============================ */
 function reiterZeigen(name){
+  if(name==="auf"||name==="ab"){ setPhase("auf","eingabe"); setPhase("ab","eingabe"); }
   ["auf","ab","karten","einstellungen"].forEach(function(r){
     $("reiter-"+r).classList.toggle("hide", r!==name);
   });
@@ -1899,9 +2061,19 @@ function start(){
     });
     $(t[4]).addEventListener("click",function(){
       $(t[1]).value=""; if(tab==="auf"){ db.aufBetrag=""; sichern(); }
-      $(t[1]).focus();
     });
     $(t[5]).addEventListener("click",function(){ klangWecken(); kameraUmschalten(tab); });
+    /* Mit einer richtigen Tastatur geht es auch: Zahl tippen, Enter. */
+    $(t[1]).addEventListener("keydown",function(e){
+      if(e.key==="Enter") scanBeginnen(tab);
+    });
+  });
+  document.querySelectorAll(".tasten").forEach(function(g){
+    g.addEventListener("click",function(e){
+      var k=e.target.getAttribute&&e.target.getAttribute("data-taste");
+      if(k===null||k===undefined) return;
+      tasteDruecken($(g.getAttribute("data-fuer")),k);
+    });
   });
   document.querySelectorAll(".schnell").forEach(function(g){
     g.addEventListener("click",function(e){
@@ -1913,6 +2085,24 @@ function start(){
          danebenzutippen. */
       feld.value=eur(Number(c)).replace(/\./g,"");
       if(feld.id==="aufBetrag"){ db.aufBetrag=feld.value; sichern(); }
+    });
+  });
+  document.querySelectorAll("[data-scan]").forEach(function(k){
+    k.addEventListener("click",function(){ scanBeginnen(k.getAttribute("data-scan")); });
+  });
+  document.querySelectorAll("[data-aendern]").forEach(function(k){
+    k.addEventListener("click",function(){
+      kameraAus(); setPhase(k.getAttribute("data-aendern"),"eingabe");
+    });
+  });
+  document.querySelectorAll("[data-weiter]").forEach(function(k){
+    k.addEventListener("click",function(){ klangWecken(); weiter(k.getAttribute("data-weiter")); });
+  });
+  /* Das Urteil selbst lässt sich auch antippen: wer das Ergebnis gesehen hat,
+     will weiter, nicht erst den Knopf suchen. */
+  [["auf","befund"],["ab","befund2"]].forEach(function(t){
+    $(t[1]).addEventListener("click",function(){
+      if(istHandy() && phase[t[0]]==="ergebnis"){ klangWecken(); weiter(t[0]); }
     });
   });
   $("aufBetrag").addEventListener("change",function(){ db.aufBetrag=this.value; sichern(); });
