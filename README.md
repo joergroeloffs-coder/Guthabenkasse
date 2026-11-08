@@ -61,6 +61,16 @@ Bild. Wo der Browser den Blitz freigibt (Chrome auf Android), geht das Licht
 an, solange die Kamera sucht, und aus, sobald gebucht ist. Einstellung unter
 *Dieses Gerät*: *Automatisch* oder *Aus*. Auf dem iPhone gibt es das nicht.
 
+**Neue Fassung erkennen:** Eine Verknüpfung auf dem Startbildschirm zeigt gern die
+zuletzt gespeicherte Seite, und GitHub Pages erlaubt ohnehin zehn Minuten
+Zwischenspeicher. Deshalb holt die Kasse beim Öffnen (und beim Zurückkehren,
+höchstens alle fünf Minuten) die Seite noch einmal unter einer Adresse, die nicht
+im Zwischenspeicher liegt, liest die Fassungsnummer heraus und zeigt oben einen
+gelben Streifen, wenn sie sich unterscheidet. *Jetzt laden* ersetzt den
+gespeicherten Eintrag und lädt neu. Unter *Einstellungen → Fassung* steht die
+laufende Nummer, dazu ein Knopf zum Nachsehen. Das gibt es erst ab 0.4.1 und
+geht nur mit Netz und über die Internetadresse.
+
 **Betrieb auf Null setzen** (*Einstellungen → Sicherung und Neubeginn*): löscht
 alle Karten, Buchungen und Summen, **auf allen Geräten und in der Ablage**.
 Bleiben: Gerätezeichen, Rolle, Anlass, Adresse und Zugangswort der Ablage.
@@ -115,7 +125,8 @@ in der `index.html`.
 
 | | |
 | --- | --- |
-| **0.4** | Gästeliste aus Excel/CSV mit Spaltenauswahl; Betrieb auf Null setzen (auch über den Abgleich); großes Kamerabild; Licht beim Scannen |
+| **0.4.1** | erkennt eine neuere Fassung selbst und meldet es (Verknüpfung auf dem Startbildschirm) |
+| 0.4 | Gästeliste aus Excel/CSV mit Spaltenauswahl; Betrieb auf Null setzen (auch über den Abgleich); großes Kamerabild; Licht beim Scannen |
 | 0.3.1 | Bedienungsanleitung als PDF; Vorschau und Rollenwahl auf schmalen Handys besser lesbar |
 | 0.3 | Karten löschen (einzeln, nach Bereich, alle unbenutzten, wiederherstellbar), Karten mit Namen |
 | 0.2 | Ziffernblock für den Betrag, Betrag und neues Guthaben groß; auf dem Handy in drei Schritten |

@@ -203,6 +203,10 @@ td.n,th.n{text-align:right}
          border-radius:var(--radius);padding:10px;font-size:14px;margin-top:10px}
 .hinweis.still{background:var(--papier);border-color:var(--linieFein);color:var(--tinteWeich)}
 
+/* Der Streifen unter dem Kopf: eine neuere Fassung liegt bereit. */
+.fassungsHinweis{flex:0 0 auto;background:#F2C94C;color:var(--tinte);padding:8px 16px;display:flex;gap:12px;
+  align-items:center;justify-content:center;font-size:14px;border-bottom:1px solid var(--goldKante)}
+.fassungsHinweis .knopf{background:var(--tinte);color:#fff;border-color:var(--tinte);min-width:0}
 #meldung{
   position:fixed;left:50%;transform:translateX(-50%);bottom:20px;z-index:60;
   background:var(--kopf);color:var(--papier);padding:10px 16px;border-radius:var(--radius);
@@ -508,6 +512,10 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     <button data-reiter="einstellungen"><span class="lang">Einstellungen</span><span class="kurz">Optionen</span></button>
   </nav>
 </header>
+<div class="fassungsHinweis hide" id="fassungsHinweis" role="status">
+  <span id="fassungsText"></span>
+  <button class="knopf klein" id="btnAktualisieren" type="button">Jetzt laden</button>
+</div>
 
 <main class="seitenBreite">
 
@@ -734,6 +742,18 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       </div>
       <p class="muted" style="margin:10px 0 0" id="wolkeStand"></p>
       <div class="hinweis hide" id="wolkeProbe"></div>
+    </div></div>
+
+  <div class="karte"><div class="titel"><h2>Fassung</h2></div>
+    <div class="inhalt">
+      <div class="reihe umbruch" style="align-items:center">
+        <span class="grow" id="fassungZeile"></span>
+        <button class="knopf" id="btnFassungPruefen" type="button">Nach neuer Fassung suchen</button>
+      </div>
+      <p class="muted" style="margin:10px 0 0">Eine Verknüpfung auf dem Startbildschirm zeigt gern die zuletzt
+        gespeicherte Seite. Die Kasse fragt deshalb beim Öffnen und beim Zurückkehren selbst nach, ob eine
+        neuere Fassung bereitliegt, und meldet es oben. Das geht nur mit Netz und nur über die
+        Internetadresse, nicht aus einer geöffneten Datei.</p>
     </div></div>
 
   <div class="karte"><div class="titel"><h2>Sicherung und Neubeginn</h2></div>
@@ -1013,7 +1033,7 @@ function qrSvg(text){
 /* Die Nummer steht oben in der Kopfzeile und ist dazu da, zwei Geräte
    nebeneinanderlegen zu können. Bei jeder Änderung, die man merkt,
    weiterdrehen. */
-var VERSION = "0.4";
+var VERSION = "0.4.1";
 
 /* ============================== Daten ==============================
 
@@ -2801,6 +2821,50 @@ function betriebAufNull(){
   if(wolkeBereit()) wolkeAbgleichen();
 }
 
+/* ============================ Neue Fassung ============================
+
+   Eine Verknüpfung auf dem Startbildschirm (oder ein offener Browser-Tab)
+   zeigt gern die Seite, die beim letzten Mal gespeichert wurde. GitHub Pages
+   erlaubt ohnehin, eine Seite zehn Minuten lang zu behalten. Also fragt die
+   Kasse selbst nach: sie holt die Seite noch einmal, an einer Adresse, die
+   garantiert nicht im Zwischenspeicher liegt, liest die Fassungsnummer heraus
+   und meldet, wenn sie sich von der eigenen unterscheidet. Das gelingt nur
+   mit Netz und nur über eine Internetadresse. */
+var neueFassung="", letztePruefung=0;
+
+function zeichneFassung(){
+  $("fassungsHinweis").classList.toggle("hide",!neueFassung);
+  if(neueFassung) $("fassungsText").textContent="Eine neue Fassung ist da: "+neueFassung+
+    " (hier läuft "+VERSION+").";
+  var z=$("fassungZeile");
+  if(z) z.textContent="Fassung "+VERSION+(neueFassung ? " · neuere "+neueFassung+" liegt bereit" : "");
+}
+
+function fassungPruefen(vonHand){
+  if(location.protocol==="file:" || !window.fetch){
+    if(vonHand) melden("Das geht nur über die Internetadresse");
+    return Promise.resolve();
+  }
+  letztePruefung=Date.now();
+  return fetch(location.pathname+"?pruefen="+Date.now(),{cache:"no-store"})
+    .then(function(r){ if(!r.ok) throw new Error("Status "+r.status); return r.text(); })
+    .then(function(t){
+      var m=/var VERSION = "([^"]+)"/.exec(t);
+      if(!m) throw new Error("keine Fassungsnummer gefunden");
+      neueFassung = m[1]!==VERSION ? m[1] : "";
+      zeichneFassung();
+      if(vonHand) melden(neueFassung ? "Neue Fassung "+neueFassung+" gefunden" : "Das ist die neueste Fassung");
+    })
+    .catch(function(){ if(vonHand) melden("Nachsehen nicht möglich — kein Netz?"); });
+}
+
+/* Die Seite selbst neu holen und dabei den Eintrag im Zwischenspeicher
+   ersetzen ("reload"): sonst würde der nächste Start von der Verknüpfung aus
+   wieder die alte Seite liefern. */
+function jetztAktualisieren(){
+  fetch(location.pathname,{cache:"reload"}).catch(function(){}).then(function(){ location.reload(); });
+}
+
 /* ============================ Verdrahtung ============================ */
 function reiterZeigen(name){
   if(name==="auf"||name==="ab"){ setPhase("auf","eingabe"); setPhase("ab","eingabe"); }
@@ -2827,6 +2891,14 @@ function start(){
   zeichneAlles(); zeichneEinstellungen(); rolleAnwenden();
   wolkeUhrStellen();
   if(wolkeBereit()) wolkeAbgleichen();
+  zeichneFassung(); fassungPruefen(false);
+  /* Wer die Kasse nur wieder nach vorn holt, startet sie nicht neu: dann beim
+     Zurückkehren nachsehen, höchstens alle fünf Minuten. */
+  document.addEventListener("visibilitychange",function(){
+    if(!document.hidden && Date.now()-letztePruefung>300000) fassungPruefen(false);
+  });
+  $("btnAktualisieren").addEventListener("click",jetztAktualisieren);
+  $("btnFassungPruefen").addEventListener("click",function(){ fassungPruefen(true); });
 
   document.querySelectorAll("nav button").forEach(function(b){
     b.addEventListener("click",function(){ reiterZeigen(b.getAttribute("data-reiter")); });
