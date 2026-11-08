@@ -324,6 +324,8 @@ td.n,th.n{text-align:right}
              border-bottom:1px solid var(--linieFein);cursor:pointer}
 .kartenzeile:last-child{border-bottom:0}
 .kartenzeile .nr{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:14px;flex:1;min-width:0}
+.kartenzeile .rname{display:block;font-family:'Newsreader',Georgia,serif;font-size:15px;color:var(--tinteWeich);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kartenzeile .guthaben{font-family:'Newsreader',Georgia,serif;font-size:20px;
                        font-variant-numeric:tabular-nums}
 .kartenzeile .guthaben.null{color:var(--tinteWeich)}
@@ -358,6 +360,12 @@ td.n,th.n{text-align:right}
   text-transform:uppercase;letter-spacing:.1em;line-height:1.35}
 .wertkarte .anlass{font-size:11pt;font-weight:600;line-height:1.15}
 .wertkarte .art{font-size:8pt}
+.wertkarte .kname{font-weight:600;line-height:1.15;margin-top:1mm;
+  max-height:3.5em;overflow:hidden;overflow-wrap:anywhere}
+.wertkarte .kname.g1{font-size:12pt}
+.wertkarte .kname.g2{font-size:10.5pt}
+.wertkarte .kname.g3{font-size:9pt}
+.wertkarte .kname.g4{font-size:8pt}
 .wertkarte .nummer{font-family:'IBM Plex Mono',monospace;font-size:13pt;font-weight:600;
   border-top:0.6pt solid #000;padding-top:1.5mm;letter-spacing:.02em}
 
@@ -531,6 +539,8 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         <div class="grow muted" id="kVorschau"></div>
         <button class="knopf voll" id="btnKartenDrucken">Karten drucken</button>
       </div>
+      <label class="feld" style="margin-top:10px"><span>Namen — freiwillig, ein Name je Zeile</span>
+        <textarea id="kNamen" rows="3" placeholder="Anna Müller&#10;Tisch 5&#10;Familie Petersen"></textarea></label>
       <p class="muted" style="margin:10px 0 0">
         Die Karten tragen nur eine Nummer, keinen Betrag — das Guthaben steht
         in der Ablage. Eine Karte ist 85 × 54 mm, zwei nebeneinander, acht auf
@@ -553,6 +563,23 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         <span class="mono">20</span> heißt: die Karten 1 bis 20 dieses Geräts. Danach den nächsten Stapel
         mit anderem Betrag. Jede Karte bekommt eine eigene Buchung und lässt sich einzeln zurücknehmen.</p>
       <div id="stapelListe" style="margin-top:10px"></div>
+    </div></div>
+
+  <div class="karte"><div class="titel"><h2>Karten löschen</h2></div>
+    <div class="inhalt">
+      <div class="reihe umbruch" style="align-items:flex-end">
+        <label class="feld" style="width:110px"><span>Von Karte</span>
+          <input id="lVon" class="mono" placeholder="A0001" autocomplete="off" spellcheck="false"></label>
+        <label class="feld" style="width:110px"><span>Bis Karte</span>
+          <input id="lBis" class="mono" placeholder="A0020" autocomplete="off" spellcheck="false"></label>
+        <button class="knopf warn" id="btnLoeschen">Löschen</button>
+        <button class="knopf warn" id="btnUnbenutzte">Alle unbenutzten</button>
+      </div>
+      <p class="muted" style="margin:10px 0 0" id="lVorschau"></p>
+      <p class="muted" style="margin:6px 0 0">Gelöscht werden nur Karten ohne Guthaben. Ihre
+        Buchungen bleiben im Abschluss stehen, die Nummer wird nicht neu vergeben. Eine einzelne
+        Karte löschen Sie in der Liste unten: Nummer antippen.</p>
+      <div id="geloeschtListe" style="margin-top:10px"></div>
     </div></div>
 
   <div class="karte"><div class="titel"><h2>Alle Karten</h2></div>
@@ -894,7 +921,7 @@ function qrSvg(text){
 /* Die Nummer steht oben in der Kopfzeile und ist dazu da, zwei Geräte
    nebeneinanderlegen zu können. Bei jeder Änderung, die man merkt,
    weiterdrehen. */
-var VERSION = "0.2";
+var VERSION = "0.3";
 
 /* ============================== Daten ==============================
 
@@ -922,7 +949,8 @@ function leereDaten(){
     rolle:"beide",                 /* beide | auf | ab */
     ton:true,
     anlass:{name:"", verein:"", zusatz:"", ts:0},
-    karten:{},                     /* "A0007" → {nr, ts} */
+    karten:{},                     /* "A0007" → {nr, ts, name?, nts?} */
+    geloescht:{},                  /* "A0007" → Zeit; positiv gelöscht, negativ wiederhergestellt */
     buchungen:[],                  /* {id, karte, cent, art, zeit, geraet, ref?} */
     ablage:{adresse:"", wort:"", intervall:0},
     aufBetrag:""
@@ -940,6 +968,7 @@ function migriere(d){
   if(!d || typeof d!=="object") return l;
   for(var f in l) if(Object.prototype.hasOwnProperty.call(l,f) && d[f]===undefined) d[f]=l[f];
   if(!d.karten || typeof d.karten!=="object") d.karten={};
+  if(!d.geloescht || typeof d.geloescht!=="object") d.geloescht={};
   if(!Array.isArray(d.buchungen)) d.buchungen=[];
   if(!d.anlass) d.anlass=l.anlass;
   if(!d.ablage) d.ablage=l.ablage;
@@ -1053,6 +1082,30 @@ function kartenNummer(roh){
   return m ? m[1]+m[2] : "";
 }
 function kartenCode(nr){ return "GK-"+nr; }
+
+/* ====================== Gelöschte und benannte Karten ======================
+
+   Eine gelöschte Karte verschwindet nicht aus dem Datenbestand, sie bekommt
+   einen Vermerk mit der Zeit. Das ist nötig, weil sich zwei Geräte abgleichen
+   und dabei alles zusammenlegen: hätte ein Gerät die Karte wirklich entfernt,
+   brächte der nächste Abgleich sie vom anderen Gerät wieder zurück. Mit dem
+   Vermerk weiß jedes Gerät: diese Nummer ist gelöscht.
+
+   Der Vermerk ist ein Zeitpunkt. Positiv heißt gelöscht, negativ heißt
+   wiederhergestellt; beim Abgleich gilt der neuere. So lässt sich auch ein
+   Löschen zurücknehmen, und ein Gerät, das noch nichts davon weiß, überstimmt
+   das andere nicht.
+
+   Die Buchungen einer gelöschten Karte bleiben stehen: der Abschluss muss
+   weiter stimmen, auch wenn die Karte nicht mehr gilt. Gelöscht wird deshalb
+   nur, was kein Guthaben mehr trägt. Und die Nummer wird nicht noch einmal
+   vergeben — auf einer laminierten Karte steht sie ja weiter. */
+function istGeloescht(nr){ return (db.geloescht[nr]||0)>0; }
+function aktiveKarten(){
+  return Object.keys(db.karten).filter(function(n){ return !istGeloescht(n); }).sort();
+}
+function kartenName(nr){ var k=db.karten[nr]; return (k&&k.name)||""; }
+function kartenLabel(nr){ var n=kartenName(nr); return nr+(n?" · "+n:""); }
 
 function naechsteKartenNummer(){
   var buchstabe=(db.geraet||"A"), hoechste=0;
@@ -1234,6 +1287,10 @@ function buche(tab, roh){
            "Gelesen: "+String(roh||"").slice(0,40)+(String(roh||"").length>40?" …":""));
     klingen("nein"); return;
   }
+  if(istGeloescht(nr)){
+    urteil(tab,"b-nein","Karte gelöscht",kartenCode(nr)+" gilt nicht mehr. Eine neue Karte nehmen.");
+    klingen("nein"); return;
+  }
   var feldId = tab==="ab" ? "abBetrag" : "aufBetrag";
   var cent=centAus($(feldId).value);
   if(!(cent>0)){
@@ -1253,21 +1310,21 @@ function buche(tab, roh){
     buchen(nr, cent, "auf");
     if(istHandy()) setPhase("auf","ergebnis");
     urteil("auf","b-auf","Guthaben "+euro(saldo(nr)),
-           "Aufgebucht "+euro(cent)+" · Karte "+nr+(neu?" · neu angelegt":""));
+           "Aufgebucht "+euro(cent)+" · Karte "+kartenLabel(nr)+(neu?" · neu angelegt":""));
     klingen("auf");
     db.aufBetrag=$("aufBetrag").value; sichern();
   } else {
     var vorher=saldo(nr);
     if(vorher<cent){
       urteil("ab","b-nein","Zu wenig Guthaben",
-             "Es fehlen "+euro(cent-vorher)+" · Guthaben "+euro(vorher)+" · Karte "+nr+
+             "Es fehlen "+euro(cent-vorher)+" · Guthaben "+euro(vorher)+" · Karte "+kartenLabel(nr)+
              (db.karten[nr]?"":" · hier nicht bekannt, vielleicht fehlt ein Abgleich"));
       klingen("nein"); return;
     }
     buchen(nr, -cent, "ab");
     if(istHandy()) setPhase("ab","ergebnis");
     urteil("ab","b-ab","Guthaben "+euro(saldo(nr)),
-           "Abgebucht "+euro(cent)+" · Karte "+nr);
+           "Abgebucht "+euro(cent)+" · Karte "+kartenLabel(nr));
     klingen("ab");
     /* Beim Abbuchen wird der Betrag nach jeder Buchung geleert: der nächste
        Gast kauft etwas anderes, und ein vergessener Betrag würde ihm das
@@ -1382,7 +1439,7 @@ function zeichneKopf(){
 function zeichneZahlen(){
   var g=gesamt(), s=salden();
   $("zAuf").textContent=eur(g.auf); $("zAb").textContent=eur(g.ab); $("zRest").textContent=eur(g.rest);
-  var nKarten=Object.keys(db.karten).length;
+  var nKarten=aktiveKarten().length;
   var mitGuthaben=0, imMinus=0;
   for(var nr in s){ if(s[nr]>0) mitGuthaben++; else if(s[nr]<0) imMinus++; }
   $("zZeile").textContent=mehrzahl(nKarten,"Karte","Karten")+" bekannt, "+
@@ -1411,11 +1468,17 @@ function detailHtml(nr){
       '<button class="knopf voll" data-tat="korrigieren">Setzen</button></div>'+
     '<p class="muted" style="margin:6px 0 12px" id="korrVorschau">Der Unterschied wird als Korrekturbuchung '+
       'eingetragen — die alten Buchungen bleiben stehen.</p>'+
+    '<label class="feld" style="margin-bottom:12px"><span>Name auf der Karte (freiwillig)</span>'+
+      '<input id="kartenName" maxlength="40" value="'+esc(kartenName(nr))+'" autocomplete="off" '+
+      'placeholder="zum Beispiel Anna Müller"></label>'+
     '<div class="reihe umbruch">'+
       '<button class="knopf" data-tat="drucken">Karte nochmal drucken</button>'+
       '<button class="knopf" data-tat="auszahlen"'+(g>0?'':' disabled')+'>Restguthaben auszahlen</button>'+
+      '<button class="knopf warn" data-tat="loeschen"'+(g!==0?' disabled':'')+'>Karte löschen</button>'+
       '<button class="knopf" data-tat="zu">Schließen</button>'+
     '</div>'+
+    (g!==0?'<p class="muted" style="margin:6px 0 0">Gelöscht werden kann erst, wenn kein Guthaben '+
+      'mehr drauf ist — erst auszahlen.</p>':'')+
     '<div class="verlauf">'+(liste.length ? liste.map(function(b){
       var knopf=(!b.ref && !zurueck[b.id] && b.art!=="storno")
         ? '<button class="knopf klein" data-zurueck="'+esc(b.id)+'">zurücknehmen</button>' : '';
@@ -1426,19 +1489,32 @@ function detailHtml(nr){
     }).join("") : '<p class="muted" style="margin:0">Noch keine Buchungen.</p>')+'</div></div>';
 }
 
+/* Beim Neuzeichnen wird das fokussierte Eingabefeld aus dem Dokument
+   genommen, und der Browser meldet dabei ein "change", als wäre das Feld
+   verlassen worden. Das darf nichts speichern: der Name ist erst fertig,
+   wenn der Mensch ihn fertig getippt hat, nicht wenn im Hintergrund ein
+   Abgleich zeichnet. */
+var listeZeichnet=false;
 function zeichneKartenListe(){
+  listeZeichnet=true;
+  try{ zeichneKartenListeEigentlich(); } finally { listeZeichnet=false; }
+}
+function zeichneKartenListeEigentlich(){
   /* Beim Neuzeichnen — etwa durch einen Abgleich im Hintergrund — darf ein
      halb getippter Betrag nicht verschwinden. Er gehört aber zu der Karte,
      für die er getippt wurde: wechselt die Anzeige auf eine andere, fängt
      das Feld leer an. Sonst bucht ein Tipp auf "Setzen" auf die falsche Karte. */
-  var alt=$("korrBetrag");
+  var alt=$("korrBetrag"), altN=$("kartenName");
   var altWert=alt?alt.value:"", hatFokus=!!alt && document.activeElement===alt;
+  var altName=altN?altN.value:"", nameFokus=!!altN && document.activeElement===altN;
   var neuGeoeffnet=(detailGezeigt!==offeneKarte);
-  if(neuGeoeffnet){ altWert=""; hatFokus=false; }
+  if(neuGeoeffnet){ altWert=""; hatFokus=false; altName=null; nameFokus=false; }
 
   var s=salden(), suche=$("suche").value.trim().toUpperCase();
-  var nrs=Object.keys(db.karten).sort();
-  if(suche) nrs=nrs.filter(function(n){ return n.indexOf(suche)>=0; });
+  var nrs=aktiveKarten();
+  if(suche) nrs=nrs.filter(function(n){
+    return n.indexOf(suche)>=0 || kartenName(n).toUpperCase().indexOf(suche)>=0;
+  });
   var gesamtAnzahl=nrs.length;
   nrs=nrs.slice(0,200);
   if(!nrs.length){
@@ -1454,7 +1530,8 @@ function zeichneKartenListe(){
                   :'<span class="marker m-leer">leer</span>';
     if(offen) zeigtOffene=true;
     return '<div class="kartenzeile'+(offen?' offen':'')+'" data-karte="'+esc(nr)+'"><span class="nr">'+
-           esc(kartenCode(nr))+'</span>'+marker+'<span class="guthaben'+(g===0?' null':'')+'">'+
+           esc(kartenCode(nr))+(kartenName(nr)?'<span class="rname">'+esc(kartenName(nr))+'</span>':'')+
+           '</span>'+marker+'<span class="guthaben'+(g===0?' null':'')+'">'+
            euro(g)+'</span></div>'+(offen?detailHtml(nr):"");
   }).join("")+(gesamtAnzahl>200?'<p class="muted" style="margin:8px 0 0">… und '+(gesamtAnzahl-200)+
     ' weitere. Mit der Suche eingrenzen.</p>':"");
@@ -1463,6 +1540,10 @@ function zeichneKartenListe(){
   if(!zeigtOffene) return;
   if(altWert){ $("korrBetrag").value=altWert; korrVorschau(); }
   if(hatFokus) $("korrBetrag").focus();
+  /* Ein halb getippter Name bleibt auch dann stehen, wenn im Hintergrund ein
+     Abgleich die Liste neu zeichnet. */
+  if(altName!==null && altName!==kartenName(offeneKarte)) $("kartenName").value=altName;
+  if(nameFokus) $("kartenName").focus();
   if(neuGeoeffnet){
     /* Frisch aufgeklappt: gleich ins Feld, damit nach dem Antippen nur noch
        der Betrag zu tippen ist. */
@@ -1539,7 +1620,7 @@ function stapelPruefen(){
   var karten=[], fehlend=[], s=salden(), schonGeladen=0;
   for(var n=n1;n<=n2;n++){
     var nr=von.charAt(0)+("0000"+n).slice(-4);
-    if(db.karten[nr]){ karten.push(nr); if(s[nr]>0) schonGeladen++; } else fehlend.push(nr);
+    if(db.karten[nr] && !istGeloescht(nr)){ karten.push(nr); if(s[nr]>0) schonGeladen++; } else fehlend.push(nr);
   }
   var r={karten:karten, fehlend:fehlend, schonGeladen:schonGeladen, von:von, bis:bis, cent:cent};
   if(!karten.length) r.fehler="In diesem Bereich gibt es noch keine Karten. Erst drucken (oder abgleichen).";
@@ -1624,12 +1705,142 @@ function stapelZurueck(id){
   zeichneAlles(); wolkeVormerken(); melden("Stapel zurückgenommen");
 }
 
+/* ============================ Namen ============================ */
+function nameSetzen(nr, text){
+  var name=String(text||"").replace(/\s+/g," ").trim().slice(0,40);
+  var k=db.karten[nr]; if(!k || (k.name||"")===name) return;
+  k.name=name; k.nts=Date.now();
+  sichern(); zeichneAlles(); wolkeVormerken();
+  melden(name ? "Name gespeichert" : "Name entfernt");
+}
+
+/* ============================ Löschen ============================ */
+/* Wie bei den Stapeln: "7" heißt die Karte 7 dieses Geräts. */
+function bereichNummern(vonText, bisText){
+  var von=stapelNummer(vonText), bis=stapelNummer(bisText);
+  if(!String(vonText).trim() && !String(bisText).trim()) return {leer:true};
+  if(!von || !bis) return {fehler:"Von und Bis als Kartennummer eintragen, zum Beispiel 1 und 20."};
+  if(von.charAt(0)!==bis.charAt(0)) return {fehler:"Von und Bis müssen vom selben Gerät sein (gleicher Buchstabe)."};
+  var n1=parseInt(von.slice(1),10), n2=parseInt(bis.slice(1),10);
+  if(n2<n1) return {fehler:"Bis liegt vor Von."};
+  if(n2-n1>=1000) return {fehler:"Höchstens 1000 Karten auf einmal."};
+  var alle=[];
+  for(var n=n1;n<=n2;n++) alle.push(von.charAt(0)+("0000"+n).slice(-4));
+  return {alle:alle};
+}
+
+/* Sortiert Nummern danach, was mit ihnen geschehen darf. */
+function loeschSortieren(nrs){
+  var s=salden(), r={weg:[], mitGuthaben:[], ohneKarte:[], schonWeg:[]};
+  nrs.forEach(function(nr){
+    if(!db.karten[nr]) r.ohneKarte.push(nr);
+    else if(istGeloescht(nr)) r.schonWeg.push(nr);
+    else if((s[nr]||0)!==0) r.mitGuthaben.push(nr);
+    else r.weg.push(nr);
+  });
+  return r;
+}
+
+function loeschPruefen(){
+  var b=bereichNummern($("lVon").value,$("lBis").value);
+  if(b.leer||b.fehler) return b;
+  var r=loeschSortieren(b.alle); r.alle=b.alle;
+  if(!r.weg.length) r.fehler=r.mitGuthaben.length
+    ? "Keine der Karten kann gelöscht werden: sie haben noch Guthaben."
+    : "In diesem Bereich gibt es keine Karten zu löschen.";
+  return r;
+}
+
+function zeichneLoeschVorschau(){
+  var r=loeschPruefen(), t=$("lVorschau");
+  $("btnLoeschen").disabled=!!(r.leer||r.fehler);
+  if(r.leer){ t.textContent=""; return; }
+  if(!r.alle){ t.textContent=r.fehler; return; }
+  var teile=[];
+  if(r.weg.length) teile.push(mehrzahl(r.weg.length,"Karte wird","Karten werden")+" gelöscht ("+
+                              kartenCode(r.weg[0])+(r.weg.length>1?" bis "+kartenCode(r.weg[r.weg.length-1]):"")+")");
+  if(r.mitGuthaben.length) teile.push(mehrzahl(r.mitGuthaben.length,"Karte hat","Karten haben")+
+                                      " noch Guthaben und "+(r.mitGuthaben.length===1?"bleibt":"bleiben"));
+  if(r.ohneKarte.length) teile.push(mehrzahl(r.ohneKarte.length,"Nummer","Nummern")+" ohne Karte");
+  t.textContent=(r.fehler&&!r.weg.length ? r.fehler+" " : "")+teile.join(" · ");
+}
+
+function vermerken(nrs){
+  var jetzt=Date.now();
+  nrs.forEach(function(nr){ db.geloescht[nr]=jetzt; });
+  if(nrs.indexOf(offeneKarte)>=0) offeneKarte="";
+  sichern(); zeichneAlles(); wolkeVormerken();
+}
+
+function kartenLoeschen(){
+  var r=loeschPruefen();
+  if(r.leer||r.fehler||!r.weg.length){ melden(r.fehler||"Erst Von und Bis eintragen"); return; }
+  if(!confirm(mehrzahl(r.weg.length,"Karte","Karten")+" löschen?\n\nDie Buchungen bleiben im Abschluss "+
+              "stehen. Eine gelöschte Karte lässt sich wiederherstellen."+
+              (r.mitGuthaben.length?"\n"+mehrzahl(r.mitGuthaben.length,"Karte hat","Karten haben")+" noch Guthaben und "+
+               (r.mitGuthaben.length===1?"bleibt":"bleiben")+" stehen.":"")))
+    return;
+  vermerken(r.weg);
+  $("lVon").value=""; $("lBis").value=""; zeichneLoeschVorschau();
+  melden(mehrzahl(r.weg.length,"Karte","Karten")+" gelöscht");
+}
+
+/* Karten, mit denen nie etwas gebucht wurde: das sind die, die zu viel
+   gedruckt wurden. */
+function unbenutzteLoeschen(){
+  var benutzt={};
+  db.buchungen.forEach(function(b){ benutzt[b.karte]=true; });
+  var weg=aktiveKarten().filter(function(n){ return !benutzt[n]; });
+  if(!weg.length){ melden("Es gibt keine unbenutzten Karten"); return; }
+  if(!confirm(mehrzahl(weg.length,"Karte","Karten")+", mit denen noch nie gebucht wurde, löschen?\n\n"+
+              "Eine gelöschte Karte lässt sich wiederherstellen."))
+    return;
+  vermerken(weg);
+  melden(mehrzahl(weg.length,"Karte","Karten")+" gelöscht");
+}
+
+function karteLoeschen(nr){
+  if(saldo(nr)!==0){ melden("Erst das Guthaben auszahlen"); return; }
+  var n=kartenName(nr);
+  if(!confirm(kartenCode(nr)+(n?" ("+n+")":"")+" löschen?\n\nDie Karte gilt danach nicht mehr. "+
+              "Ihre Buchungen bleiben im Abschluss stehen."))
+    return;
+  vermerken([nr]);
+  melden(kartenCode(nr)+" gelöscht");
+}
+
+function wiederherstellen(nr){
+  db.geloescht[nr]=-Date.now();
+  sichern(); zeichneAlles(); wolkeVormerken();
+  melden(kartenCode(nr)+" wiederhergestellt");
+}
+
+function zeichneGeloeschtListe(){
+  var nrs=Object.keys(db.geloescht).filter(istGeloescht)
+    .sort(function(a,b){ return db.geloescht[b]-db.geloescht[a]; });
+  var k=$("geloeschtListe");
+  if(!nrs.length){ k.innerHTML=""; return; }
+  k.innerHTML='<div class="feldTitel">Gelöschte Karten ('+nrs.length+')</div>'+
+    nrs.slice(0,20).map(function(nr){
+      return '<div class="zeile"><span class="mono">'+esc(kartenCode(nr))+'</span>'+
+        (kartenName(nr)?'<span class="muted">'+esc(kartenName(nr))+'</span>':'')+
+        '<button class="knopf klein" style="margin-left:auto" data-zurueckholen="'+esc(nr)+'">wiederherstellen</button></div>';
+    }).join("")+(nrs.length>20?'<p class="muted" style="margin:6px 0 0">… und '+(nrs.length-20)+' weitere.</p>':"");
+}
+
 function zeichneAlles(){
   zeichneKopf(); zeichneZahlen(); zeichneKartenListe(); zeichneKartenVorschau();
-  zeichneStapelVorschau(); zeichneStapelListe();
+  zeichneStapelVorschau(); zeichneStapelListe(); zeichneLoeschVorschau(); zeichneGeloeschtListe();
 }
 
 /* ============================== Druck ============================== */
+/* Je länger der Name, desto kleiner die Schrift — so passen vierzig Zeichen
+   in drei Zeilen, statt abgeschnitten zu werden. */
+function nameGroesse(n){
+  var l=String(n).length;
+  return l<=16 ? "g1" : l<=22 ? "g2" : l<=32 ? "g3" : "g4";
+}
+
 function kartenBlatt(nrs){
   var a=db.anlass||{};
   var kopf=(a.verein||"")+(a.zusatz?'<br>'+esc(a.zusatz):"");
@@ -1638,7 +1849,9 @@ function kartenBlatt(nrs){
       '<div class="daten"><div class="verein">'+(a.verein?esc(a.verein):"&nbsp;")+
       (a.zusatz?'<br>'+esc(a.zusatz):"")+'</div>'+
       '<div><div class="anlass">'+esc(a.name||"Guthabenkarte")+'</div>'+
-      '<div class="art">Guthabenkarte</div></div>'+
+      '<div class="art">Guthabenkarte</div>'+
+      (kartenName(nr)?'<div class="kname '+nameGroesse(kartenName(nr))+'">'+esc(kartenName(nr))+'</div>':'')+
+      '</div>'+
       '<div class="nummer">'+esc(kartenCode(nr))+'</div></div></div>';
   }
   /* Acht Karten auf ein Blatt: vier Reihen zu zwei. Jede Seite ist ein
@@ -1656,22 +1869,37 @@ function drucken(html){
   setTimeout(function(){ window.print(); },80);
 }
 
+/* Die Namen aus dem Textfeld: eine Zeile, ein Name, Leerzeilen zählen nicht. */
+function namenZeilen(){
+  return String($("kNamen").value||"").split(/\r?\n/)
+    .map(function(z){ return z.replace(/\s+/g," ").trim().slice(0,40); })
+    .filter(function(z){ return z; });
+}
+
 function zeichneKartenVorschau(){
-  var n=parseInt($("kAnzahl").value,10);
+  var namen=namenZeilen();
+  /* Mit Namen bestimmt die Zahl der Zeilen die Zahl der Karten. */
+  $("kAnzahl").disabled=namen.length>0;
+  var n=namen.length || parseInt($("kAnzahl").value,10);
   if(!(n>0)){ $("kVorschau").textContent=""; return; }
   var von=nummerSchreiben(naechsteKartenNummer()), bis=nummerSchreiben(naechsteKartenNummer()+n-1);
-  $("kVorschau").textContent=n===1 ? kartenCode(von) : kartenCode(von)+" bis "+kartenCode(bis);
+  $("kVorschau").textContent=(n===1 ? kartenCode(von) : kartenCode(von)+" bis "+kartenCode(bis))+
+    (namen.length?" · "+mehrzahl(n,"Karte mit Namen","Karten mit Namen"):"");
 }
 
 function kartenDrucken(){
-  var n=parseInt($("kAnzahl").value,10);
+  var namen=namenZeilen();
+  var n=namen.length || parseInt($("kAnzahl").value,10);
   if(!(n>0 && n<=400)){ melden("Anzahl zwischen 1 und 400"); return; }
   if(!/^[A-Z]$/.test(db.geraet||"")){ melden("Erst ein Gerätezeichen eintragen"); return; }
-  var start=naechsteKartenNummer(), nrs=[];
+  var start=naechsteKartenNummer(), nrs=[], jetzt=Date.now();
   for(var i=0;i<n;i++){
     var nr=nummerSchreiben(start+i);
-    db.karten[nr]={nr:nr, ts:Date.now()}; nrs.push(nr);
+    db.karten[nr]={nr:nr, ts:jetzt};
+    if(namen[i]){ db.karten[nr].name=namen[i]; db.karten[nr].nts=jetzt; }
+    nrs.push(nr);
   }
+  $("kNamen").value="";
   sichern(); zeichneAlles(); wolkeVormerken();
   drucken(kartenBlatt(nrs));
 }
@@ -1726,7 +1954,7 @@ function abschlussDrucken(){
 function zusammenfuehren(roh){
   if(!roh || typeof roh!=="object" || !Array.isArray(roh.buchungen) || typeof roh.karten!=="object")
     return {fehler:"Die Ablage enthält etwas, das keine Guthabenkasse ist."};
-  var b={kartenNeu:0, buchungenNeu:0, anlassUebernommen:false};
+  var b={kartenNeu:0, buchungenNeu:0, anlassUebernommen:false, namenNeu:0, vermerkeNeu:0};
   var schonDa={};
   db.buchungen.forEach(function(x){ schonDa[x.id]=true; });
   roh.buchungen.forEach(function(x){
@@ -1735,7 +1963,23 @@ function zusammenfuehren(roh){
   });
   for(var nr in roh.karten){
     if(!Object.prototype.hasOwnProperty.call(roh.karten,nr)) continue;
-    if(!db.karten[nr]){ db.karten[nr]=roh.karten[nr]; b.kartenNeu++; }
+    var fremd=roh.karten[nr];
+    if(!db.karten[nr]){ db.karten[nr]=fremd; b.kartenNeu++; }
+    /* Der Name ist ein einzelner Wert: da gilt der neuere. */
+    else if((fremd.nts||0)>(db.karten[nr].nts||0)){
+      db.karten[nr].name=fremd.name||""; db.karten[nr].nts=fremd.nts; b.namenNeu++;
+    }
+  }
+  /* Gelöscht-Vermerke: der mit dem größeren Betrag, also dem späteren
+     Zeitpunkt, gewinnt — gleich ob gelöscht oder wiederhergestellt. */
+  var fremdeVermerke=(roh.geloescht && typeof roh.geloescht==="object") ? roh.geloescht : {};
+  for(var gn in fremdeVermerke){
+    if(!Object.prototype.hasOwnProperty.call(fremdeVermerke,gn)) continue;
+    var eigen=db.geloescht[gn]||0, neu=Number(fremdeVermerke[gn])||0;
+    if(Math.abs(neu)>Math.abs(eigen)){
+      if((neu>0)!==(eigen>0)) b.vermerkeNeu++;
+      db.geloescht[gn]=neu;
+    }
   }
   /* Auch eine Karte, die nur durch ihre Buchungen bekannt wird, gehört in die Liste. */
   db.buchungen.forEach(function(x){
@@ -1874,7 +2118,7 @@ function wolkePruefen(){
 /* Was hochgeht, ist der eigene Stand ohne die Zugangsdaten und ohne das,
    was nur dieses Gerät betrifft: Gerätezeichen, Rolle und Ton bleiben hier. */
 function wolkePaket(){
-  return {karten:db.karten, buchungen:db.buchungen, anlass:db.anlass};
+  return {karten:db.karten, buchungen:db.buchungen, anlass:db.anlass, geloescht:db.geloescht};
 }
 
 function wolkeAbgleichen(versuch){
@@ -1890,7 +2134,7 @@ function wolkeAbgleichen(versuch){
       if(a.daten){
         bericht=zusammenfuehren(a.daten);
         if(bericht.fehler) throw new Error(bericht.fehler);
-        if(bericht.kartenNeu||bericht.buchungenNeu||bericht.anlassUebernommen) sichern();
+        if(bericht.kartenNeu||bericht.buchungenNeu||bericht.anlassUebernommen||bericht.namenNeu||bericht.vermerkeNeu) sichern();
       }
       if(standZaehler===hochgeladenBei)
         return {ablegen:{ok:true, unveraendert:true}, bericht:bericht};
@@ -1911,9 +2155,11 @@ function wolkeAbgleichen(versuch){
       if(e.ablegen.fehler) throw new Error(e.ablegen.fehler);
       zeichneAlles(); zeichneEinstellungen();
       var b=e.bericht;
-      var dazu = b && (b.kartenNeu||b.buchungenNeu)
+      var dazu = b && (b.kartenNeu||b.buchungenNeu||b.namenNeu||b.vermerkeNeu)
         ? " · "+[mehrzahl(b.buchungenNeu,"Buchung","Buchungen"),
-                 mehrzahl(b.kartenNeu,"Karte","Karten")].filter(Boolean).join(", ")+" übernommen"
+                 mehrzahl(b.kartenNeu,"Karte","Karten"),
+                 mehrzahl(b.namenNeu,"Name","Namen"),
+                 mehrzahl(b.vermerkeNeu,"Löschvermerk","Löschvermerke")].filter(Boolean).join(", ")+" übernommen"
         : "";
       wolkeSagen("Abgeglichen "+uhrzeit(Date.now())+" Uhr"+dazu+
                  (e.ablegen.unveraendert && !dazu ? " · nichts Neues" : ""));
@@ -2011,7 +2257,7 @@ function alleLoeschen(){
               "Nicht angefasst: die Datei in der Ablage. Solange die steht, holt der nächste "+
               "Abgleich alles zurück."))
     return;
-  db.karten={}; db.buchungen=[]; db.aufBetrag="";
+  db.karten={}; db.geloescht={}; db.buchungen=[]; db.aufBetrag="";
   $("aufBetrag").value=""; $("abBetrag").value="";
   hochgeladenBei=-1; offeneKarte="";
   sichern(); zeichneAlles(); urteilBereit("auf"); urteilBereit("ab");
@@ -2113,6 +2359,14 @@ function start(){
   $("btnAbschluss").addEventListener("click",abschlussDrucken);
   ["sVon","sBis","sBetrag"].forEach(function(id){ $(id).addEventListener("input",zeichneStapelVorschau); });
   $("btnStapel").addEventListener("click",stapelBuchen);
+  ["lVon","lBis"].forEach(function(id){ $(id).addEventListener("input",zeichneLoeschVorschau); });
+  $("btnLoeschen").addEventListener("click",kartenLoeschen);
+  $("btnUnbenutzte").addEventListener("click",unbenutzteLoeschen);
+  $("geloeschtListe").addEventListener("click",function(e){
+    var nr=e.target.getAttribute&&e.target.getAttribute("data-zurueckholen");
+    if(nr) wiederherstellen(nr);
+  });
+  $("kNamen").addEventListener("input",zeichneKartenVorschau);
   $("stapelListe").addEventListener("click",function(e){
     var id=e.target.getAttribute&&e.target.getAttribute("data-stapel");
     if(id) stapelZurueck(id);
@@ -2130,6 +2384,7 @@ function start(){
       else if(tat==="auszahlen") auszahlen(offeneKarte);
       else if(tat==="korrigieren") korrigieren(offeneKarte);
       else if(tat==="drucken") drucken(kartenBlatt([offeneKarte]));
+      else if(tat==="loeschen") karteLoeschen(offeneKarte);
       else if(tat==="zu"){ offeneKarte=""; zeichneKartenListe(); }
       return;
     }
@@ -2143,7 +2398,13 @@ function start(){
   $("kartenListe").addEventListener("input",function(e){
     if(e.target.id==="korrBetrag") korrVorschau();
   });
+  /* Der Name wird gespeichert, sobald das Feld verlassen oder Enter gedrückt
+     wird — kein eigener Knopf nötig. */
+  $("kartenListe").addEventListener("change",function(e){
+    if(e.target.id==="kartenName" && !listeZeichnet) nameSetzen(offeneKarte, e.target.value);
+  });
   $("kartenListe").addEventListener("keydown",function(e){
+    if(e.target.id==="kartenName" && e.key==="Enter"){ e.target.blur(); return; }
     if(e.target.id!=="korrBetrag") return;
     if(e.key==="Enter") korrigieren(offeneKarte);
     else if(e.key==="Escape"){ offeneKarte=""; zeichneKartenListe(); }
