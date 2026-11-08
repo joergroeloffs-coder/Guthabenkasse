@@ -24,7 +24,7 @@ Rücknahme oder Korrektur ist eine Gegenbuchung, keine Löschung.
 | Reiter | wozu |
 | --- | --- |
 | **Aufbuchen** | Betrag mit dem Ziffernblock tippen (oder eine der Tasten 5/10/20/50 €), dann die Karte scannen. Das Urteil zeigt groß das **neue Guthaben**, klein was aufgebucht wurde. Der Betrag wird nach der Buchung geleert, damit eine zweite Lesung nichts ein zweites Mal bucht; die Tasten (5/10/20/50 €) bringen den nächsten Zehner schnell zurück. |
-| **Abbuchen** | Betrag mit dem Ziffernblock tippen, groß auf dem Schirm, dann die Karte scannen. Das Urteil zeigt groß das **Guthaben, das noch auf der Karte ist**. Der Betrag wird nach jeder Buchung geleert. Reicht das Guthaben nicht: rot, nichts wird gebucht, „es fehlen 3,50 €". |
+| **Abbuchen** | Betrag mit dem Ziffernblock tippen, groß auf dem Schirm, dann die Karte scannen. Das Ergebnis ist zweigeteilt und gleich groß: oben **rötlich, was abgebucht wurde** (mit Trinkgeld), unten **grünlich, was noch auf der Karte ist**. Der Betrag wird nach jeder Buchung geleert. Reicht das Guthaben nicht: rot, nichts wird gebucht, „es fehlen 3,50 €". |
 | **Karten** | Neue Karten drucken (8 je A4, 85 × 54 mm), wahlweise **mit Namen** (ein Name je Zeile) oder aus einer **Gästeliste** (Excel/CSV in den Kasten ziehen, Spalten ankreuzen). **Karten vorab aufladen** (Von/Bis/Betrag, etwa Karten 1–20 je 50 €). **Karten löschen** (Von/Bis, alle unbenutzten, oder einzeln). Liste aller Karten mit Suche nach Nummer und Name. Nummer antippen klappt die Karte auf: Guthaben direkt auf einen Betrag setzen, Namen ändern, Verlauf, einzelne Buchungen zurücknehmen, Restguthaben auszahlen, Karte nochmal drucken oder löschen. Abschluss drucken. |
 | **Einstellungen** | Rolle des Geräts (beides / nur Aufbuchen / nur Abbuchen), Gerätezeichen, Anlass, Ablage, Sicherung. |
 
@@ -36,10 +36,7 @@ derselben Karte, getrennt vom Verkauf.
   werden 5,00 €; die 0,30 € werden als Trinkgeld mitgebucht. Der Hinweis unter
   dem Betrag zeigt es vorher. Reicht das Guthaben nur für den Betrag selbst,
   wird nicht aufgerundet (die Meldung sagt es).
-- *Tasten nach der Buchung:* Auf dem Ergebnisschirm erscheinen „+ 0,50 / + 1,00 /
-  + 2,00 €" (einstellbar, bis zu fünf). Ein Tipp bucht das Trinkgeld, die Tasten
-  verschwinden; was das Guthaben nicht mehr hergibt, ist gesperrt. Nach dem
-  Aufrunden gibt es keine Tasten mehr (das Trinkgeld ist schon da).
+- *Tasten nach der Buchung:* Auf dem Ergebnisschirm erscheinen Kacheln **5 % / 7,5 % / 10 %** (einstellbar, bis zu fünf), jede mit dem Betrag, der dabei herauskommt. Verkauf plus Trinkgeld wird auf **0,50 € genau** gerundet, der Gast zahlt am Ende …,00 oder …,50 (4,70 € + 10 % = 5,17 € → 5,00 €, Trinkgeld 0,30 €); Kacheln, die auf 0 runden oder dasselbe ergeben, entfallen. Wer feste Beträge will, stellt in den Einstellungen auf „Euro“ (0,50 / 1 / 2 €). Ein Tipp bucht das Trinkgeld, die Tasten verschwinden; was das Guthaben nicht mehr hergibt, ist gesperrt. Nach dem Aufrunden gibt es keine Tasten mehr.
 - **Name der Bedienung** (Einstellungen, freiwillig, z. B. „Anna“): wird bei jeder Buchung
   mitgespeichert; der Abschluss rechnet „Je Bedienung“ nach Namen ab, auch das Trinkgeld.
   Ohne Namen steht „Gerät B“. Wer das Gerät übergibt, ändert nur den Namen; alte Buchungen
@@ -168,7 +165,8 @@ in der `index.html`.
 
 | | |
 | --- | --- |
-| **0.6.1** | Name der Bedienung je Gerät: steht bei jeder Buchung, im Verlauf und im Abschluss („Je Bedienung“, mit Trinkgeld) |
+| **0.7.0** | Abbuchen: zweigeteiltes Ergebnis (oben rötlich abgebucht, unten grünlich Rest, gleich groß); Trinkgeld-Tasten in Prozent (5 / 7,5 / 10 %) mit Betrag auf der Kachel, auf 0,50 € genau gerundet; Euro-Tasten weiter wählbar |
+| 0.6.1 | Name der Bedienung je Gerät: steht bei jeder Buchung, im Verlauf und im Abschluss („Je Bedienung“, mit Trinkgeld) |
 | 0.6.0 | Trinkgeld: Aufrunden auf den vollen Euro und Tasten nach der Buchung, als eigene Buchungsart, im Abschluss getrennt |
 | 0.5.3 | die Fassungsnummer steht immer im Kopf, unter der Summe, auf jeder Bildschirmgröße |
 | 0.5.2 | Licht: Blitz wird bis zu 5 s lang gesucht (Chrome meldet ihn spät), Zustand wird geprüft statt angenommen, Meldung und Statuszeile sagen, warum es nicht geht |
