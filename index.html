@@ -717,7 +717,9 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 <section id="reiter-einstellungen" class="hide">
   <div class="karte"><div class="titel"><h2>Dieses Gerät</h2></div>
     <div class="inhalt">
-      <div class="feldTitel">Wofür dieses Gerät da ist</div>
+      <div class="feldTitel">Sprache / Dil</div>
+      <div class="wahl" id="wahlSprache"><button data-sprache="de">Deutsch</button><button data-sprache="tr">Türkçe</button></div>
+      <div class="feldTitel" style="margin-top:14px">Wofür dieses Gerät da ist</div>
       <div class="wahl" id="wahlRolle">
         <button data-rolle="beide">Beides</button>
         <button data-rolle="auf">Nur Aufbuchen</button>
@@ -869,6 +871,80 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 <script>
 "use strict";
+
+/* ======================= Sprache: Deutsch / Türkçe =======================
+   Die Kasse spricht Deutsch. Auf Wunsch (Einstellungen → Dieses Gerät →
+   Sprache) Türkisch. Zwei Wege:
+     _t("deutscher Text")   — Texte, die im Code entstehen (Meldungen, Ergebnis,
+                              Abschluss, Fragen); fehlt eine Übersetzung, bleibt
+                              der deutsche Text stehen
+     uebersetzeSeite()      — der feste Text der Seite (Reiter, Beschriftungen,
+                              Hinweise), gesucht nach seinem deutschen Wortlaut
+   Die Übersetzung hängt am Gerät (db.sprache), nicht an den Daten: ein deutsches
+   und ein türkisches Gerät gleichen sich ohne Weiteres ab. */
+var TRJ={"Unlesbare Anfrage":"Okunamayan istek","Das Zugangswort stimmt nicht.":"Erişim sözcüğü yanlış.","Die Ablage ist gerade belegt. Gleich noch einmal.":"Depo şu an meşgul. Birazdan tekrar deneyin.",". Meist heißt das: die Adresse ":". Çoğu zaman bu şu demektir: adres ","Guthabenkasse": "Bakiye Kasası", "Aufbuchen": "Yükleme", "Abbuchen": "Harcama", "Karten": "kart", "Einstellungen": "Ayarlar", "Optionen": "Ayarlar", "Jetzt laden": "Şimdi yükle", "Betrag aufbuchen": "Yüklenecek tutar", "Leeren": "Temizle", "Scannen": "Tara", "Kamera": "Kamera", "Licht": "Işık", "Betrag ändern": "Tutarı değiştir", "Bereit": "Hazır", "Betrag eintippen, dann die Karte vor die Kamera halten.": "Tutarı girin, sonra kartı kameraya tutun.", "Nächste Karte": "Sıradaki kart", "Buchen": "Yükle", "Betrag abbuchen": "Harcanacak tutar", "Anschreiben": "Veresiye", "Aufrunden": "Yukarı yuvarla", "Nächster Gast": "Sıradaki misafir", "Übersicht": "Özet", "Abschluss drucken": "Kapanış raporu", "aufgebucht": "yüklenen", "abgebucht": "harcanan", "noch auf Karten": "kartlarda kalan", "Neue Karten drucken": "Yeni kart yazdır", "Gästeliste hierher ziehen": "Misafir listesini buraya sürükleyin", "Excel (.xlsx, .xls), OpenDocument (.ods), CSV oder Text — jede Zeile wird eine Karte. Oder Zellen aus Excel kopieren und hier einfügen (Strg+V).": "Excel (.xlsx, .xls), OpenDocument (.ods), CSV veya metin — her satır bir kart olur. Ya da Excel'den hücreleri kopyalayıp buraya yapıştırın (Ctrl+V).", "Datei wählen": "Dosya seç", "Liste entfernen": "Listeyi kaldır", "Tabellenblatt": "Sayfa", "Erste Zeile ist die Überschrift": "İlk satır başlıktır", "Was soll auf der Karte stehen? Häkchen setzen:": "Kartta ne yazsın? İşaretleyin:", "Anzahl": "Adet", "Karten drucken": "Kartları yazdır", "Oder Namen eintippen — ein Name je Zeile": "Ya da isimleri yazın — her satıra bir isim", "Die Karten tragen nur eine Nummer, keinen Betrag — das Guthaben steht in der Ablage. Eine Karte ist 85 × 54 mm, zwei nebeneinander, acht auf einem Blatt. Ausschneiden, einlaminieren, ausgeben.": "Kartlarda yalnızca bir numara vardır, tutar yoktur — bakiye depoda durur. Bir kart 85 × 54 mm'dir, yan yana iki, bir sayfada sekiz kart çıkar. Kesin, laminasyonlayın, dağıtın.", "Karten vorab aufladen": "Kartlara önceden yükle", "Von Karte": "İlk kart", "Bis Karte": "Son kart", "Je Karte": "Kart başına", "Nur die Zahl genügt: <span class=\"mono\">1</span> und <span class=\"mono\">20</span> heißt: die Karten 1 bis 20 dieses Geräts. Danach den nächsten Stapel mit anderem Betrag. Jede Karte bekommt eine eigene Buchung und lässt sich einzeln zurücknehmen.": "Yalnızca sayı yeterli: <span class=\"mono\">1</span> ve <span class=\"mono\">20</span>, bu cihazın 1'den 20'ye kadar kartları demektir. Sonra farklı tutarla sıradaki grubu girin. Her karta ayrı bir kayıt yazılır ve tek tek geri alınabilir.", "Karten löschen": "Kartları sil", "Löschen": "Sil", "Alle unbenutzten": "Kullanılmayanların hepsi", "Gelöscht werden nur Karten ohne Guthaben, und sie sind danach nirgends mehr zu sehen. Ihre Buchungen bleiben im Abschluss mitgezählt, die Nummer wird nicht neu vergeben. Eine einzelne Karte löschen Sie in der Liste unten: Nummer antippen.": "Yalnızca bakiyesi olmayan kartlar silinir ve sonra hiçbir yerde görünmez. Kayıtları kapanış raporunda sayılmaya devam eder, numara yeniden verilmez. Tek bir kartı aşağıdaki listede silersiniz: numaraya dokunun.", "Alle Karten": "Tüm kartlar", "Noch keine Karten. Oben neue drucken.": "Henüz kart yok. Yukarıdan yeni kart yazdırın.", "Dieses Gerät": "Bu cihaz", "Wofür dieses Gerät da ist": "Bu cihaz ne için kullanılıyor", "Beides": "İkisi de", "Nur Aufbuchen": "Yalnızca yükleme", "Nur Abbuchen": "Yalnızca harcama", "Ein Gerät mit nur einer Aufgabe zeigt auch nur diese. Ein Schutz ist das nicht — wer will, schaltet wieder um.": "Tek görevli bir cihaz yalnızca onu gösterir. Bu bir koruma değildir — isteyen yeniden değiştirir.", "Gerätezeichen": "Cihaz harfi", "Ein Buchstabe. Er steht in der Kartennummer und bei jeder Buchung — zwei Geräte brauchen zwei verschiedene.": "Tek harf. Kart numarasında ve her kayıtta yer alır — iki cihazın farklı harfleri olmalı.", "Name der Bedienung (freiwillig)": "Personel adı (isteğe bağlı)", "Steht bei jeder Buchung dieses Geräts und im Abschluss statt „Gerät B“ — so rechnet jeder Kellner, auch sein Trinkgeld, mit eigenem Namen ab. Bei der Übergabe an einen anderen einfach den Namen ändern; schon gebuchte Buchungen behalten den alten.": "Bu cihazın her kaydında ve kapanış raporunda „Cihaz B“ yerine yazılır — böylece her garson bahşişiyle birlikte kendi adıyla hesap verir. Cihaz başkasına geçince yalnızca adı değiştirin; daha önce yapılmış kayıtlar eski adı korur.", "Licht beim Scannen (Blitz der Kamera)": "Taramada ışık (kamera flaşı)", "Automatisch": "Otomatik", "Aus": "Kapalı", "Wird beim ersten Scannen geprüft.": "İlk taramada denetlenir.", "Geht an, solange die Kamera sucht, und aus, sobald gebucht ist. Das gibt es nur, wo der Browser den Blitz freigibt (Chrome auf Android); auf dem iPhone nicht.": "Kamera ararken yanar, kayıt yapılınca söner. Bu yalnızca tarayıcının flaşa izin verdiği yerde çalışır (Android'de Chrome); iPhone'da yoktur.", "Ton": "Ses", "An": "Açık", "Trinkgeld-Tasten nach dem Abbuchen": "Harcamadan sonra bahşiş tuşları", "Aufrunden auf den vollen Euro": "Tam avroya yukarı yuvarlama", "Anschreiben: höchstens offen je Karte (Euro, 0 = aus)": "Veresiye: kart başına en çok açık tutar (avro, 0 = kapalı)", "Mit dem Knopf „Anschreiben“ am Abbuchen-Schirm darf eine Karte ins Minus, bis zu dieser Grenze — und nur, wenn auf der Karte ein <b>Name</b> steht (Karten → Karte antippen). Beim Gehen wird der offene Betrag aufgebucht.": "Harcama ekranındaki „Veresiye“ düğmesiyle bir kart bu sınıra kadar eksiye düşebilir — ve yalnızca kartta bir <b>isim</b> varsa (Kartlar → karta dokunun). Giderken açık tutar karta yüklenir.", "Trinkgeld-Tasten rechnen in": "Bahşiş tuşları şunu esas alır", "Prozent": "Yüzde", "Euro": "Avro", "Prozent vom Verkauf (mit Leerzeichen getrennt)": "Satışın yüzdesi (boşlukla ayrılmış)", "Verkauf plus Trinkgeld wird auf 0,50 € genau gerundet, der Gast zahlt also am Ende …,00 oder …,50. Bei 4,70 € und 10 %: 5,17 € → 5,00 €, Trinkgeld 0,30 €. Tasten, die auf 0 runden, entfallen.": "Satış artı bahşiş 0,50 €'ya yuvarlanır; misafir sonunda …,00 veya …,50 öder. 4,70 € ve %10'da: 5,17 € → 5,00 €, bahşiş 0,30 €. 0'a yuvarlanan tuşlar görünmez.", "Feste Euro-Tasten (Euro, mit Leerzeichen getrennt)": "Sabit avro tuşları (avro, boşlukla ayrılmış)", "Trinkgeld wird von derselben Karte abgebucht, als eigene Buchung, und im Abschluss getrennt ausgewiesen. „Aufrunden“ kann auch am Abbuchen-Schirm je Gast ein- und ausgeschaltet werden.": "Bahşiş aynı karttan ayrı bir kayıt olarak düşülür ve kapanış raporunda ayrı gösterilir. „Yukarı yuvarla“ harcama ekranında her misafir için açılıp kapatılabilir.", "Anlass": "Etkinlik", "Name (steht auf den Karten)": "Ad (kartlarda yazar)", "Verein": "Dernek", "Zusatz (freiwillig)": "Ek bilgi (isteğe bağlı)", "Ablage": "Depo", "Damit beide Geräte dasselbe Guthaben sehen, gleichen sie sich über eine gemeinsame Ablage ab. Einrichtung steht oben in der Datei <span class=\"mono\">ablage.gs</span>. Adresse und Zugangswort gehören nur auf die Geräte des Vereins.": "İki cihazın aynı bakiyeyi görmesi için ortak bir depo üzerinden eşitlenirler. Kurulum <span class=\"mono\">ablage.gs</span> dosyasının başında anlatılır. Adres ve erişim sözcüğü yalnızca derneğin cihazlarında bulunmalıdır.", "Adresse": "Adres", "Zugangswort": "Erişim sözcüğü", "Abgleich": "Eşitleme", "nur von Hand": "yalnızca elle", "jede Minute": "her dakika", "alle 15 Sekunden": "her 15 saniyede", "Jetzt abgleichen": "Şimdi eşitle", "Verbindung prüfen": "Bağlantıyı dene", "Keine Ablage eingetragen.": "Depo girilmemiş.", "Fassung": "Sürüm", "Nach neuer Fassung suchen": "Yeni sürümü ara", "Eine Verknüpfung auf dem Startbildschirm zeigt gern die zuletzt gespeicherte Seite. Die Kasse fragt deshalb beim Öffnen und beim Zurückkehren selbst nach, ob eine neuere Fassung bereitliegt, und meldet es oben. Das geht nur mit Netz und nur über die Internetadresse, nicht aus einer geöffneten Datei.": "Ana ekrandaki kısayol çoğu zaman son kaydedilen sayfayı gösterir. Bu yüzden kasa açılırken ve geri dönülürken yeni bir sürüm olup olmadığını kendisi sorar ve en üstte bildirir. Bu yalnızca ağ varken ve internet adresi üzerinden çalışır, açılmış bir dosyadan değil.", "Sicherung und Neubeginn": "Yedek ve yeni başlangıç", "Sicherung speichern": "Yedeği kaydet", "Sicherung einspielen": "Yedeği geri yükle", "Betrieb auf Null setzen": "Her şeyi sıfırla", "Für ein neues Fest: alle Karten, alle Buchungen, alle Summen werden gelöscht — <b>auf allen Geräten</b>, auch in der Ablage. Es bleiben das Gerät (Zeichen, Rolle), der Anlass und der Zugang zur Ablage. Vorher wird automatisch eine Sicherung gespeichert.": "Yeni bir etkinlik için: tüm kartlar, tüm kayıtlar, tüm toplamlar silinir — <b>tüm cihazlarda</b>, depoda da. Cihaz (harf, rol), etkinlik ve depo erişimi kalır. Önceden otomatik olarak bir yedek kaydedilir.", "Kartennummern wieder bei 1 beginnen": "Kart numaraları yeniden 1'den başlasın", "Dieses Gerät speichert gerade nicht dauerhaft. Sicherung speichern, ": "Bu cihaz şu anda kalıcı olarak kaydedemiyor. Sayfa kapatılmadan önce ", "bevor die Seite geschlossen wird.": "yedeği kaydedin.", " Uhr": "", "<div class=\"hz hz-ab\"><div class=\"hz-t\">Abgebucht</div><div class=\"hz-b\">": "<div class=\"hz hz-ab\"><div class=\"hz-t\">Harcanan</div><div class=\"hz-b\">", "Noch zu zahlen": "Ödenecek", "Noch auf der Karte": "Kartta kalan", "<div class=\"urteilblock\"><div class=\"wort\">Bereit</div>": "<div class=\"urteilblock\"><div class=\"wort\">Hazır</div>", "Anschreiben: an": "Veresiye: açık", "Anschreiben: bis ": "Veresiye: en çok ", " offen, nur Karten mit Namen": " açık, yalnızca adı olan kartlar", "Karte ohne Namen": "Kartta isim yok", "Anschreiben geht nur mit Namen auf der Karte. Unter Karten die Karte antippen und den Namen eintragen. ": "Veresiye yalnızca kartta isim varsa yapılabilir. Kartlar bölümünde karta dokunup ismi girin. ", "Über der Grenze": "Sınırın üstünde", "Offen wären ": "Açık tutar şu olurdu: ", ", erlaubt sind höchstens ": ", izin verilen en fazla: ", " je Karte. ": " (kart başına). ", "<span class=\"trinkTitel\">Beim Gehen bezahlt?</span>": "<span class=\"trinkTitel\">Giderken ödeme yapıldı mı?</span>", "\"><b>Begleichen</b><span>+ ": "\"><b>Öde</b><span>+ ", " aufbuchen</span></button>": " yükle</span></button>", "Beglichen": "Ödendi", "Karte ": "Kart ", " aufgebucht, Guthaben ": " yüklendi, bakiye ", "Offen ": "Borç ", " · muss noch zahlen · nichts gebucht": " · ödemesi gerekiyor · kayıt yapılmadı", "Bestand ": "Bakiye ", " · nichts gebucht": " · kayıt yapılmadı", " · hier nicht bekannt, vielleicht fehlt ein Abgleich": " · burada bilinmiyor, belki eşitleme eksik", "Erst den Betrag eintippen": "Önce tutarı girin", "Karte vor die Kamera halten.": "Kartı kameraya tutun.", "Karte vor die Kamera halten — ohne Betrag zeigt sie ihren Bestand.": "Kartı kameraya tutun — tutar girilmezse kartın bakiyesi gösterilir.", "Aufrunden: an": "Yukarı yuvarla: açık", "Aufgerundet auf ": "Yukarı yuvarlandı: ", " · Trinkgeld ": " · Bahşiş ", "davon Trinkgeld ": "bunun bahşişi: ", " · angeschrieben": " · veresiye", "<span class=\"trinkTitel\">Trinkgeld dazu?</span>": "<span class=\"trinkTitel\">Bahşiş eklensin mi?</span>", "Dafür reicht das Guthaben nicht": "Bakiye bunun için yetmiyor", "Keine Guthabenkarte": "Bakiye kartı değil", "Gelesen: ": "Okunan: ", "Karte gelöscht": "Kart silindi", " gilt nicht mehr. Eine neue Karte nehmen.": " artık geçerli değil. Yeni bir kart alın.", "Erst den Betrag": "Önce tutar", "Mit dem Ziffernblock eintippen, dann scannen.": "Rakam tuşlarıyla girin, sonra tarayın.", " — stimmt das?": " — doğru mu?", "Nicht gebucht": "Kaydedilmedi", "Betrag nicht bestätigt.": "Tutar onaylanmadı.", "Guthaben ": "Bakiye ", "Aufgebucht ": "Yüklenen ", " · Karte ": " · Kart ", " · neu angelegt": " · yeni oluşturuldu", "Zu wenig Guthaben": "Bakiye yetersiz", "Es fehlen ": "Eksik: ", " · Guthaben ": " · Bakiye ", "zum Aufrunden reichte das Guthaben nicht": "yukarı yuvarlamaya bakiye yetmedi", "Diese Ansicht darf nicht auf die Kamera zugreifen. Das gelingt nur über ": "Bu görünüm kameraya erişemiyor. Bu yalnızca ", "eine https-Adresse, nicht aus einer geöffneten Datei. Bis dahin den Code eintippen.": "bir https adresi üzerinden olur, açılmış bir dosyadan olmaz. O zamana kadar kodu yazın.", "Kamera aus": "Kamerayı kapat", "Die Kamera ist nicht freigegeben (": "Kameraya izin verilmedi (", "). Den Code bitte eintippen.": "). Lütfen kodu yazın.", "Licht an": "Işık açık", "Der Blitz dieses Geräts wird vom Browser freigegeben.": "Bu cihazın flaşı tarayıcı tarafından kullanıma açık.", "Der Browser gibt den Blitz dieses Geräts nicht frei (zuletzt geprüft).": "Tarayıcı bu cihazın flaşına izin vermiyor (son denetim).", "Der Browser gibt den Blitz dieses Geräts nicht frei": "Tarayıcı bu cihazın flaşına izin vermiyor", "Aufbuchen und Abbuchen": "Yükleme ve harcama", "Gerät ": "Cihaz ", "Karte": "kart", " bekannt, ": " biliniyor, ", "mit Guthaben": "tanesi bakiyeli", "Karte offen": "kart borçlu", "Karten offen": "kart borçlu", " mit zusammen ": ", toplam ", " € (angeschrieben, oder zwei Geräte haben zugleich abgebucht)": " € (veresiye ya da iki cihaz aynı anda harcadı)", " Davon als Trinkgeld abgebucht: ": " Bunun bahşiş olarak düşülen kısmı: ", "<label class=\"feld grow\"><span>Neues Guthaben</span>": "<label class=\"feld grow\"><span>Yeni bakiye</span>", "<button class=\"knopf voll\" data-tat=\"korrigieren\">Setzen</button></div>": "<button class=\"knopf voll\" data-tat=\"korrigieren\">Ayarla</button></div>", "<p class=\"muted\" style=\"margin:6px 0 12px\" id=\"korrVorschau\">Der Unterschied wird als Korrekturbuchung ": "<p class=\"muted\" style=\"margin:6px 0 12px\" id=\"korrVorschau\">Fark bir düzeltme kaydı olarak ", "eingetragen — die alten Buchungen bleiben stehen.</p>": "yazılır — eski kayıtlar durur.</p>", "<label class=\"feld\" style=\"margin-bottom:12px\"><span>Name auf der Karte (freiwillig)</span>": "<label class=\"feld\" style=\"margin-bottom:12px\"><span>Kart üzerindeki isim (isteğe bağlı)</span>", "placeholder=\"zum Beispiel Anna Müller\"></label>": "placeholder=\"örneğin Ayşe Yılmaz\"></label>", "<label class=\"feld\" style=\"margin-bottom:12px\"><span>Weitere Angaben auf der Karte (freiwillig)</span>": "<label class=\"feld\" style=\"margin-bottom:12px\"><span>Kart üzerindeki ek bilgiler (isteğe bağlı)</span>", "placeholder=\"zum Beispiel Tisch 5 · vegetarisch\"></label>": "placeholder=\"örneğin Masa 5 · vejetaryen\"></label>", "<button class=\"knopf\" data-tat=\"drucken\">Karte nochmal drucken</button>": "<button class=\"knopf\" data-tat=\"drucken\">Kartı yeniden yazdır</button>", ">Restguthaben auszahlen</button>": ">Kalan bakiyeyi öde</button>", ">Karte löschen</button>": ">Kartı sil</button>", "<button class=\"knopf\" data-tat=\"zu\">Schließen</button>": "<button class=\"knopf\" data-tat=\"zu\">Kapat</button>", "<p class=\"muted\" style=\"margin:6px 0 0\">Gelöscht werden kann erst, wenn kein Guthaben ": "<p class=\"muted\" style=\"margin:6px 0 0\">Silme ancak kartta hiç bakiye kalmayınca yapılabilir ", "mehr drauf ist — erst auszahlen.</p>": "— önce bakiyeyi ödeyin.</p>", "\">zurücknehmen</button>": "\">geri al</button>", " <span class=\"muted\">(zurückgenommen)</span>": " <span class=\"muted\">(geri alındı)</span>", "<p class=\"muted\" style=\"margin:0\">Noch keine Buchungen.</p>": "<p class=\"muted\" style=\"margin:0\">Henüz kayıt yok.</p>", "Keine Karte gefunden.": "Kart bulunamadı.", "<span class=\"marker m-weg\">offen</span>": "<span class=\"marker m-weg\">borç</span>", "<span class=\"marker m-auf\">Guthaben</span>": "<span class=\"marker m-auf\">bakiye</span>", "<span class=\"marker m-leer\">leer</span>": "<span class=\"marker m-leer\">boş</span>", "<p class=\"muted\" style=\"margin:8px 0 0\">… und ": "<p class=\"muted\" style=\"margin:8px 0 0\">… ve ", " weitere. Mit der Suche eingrenzen.</p>": " kart daha. Aramayla daraltın.</p>", "Der Unterschied wird als Korrekturbuchung eingetragen — die alten Buchungen bleiben stehen.": "Fark bir düzeltme kaydı olarak yazılır — eski kayıtlar durur.", "Kein gültiger Betrag.": "Geçerli bir tutar değil.", "Das ist schon das Guthaben.": "Bakiye zaten bu.", "Von ": "", " auf ": " → ", " als Korrektur.": " düzeltme olarak.", "Erst einen Betrag eintragen": "Önce bir tutar girin", "Das ist schon das Guthaben": "Bakiye zaten bu", "Guthaben von ": "Bakiye: ", " von ": " · ", " setzen (": " olarak ayarlansın mı (", "Korrigiert auf ": "Düzeltildi: ", "Das lässt die Karte mit ": "Bu işlemle kartın bakiyesi ", " € im Minus zurück. Trotzdem?": " € olur (eksi). Yine de yapılsın mı?", "Zurückgenommen": "Geri alındı", " € von ": " € · Kart ", " auszahlen und die Karte auf 0 setzen?": " — nakit ödensin ve kart 0'a ayarlansın mı?", " € ausgezahlt": " € ödendi", "Von und Bis als Kartennummer eintragen, zum Beispiel 1 und 20.": "İlk ve son kart numarasını girin, örneğin 1 ve 20.", "Von und Bis müssen vom selben Gerät sein (gleicher Buchstabe).": "İlk ve son kart aynı cihazdan olmalı (aynı harf).", "Bis liegt vor Von.": "Son numara ilkten önce.", "Höchstens 1000 Karten auf einmal.": "Tek seferde en fazla 1000 kart.", "In diesem Bereich gibt es noch keine Karten. Erst drucken (oder abgleichen).": "Bu aralıkta henüz kart yok. Önce yazdırın (veya eşitleyin).", "Betrag je Karte fehlt.": "Kart başına tutar eksik.", " bis ": " – ", " je ": " · kart başına ", "Nummer": "numara", "Nummern": "numara", " im Bereich ohne Karte, ": " aralıkta kartsız, ", "sie wird": "", "sie werden": "", " übersprungen": " atlanır", "Karte hat": "kart", "Karten haben": "kart", " schon Guthaben, es kommt dazu": " zaten bakiyeli, üstüne eklenir", "Erst ausfüllen": "Önce doldurun", " mit je ": ", kart başına ", " aufladen?\n": " yüklensin mi?\n", "Zusammen ": "Toplam ", " schon Guthaben; der Betrag kommt dazu.": " zaten bakiyeli; tutar üstüne eklenir.", " aufgeladen · ": " yüklendi · ", "<div class=\"feldTitel\">Zuletzt aufgeladene Stapel</div>": "<div class=\"feldTitel\">Son yüklenen gruplar</div>", " je Karte</span>": " kart başına</span>", "<span class=\"muted\" style=\"margin-left:auto\">zurückgenommen</span>": "<span class=\"muted\" style=\"margin-left:auto\">geri alındı</span>", "Aufladung": "yükleme", "Aufladungen": "yükleme", " dieses Stapels zurücknehmen?": " (bu grup) geri alınsın mı?", "Karte wäre": "kart", "Karten wären": "kart", " danach im Minus, weil schon abgebucht wurde.": " sonra eksi bakiyede kalır, çünkü zaten harcama yapıldı.", "Stapel zurückgenommen": "Grup geri alındı", "Das ist keine gültige ZIP-/Excel-Datei.": "Bu geçerli bir ZIP/Excel dosyası değil.", "Die Datei ist auf eine Art gepackt, die hier nicht gelesen wird.": "Dosya burada okunamayan bir yöntemle sıkıştırılmış.", "Dieser Browser kann solche Dateien nicht entpacken. Bitte als CSV speichern oder einen neueren Browser nehmen.": "Bu tarayıcı bu tür dosyaları açamıyor. Lütfen CSV olarak kaydedin veya daha yeni bir tarayıcı kullanın.", "Blatt ": "Sayfa ", "Das ist keine Excel-Datei.": "Bu bir Excel dosyası değil.", "Die Datei ist mit einem Kennwort geschützt. In Excel das Kennwort entfernen oder als CSV speichern.": "Dosya parolayla korunuyor. Excel'de parolayı kaldırın veya CSV olarak kaydedin.", "Das ist eine Excel-Datei vor Version 97. In Excel öffnen und als .xlsx oder CSV speichern.": "Bu, 97 öncesi bir Excel dosyası. Excel'de açıp .xlsx veya CSV olarak kaydedin.", "In dieser Datei steckt keine Excel-Tabelle.": "Bu dosyada Excel tablosu yok.", "Das ist keine lesbare Excel-Datei.": "Bu okunabilir bir Excel dosyası değil.", "Tabelle ": "Tablo ", "Liste": "Liste", "Das ist das binäre Excel-Format (.xlsb). In Excel als .xlsx oder CSV speichern.": "Bu ikili Excel biçimi (.xlsb). Excel'de .xlsx veya CSV olarak kaydedin.", "Das ist ein Word-Dokument, keine Tabelle.": "Bu bir Word belgesi, tablo değil.", "In dieser ZIP-Datei steckt keine Tabelle.": "Bu ZIP dosyasında tablo yok.", "Das ist ein PDF, keine Tabelle. Bitte die Liste als Excel oder CSV exportieren.": "Bu bir PDF, tablo değil. Lütfen listeyi Excel veya CSV olarak dışa aktarın.", "In der Datei steht nichts.": "Dosyada hiçbir şey yok.", "Die Datei konnte nicht gelesen werden: ": "Dosya okunamadı: ", "Die Zwischenablage ist leer.": "Pano boş.", "Zwischenablage": "Pano", "Spalte ": "Sütun ", " Zeilen)</option>": " satır)</option>", "Gast": "misafir", "Gäste": "misafir", "<div class=\"feldTitel\" style=\"margin-top:8px\">So steht es auf den ersten Karten</div>": "<div class=\"feldTitel\" style=\"margin-top:8px\">İlk kartlarda böyle görünür</div>", "<span class=\"muted\">Noch nichts angekreuzt — ohne Häkchen gibt es nichts zu drucken.</span>": "<span class=\"muted\">Henüz bir şey işaretlenmedi — işaret olmadan yazdırılacak bir şey yok.</span>", "Name gespeichert": "İsim kaydedildi", "Name entfernt": "İsim kaldırıldı", "Angaben gespeichert": "Bilgiler kaydedildi", "Angaben entfernt": "Bilgiler kaldırıldı", "Keine der Karten kann gelöscht werden: sie haben noch Guthaben.": "Hiçbir kart silinemez: hâlâ bakiyeleri var.", "In diesem Bereich gibt es keine Karten zu löschen.": "Bu aralıkta silinecek kart yok.", "Karte wird": "kart", "Karten werden": "kart", " gelöscht (": " silinecek (", " noch Guthaben und ": " hâlâ bakiyeli ve ", " ohne Karte": " kartsız", "Erst Von und Bis eintragen": "Önce ilk ve son numarayı girin", " löschen?\n\nDie Buchungen bleiben im Abschluss ": " silinsin mi?\n\nKayıtlar kapanış raporunda ", "stehen. Das lässt sich nicht rückgängig machen.": "kalır. Bu işlem geri alınamaz.", " stehen.": ".", " gelöscht": " silindi", "Es gibt keine unbenutzten Karten": "Kullanılmayan kart yok", ", mit denen noch nie gebucht wurde, löschen?\n\n": ", hiç işlem yapılmamış, silinsin mi?\n\n", "Das lässt sich nicht rückgängig machen.": "Bu işlem geri alınamaz.", "Erst das Guthaben auszahlen": "Önce bakiyeyi ödeyin", " löschen?\n\nDie Karte gilt danach nicht mehr. ": " silinsin mi?\n\nKart artık geçerli olmaz. ", "Ihre Buchungen bleiben im Abschluss stehen.": "Kayıtları kapanış raporunda kalır.", "Guthabenkarte": "Bakiye Kartı", "<div class=\"art\">Guthabenkarte</div>": "<div class=\"art\">Bakiye Kartı</div>", "Karte mit Namen": "kart (isimli)", "Karten mit Namen": "kart (isimli)", "Nichts angekreuzt oder die Liste ist leer": "Hiçbir şey işaretlenmedi veya liste boş", "Anzahl zwischen 1 und 1000": "Adet 1 ile 1000 arasında olmalı", "Erst ein Gerätezeichen eintragen": "Önce bir cihaz harfi girin", "<div class=\"titel\">Abschluss Guthabenkarten": "<div class=\"titel\">Bakiye kartları kapanış raporu", "<div>Stand ": "<div>Tarih: ", "<table><tr><th>Aufgebucht</th><th class=\"n\">": "<table><tr><th>Yüklenen</th><th class=\"n\">", "<tr><td>Abgebucht (verkauft)</td><td class=\"n\">": "<tr><td>Harcanan (satış)</td><td class=\"n\">", "<tr><td>Abgebucht als Trinkgeld</td><td class=\"n\">": "<tr><td>Bahşiş olarak düşülen</td><td class=\"n\">", "<tr><td>Ausgezahlt, zurückgenommen oder korrigiert</td><td class=\"n\">": "<tr><td>Ödenen, geri alınan veya düzeltilen</td><td class=\"n\">", "<tr><td><b>Noch auf Karten</b></td><td class=\"n\"><b>": "<tr><td><b>Kartlarda kalan</b></td><td class=\"n\"><b>", "<tr><td>davon Guthaben auf Karten</td><td class=\"n\">": "<tr><td>bunun kartlardaki bakiyesi</td><td class=\"n\">", "<tr><td>davon offen (angeschrieben, noch zu zahlen)</td><td class=\"n\">−": "<tr><td>bunun açık borcu (veresiye, ödenecek)</td><td class=\"n\">−", "<div class=\"titel\" style=\"margin-top:8mm\">Je Bedienung</div>": "<div class=\"titel\" style=\"margin-top:8mm\">Personel başına</div>", "<table><tr><th>Name / Gerät</th><th class=\"n\">Buchungen</th><th class=\"n\">aufgebucht</th><th class=\"n\">abgebucht</th><th class=\"n\">Trinkgeld</th></tr>": "<table><tr><th>Ad / Cihaz</th><th class=\"n\">Kayıt</th><th class=\"n\">yüklenen</th><th class=\"n\">harcanan</th><th class=\"n\">Bahşiş</th></tr>", "<div class=\"titel\" style=\"margin-top:8mm\">Offen — noch zu zahlen (": "<div class=\"titel\" style=\"margin-top:8mm\">Açık — ödenecek (", ", zusammen ": ", toplam ", "<table><tr><th>Karte</th><th>Name</th><th class=\"n\">offen</th></tr>": "<table><tr><th>Kart</th><th>Ad</th><th class=\"n\">açık</th></tr>", "<div class=\"titel\" style=\"margin-top:8mm\">Karten mit Restbetrag (": "<div class=\"titel\" style=\"margin-top:8mm\">Kalan bakiyeli kartlar (", "<table><tr><th>Karte</th><th class=\"n\">Guthaben</th></tr>": "<table><tr><th>Kart</th><th class=\"n\">Bakiye</th></tr>", "<p>Keine.</p>": "<p>Yok.</p>", "<div class=\"fuss\">Guthabenkasse ": "<div class=\"fuss\">Bakiye Kasası ", " · Gerät ": " · Cihaz ", "Die Ablage enthält etwas, das keine Guthabenkasse ist.": "Depoda Bakiye Kasası'na ait olmayan bir şey var.", "Noch nicht abgeglichen.": "Henüz eşitlenmedi.", "Die Ablage schickt eine Anmeldeseite statt einer Antwort. In Apps Script ": "Depo yanıt yerine bir oturum açma sayfası gönderiyor. Apps Script'te ", "unter Bereitstellen → Bereitstellungen verwalten muss bei ": "Dağıt → Dağıtımları yönet bölümünde ", "„Wer hat Zugriff“ ausdrücklich Jeder stehen — nicht ": "„Erişimi olanlar“ için açıkça Herkes seçilmeli — şu değil: ", "„Jeder mit einem Google-Konto“.": "„Google hesabı olan herkes“.", "Die Ablage antwortet mit einer Internetseite statt mit Daten": "Depo veri yerine bir internet sayfasıyla yanıt veriyor", " (Status ": " (Durum ", "gehört nicht zu einer bereitgestellten Web-App, oder sie endet nicht ": "dağıtılmış bir web uygulamasına ait değil veya sonu ", "auf /exec. Anfang der Antwort: ": "/exec ile bitmiyor. Yanıtın başı: ", "Die Ablage antwortet leer": "Depo boş yanıt veriyor", "Unverständliche Antwort der Ablage": "Depodan anlaşılmayan yanıt", "Die Ablage ist nicht erreichbar (": "Depoya ulaşılamıyor (", "). Entweder fehlt ": "). Ya ", "das Netz, oder die Adresse stimmt nicht. Sie muss mit ": "ağ yok ya da adres yanlış. Adres ", "https://script.google.com/ beginnen und auf /exec enden.": "https://script.google.com/ ile başlayıp /exec ile bitmeli.", "Die Ablage antwortet mit Status ": "Depo şu durumla yanıt veriyor: ", "Frage die Ablage …": "Depoya soruluyor …", "Status ": "Durum ", "ohne Typ": "tür yok", " ms": " ms", "Antwort: ": "Yanıt: ", "Die Ablage antwortet richtig. Stand ": "Depo doğru yanıt veriyor. Durum: ", "Daten vorhanden": "veri var", "noch leer": "henüz boş", "Die Ablage antwortet, lehnt aber ab: ": "Depo yanıt veriyor ama reddediyor: ", "<b>Keine Antwort: ": "<b>Yanıt yok: ", "<div style=\"margin-top:8px\">Das kommt vor, wenn kein Netz da ist, die Adresse ": "<div style=\"margin-top:8px\">Bu, ağ yoksa, adres yanlışsa ", "nicht stimmt, oder der Browser den Aufruf nicht zulässt.</div>": "veya tarayıcı isteğe izin vermiyorsa olur.</div>", "Gleicht ab …": "Eşitleniyor …", "Die Ablage war mehrfach in Benutzung. Nächster Versuch später.": "Depo birden çok kez kullanımdaydı. Sonraki deneme daha sonra.", "Neubeginn von einem anderen Gerät übernommen": "Başka bir cihazdaki yeni başlangıç alındı", "Neubeginn von einem anderen Gerät": "başka cihazdan yeni başlangıç", "Buchung": "kayıt", "Buchungen": "kayıt", "Name": "isim", "Namen": "isim", "Löschvermerk": "silme notu", "Löschvermerke": "silme notu", " übernommen": " alındı", "Abgeglichen ": "Eşitlendi ", " · nichts Neues": " · yeni bir şey yok", "Nicht abgeglichen: ": "Eşitlenemedi: ", " · Die Kasse arbeitet weiter, ": " · Kasa çalışmaya devam eder, ", "der nächste Versuch folgt.": "bir sonraki deneme yapılır.", "Das ist keine Sicherung der Guthabenkasse": "Bu, Bakiye Kasası'nın bir yedeği değil", "Betrieb auf Null setzen?\n\n": "Her şey sıfırlansın mı?\n\n", "Gelöscht werden — auf ALLEN Geräten — ": "Silinecekler — TÜM cihazlarda — ", " und ": " ve ", ", dazu alle Summen. Noch auf den Karten liegen ": ", ayrıca tüm toplamlar. Kartlarda şu an duran: ", "Bleiben: Gerätezeichen, Rolle, Anlass, Adresse und Zugangswort der Ablage.\n\n": "Kalacaklar: cihaz harfi, rol, etkinlik, depo adresi ve erişim sözcüğü.\n\n", "Die Kartennummern fangen wieder bei 1 an.": "Kart numaraları yeniden 1'den başlar.", "Die Kartennummern zählen weiter, damit eine alte Karte nicht zufällig wieder gilt.": "Eski bir kart yanlışlıkla yeniden geçerli olmasın diye kart numaraları devam eder.", "\n\nVorher sollten alle Geräte einmal abgeglichen sein: was ein Gerät später ohne Netz ": "\n\n\n\nÖnce tüm cihazlar bir kez eşitlenmiş olmalı: bir cihazın sonradan ağsız yaptığı ", "bucht, geht beim nächsten Abgleich verloren. Eine Sicherung wird vorher automatisch gespeichert.": "kayıtlar bir sonraki eşitlemede kaybolur. Önceden otomatik olarak bir yedek kaydedilir.", "Zur Bestätigung das Wort NULL eintippen:": "Onay için NULL sözcüğünü yazın:", "Nicht zurückgesetzt": "Sıfırlanmadı", "Auf Null gesetzt": "Sıfırlandı", "Eine neue Fassung ist da: ": "Yeni bir sürüm var: ", " (hier läuft ": " (burada çalışan: ", "Fassung ": "Sürüm ", " · neuere ": " · daha yenisi ", " liegt bereit": " hazır", "Das geht nur über die Internetadresse": "Bu yalnızca internet adresi üzerinden olur", "Neue Fassung ": "Yeni sürüm ", " gefunden": " bulundu", "Das ist die neueste Fassung": "Bu en yeni sürüm", "Nachsehen nicht möglich — kein Netz?": "Kontrol edilemedi — ağ yok mu?", "Erst die Adresse eintragen": "Önce adresi girin", "abbuchen": "harcansın", "aufbuchen": "yüklensin", "bleibt": "silinmez", "bleiben": "silinmez"};
+var TRS={"Guthabenkasse": "Bakiye Kasası", "Aufbuchen": "Yükleme", "Abbuchen": "Harcama", "Karten": "Kartlar", "Einstellungen": "Ayarlar", "Optionen": "Ayarlar", "Jetzt laden": "Şimdi yükle", "Betrag aufbuchen": "Yüklenecek tutar", "Leeren": "Temizle", "Scannen": "Tara", "Kamera": "Kamera", "Licht": "Işık", "Betrag ändern": "Tutarı değiştir", "Bereit": "Hazır", "Betrag eintippen, dann die Karte vor die Kamera halten.": "Tutarı girin, sonra kartı kameraya tutun.", "Nächste Karte": "Sıradaki kart", "Buchen": "Yükle", "Betrag abbuchen": "Harcanacak tutar", "Anschreiben": "Veresiye", "Aufrunden": "Yukarı yuvarla", "Nächster Gast": "Sıradaki misafir", "Übersicht": "Özet", "Abschluss drucken": "Kapanış raporu", "aufgebucht": "yüklenen", "abgebucht": "harcanan", "noch auf Karten": "kartlarda kalan", "Neue Karten drucken": "Yeni kart yazdır", "Gästeliste hierher ziehen": "Misafir listesini buraya sürükleyin", "Excel (.xlsx, .xls), OpenDocument (.ods), CSV oder Text — jede Zeile wird eine Karte. Oder Zellen aus Excel kopieren und hier einfügen (Strg+V).": "Excel (.xlsx, .xls), OpenDocument (.ods), CSV veya metin — her satır bir kart olur. Ya da Excel'den hücreleri kopyalayıp buraya yapıştırın (Ctrl+V).", "Datei wählen": "Dosya seç", "Liste entfernen": "Listeyi kaldır", "Tabellenblatt": "Sayfa", "Erste Zeile ist die Überschrift": "İlk satır başlıktır", "Was soll auf der Karte stehen? Häkchen setzen:": "Kartta ne yazsın? İşaretleyin:", "Anzahl": "Adet", "Karten drucken": "Kartları yazdır", "Oder Namen eintippen — ein Name je Zeile": "Ya da isimleri yazın — her satıra bir isim", "Die Karten tragen nur eine Nummer, keinen Betrag — das Guthaben steht in der Ablage. Eine Karte ist 85 × 54 mm, zwei nebeneinander, acht auf einem Blatt. Ausschneiden, einlaminieren, ausgeben.": "Kartlarda yalnızca bir numara vardır, tutar yoktur — bakiye depoda durur. Bir kart 85 × 54 mm'dir, yan yana iki, bir sayfada sekiz kart çıkar. Kesin, laminasyonlayın, dağıtın.", "Karten vorab aufladen": "Kartlara önceden yükle", "Von Karte": "İlk kart", "Bis Karte": "Son kart", "Je Karte": "Kart başına", "Nur die Zahl genügt: <span class=\"mono\">1</span> und <span class=\"mono\">20</span> heißt: die Karten 1 bis 20 dieses Geräts. Danach den nächsten Stapel mit anderem Betrag. Jede Karte bekommt eine eigene Buchung und lässt sich einzeln zurücknehmen.": "Yalnızca sayı yeterli: <span class=\"mono\">1</span> ve <span class=\"mono\">20</span>, bu cihazın 1'den 20'ye kadar kartları demektir. Sonra farklı tutarla sıradaki grubu girin. Her karta ayrı bir kayıt yazılır ve tek tek geri alınabilir.", "Karten löschen": "Kartları sil", "Löschen": "Sil", "Alle unbenutzten": "Kullanılmayanların hepsi", "Gelöscht werden nur Karten ohne Guthaben, und sie sind danach nirgends mehr zu sehen. Ihre Buchungen bleiben im Abschluss mitgezählt, die Nummer wird nicht neu vergeben. Eine einzelne Karte löschen Sie in der Liste unten: Nummer antippen.": "Yalnızca bakiyesi olmayan kartlar silinir ve sonra hiçbir yerde görünmez. Kayıtları kapanış raporunda sayılmaya devam eder, numara yeniden verilmez. Tek bir kartı aşağıdaki listede silersiniz: numaraya dokunun.", "Alle Karten": "Tüm kartlar", "Noch keine Karten. Oben neue drucken.": "Henüz kart yok. Yukarıdan yeni kart yazdırın.", "Dieses Gerät": "Bu cihaz", "Wofür dieses Gerät da ist": "Bu cihaz ne için kullanılıyor", "Beides": "İkisi de", "Nur Aufbuchen": "Yalnızca yükleme", "Nur Abbuchen": "Yalnızca harcama", "Ein Gerät mit nur einer Aufgabe zeigt auch nur diese. Ein Schutz ist das nicht — wer will, schaltet wieder um.": "Tek görevli bir cihaz yalnızca onu gösterir. Bu bir koruma değildir — isteyen yeniden değiştirir.", "Gerätezeichen": "Cihaz harfi", "Ein Buchstabe. Er steht in der Kartennummer und bei jeder Buchung — zwei Geräte brauchen zwei verschiedene.": "Tek harf. Kart numarasında ve her kayıtta yer alır — iki cihazın farklı harfleri olmalı.", "Name der Bedienung (freiwillig)": "Personel adı (isteğe bağlı)", "Steht bei jeder Buchung dieses Geräts und im Abschluss statt „Gerät B“ — so rechnet jeder Kellner, auch sein Trinkgeld, mit eigenem Namen ab. Bei der Übergabe an einen anderen einfach den Namen ändern; schon gebuchte Buchungen behalten den alten.": "Bu cihazın her kaydında ve kapanış raporunda „Cihaz B“ yerine yazılır — böylece her garson bahşişiyle birlikte kendi adıyla hesap verir. Cihaz başkasına geçince yalnızca adı değiştirin; daha önce yapılmış kayıtlar eski adı korur.", "Licht beim Scannen (Blitz der Kamera)": "Taramada ışık (kamera flaşı)", "Automatisch": "Otomatik", "Aus": "Kapalı", "Wird beim ersten Scannen geprüft.": "İlk taramada denetlenir.", "Geht an, solange die Kamera sucht, und aus, sobald gebucht ist. Das gibt es nur, wo der Browser den Blitz freigibt (Chrome auf Android); auf dem iPhone nicht.": "Kamera ararken yanar, kayıt yapılınca söner. Bu yalnızca tarayıcının flaşa izin verdiği yerde çalışır (Android'de Chrome); iPhone'da yoktur.", "Ton": "Ses", "An": "Açık", "Trinkgeld-Tasten nach dem Abbuchen": "Harcamadan sonra bahşiş tuşları", "Aufrunden auf den vollen Euro": "Tam avroya yukarı yuvarlama", "Anschreiben: höchstens offen je Karte (Euro, 0 = aus)": "Veresiye: kart başına en çok açık tutar (avro, 0 = kapalı)", "Mit dem Knopf „Anschreiben“ am Abbuchen-Schirm darf eine Karte ins Minus, bis zu dieser Grenze — und nur, wenn auf der Karte ein <b>Name</b> steht (Karten → Karte antippen). Beim Gehen wird der offene Betrag aufgebucht.": "Harcama ekranındaki „Veresiye“ düğmesiyle bir kart bu sınıra kadar eksiye düşebilir — ve yalnızca kartta bir <b>isim</b> varsa (Kartlar → karta dokunun). Giderken açık tutar karta yüklenir.", "Trinkgeld-Tasten rechnen in": "Bahşiş tuşları şunu esas alır", "Prozent": "Yüzde", "Euro": "Avro", "Prozent vom Verkauf (mit Leerzeichen getrennt)": "Satışın yüzdesi (boşlukla ayrılmış)", "Verkauf plus Trinkgeld wird auf 0,50 € genau gerundet, der Gast zahlt also am Ende …,00 oder …,50. Bei 4,70 € und 10 %: 5,17 € → 5,00 €, Trinkgeld 0,30 €. Tasten, die auf 0 runden, entfallen.": "Satış artı bahşiş 0,50 €'ya yuvarlanır; misafir sonunda …,00 veya …,50 öder. 4,70 € ve %10'da: 5,17 € → 5,00 €, bahşiş 0,30 €. 0'a yuvarlanan tuşlar görünmez.", "Feste Euro-Tasten (Euro, mit Leerzeichen getrennt)": "Sabit avro tuşları (avro, boşlukla ayrılmış)", "Trinkgeld wird von derselben Karte abgebucht, als eigene Buchung, und im Abschluss getrennt ausgewiesen. „Aufrunden“ kann auch am Abbuchen-Schirm je Gast ein- und ausgeschaltet werden.": "Bahşiş aynı karttan ayrı bir kayıt olarak düşülür ve kapanış raporunda ayrı gösterilir. „Yukarı yuvarla“ harcama ekranında her misafir için açılıp kapatılabilir.", "Anlass": "Etkinlik", "Name (steht auf den Karten)": "Ad (kartlarda yazar)", "Verein": "Dernek", "Zusatz (freiwillig)": "Ek bilgi (isteğe bağlı)", "Ablage": "Depo", "Damit beide Geräte dasselbe Guthaben sehen, gleichen sie sich über eine gemeinsame Ablage ab. Einrichtung steht oben in der Datei <span class=\"mono\">ablage.gs</span>. Adresse und Zugangswort gehören nur auf die Geräte des Vereins.": "İki cihazın aynı bakiyeyi görmesi için ortak bir depo üzerinden eşitlenirler. Kurulum <span class=\"mono\">ablage.gs</span> dosyasının başında anlatılır. Adres ve erişim sözcüğü yalnızca derneğin cihazlarında bulunmalıdır.", "Adresse": "Adres", "Zugangswort": "Erişim sözcüğü", "Abgleich": "Eşitleme", "nur von Hand": "yalnızca elle", "jede Minute": "her dakika", "alle 15 Sekunden": "her 15 saniyede", "Jetzt abgleichen": "Şimdi eşitle", "Verbindung prüfen": "Bağlantıyı dene", "Keine Ablage eingetragen.": "Depo girilmemiş.", "Fassung": "Sürüm", "Nach neuer Fassung suchen": "Yeni sürümü ara", "Eine Verknüpfung auf dem Startbildschirm zeigt gern die zuletzt gespeicherte Seite. Die Kasse fragt deshalb beim Öffnen und beim Zurückkehren selbst nach, ob eine neuere Fassung bereitliegt, und meldet es oben. Das geht nur mit Netz und nur über die Internetadresse, nicht aus einer geöffneten Datei.": "Ana ekrandaki kısayol çoğu zaman son kaydedilen sayfayı gösterir. Bu yüzden kasa açılırken ve geri dönülürken yeni bir sürüm olup olmadığını kendisi sorar ve en üstte bildirir. Bu yalnızca ağ varken ve internet adresi üzerinden çalışır, açılmış bir dosyadan değil.", "Sicherung und Neubeginn": "Yedek ve yeni başlangıç", "Sicherung speichern": "Yedeği kaydet", "Sicherung einspielen": "Yedeği geri yükle", "Betrieb auf Null setzen": "Her şeyi sıfırla", "Für ein neues Fest: alle Karten, alle Buchungen, alle Summen werden gelöscht — <b>auf allen Geräten</b>, auch in der Ablage. Es bleiben das Gerät (Zeichen, Rolle), der Anlass und der Zugang zur Ablage. Vorher wird automatisch eine Sicherung gespeichert.": "Yeni bir etkinlik için: tüm kartlar, tüm kayıtlar, tüm toplamlar silinir — <b>tüm cihazlarda</b>, depoda da. Cihaz (harf, rol), etkinlik ve depo erişimi kalır. Önceden otomatik olarak bir yedek kaydedilir.", "Kartennummern wieder bei 1 beginnen": "Kart numaraları yeniden 1'den başlasın"};
+var TRA={"Betrag aufbuchen": "Yüklenecek tutar", "Letzte Ziffer löschen": "Son rakamı sil", "Code eintippen oder scannen": "Kodu yazın veya tarayın", "Betrag abbuchen": "Harcanacak tutar", "Anna Müller\nTisch 5\nFamilie Petersen": "Ayşe Yılmaz\nMasa 5\nDemir Ailesi", "Nummer suchen …": "Numara ara …", "zum Beispiel Anna": "örneğin Ayşe", "Sommerfest": "Yaz Şenliği", "Heimatpflege auf Föhr": "Föhr'de yöre kültürü"};
+var TRT={"Fering Vereinsmanager · Guthabenkasse": "Fering Vereinsmanager · Bakiye Kasası", "auf allen Karten": "tüm kartlarda", "Erste Zeile ist die Überschrift": "İlk satır başlıktır", "Sicherung einspielen": "Yedeği geri yükle", "Kartennummern wieder bei 1 beginnen": "Kart numaraları yeniden 1'den başlasın"};
+var NAMEN_TR={auf:"yüklendi",ab:"harcandı",storno:"geri alındı",auszahlung:"ödendi",korrektur:"düzeltildi",trinkgeld:"Bahşiş"};
+function istTR(){ return typeof db!=="undefined" && !!db && db.sprache==="tr"; }
+function _t(s){
+  if(istTR()){ var v=TRJ[s]; if(v!==undefined) return v; }
+  return s;
+}
+function nrmSp(s){ return String(s).replace(/\s+/g," ").trim(); }
+var SP_INLINE={B:1,I:1,SPAN:1,BR:1,U:1,EM:1,STRONG:1,SMALL:1,CODE:1,KBD:1,A:1};
+function spBlatt(el){
+  for(var i=0;i<el.children.length;i++){
+    var c=el.children[i];
+    if(!SP_INLINE[c.tagName] || c.id || !spBlatt(c)) return false;
+  }
+  return true;
+}
+function spAttr(el,tr){
+  ["placeholder","aria-label","title"].forEach(function(a){
+    if(!el.hasAttribute(a)) return;
+    var cur=el.getAttribute(a);
+    el.__spa=el.__spa||{};
+    if(tr){
+      var v=TRA[cur];
+      if(v!==undefined && el.__spa[a]===undefined){ el.__spa[a]=cur; el.setAttribute(a,v); }
+    } else if(el.__spa[a]!==undefined){ el.setAttribute(a,el.__spa[a]); delete el.__spa[a]; }
+  });
+}
+function spKnoten(el,tr){
+  var tag=el.tagName;
+  if(tag==="SCRIPT"||tag==="STYLE"||tag==="CANVAS"||tag==="svg"||tag==="SVG"||el.id==="druck"||el.id==="meldung") return;
+  spAttr(el,tr);
+  var hatText=false;
+  for(var i=0;i<el.childNodes.length;i++) if(el.childNodes[i].nodeType===3 && el.childNodes[i].textContent.trim()) hatText=true;
+  if(el.children.length===0 ? !!el.textContent.trim() : (hatText && spBlatt(el))){
+    var k=nrmSp(el.innerHTML);
+    if(tr){
+      var v=TRS[k];
+      if(v!==undefined && el.__spd===undefined){ el.__spd=el.innerHTML; el.__spk=nrmSp(v); el.innerHTML=v; }
+    } else if(el.__spd!==undefined && nrmSp(el.innerHTML)===el.__spk){ el.innerHTML=el.__spd; delete el.__spd; delete el.__spk; }
+    else if(el.__spd!==undefined){ delete el.__spd; delete el.__spk; }
+    return;
+  }
+  for(var j=0;j<el.childNodes.length;j++){
+    var n=el.childNodes[j];
+    if(n.nodeType===3 && n.textContent.trim()){
+      var kt=nrmSp(n.textContent);
+      if(tr){
+        var vt=TRT[kt];
+        if(vt!==undefined && n.__spd===undefined){ n.__spd=n.textContent; n.__spk=vt; n.textContent=vt; }
+      } else if(n.__spd!==undefined && nrmSp(n.textContent)===nrmSp(n.__spk)){ n.textContent=n.__spd; delete n.__spd; }
+    }
+  }
+  for(var m=0;m<el.children.length;m++) spKnoten(el.children[m],tr);
+}
+function uebersetzeSeite(){
+  var tr=istTR();
+  spKnoten(document.body,tr);
+  document.documentElement.lang=tr?"tr":"de";
+  document.title=tr?"Bakiye Kasası · Fering Vereinsmanager":"Guthabenkasse · Fering Vereinsmanager";
+}
 
 /* Zerlegt Text in Bytes; der QR-Code braucht sie. Auch Zeichen jenseits der
    Grundebene werden richtig zerlegt. */
@@ -1111,7 +1187,7 @@ function qrSvg(text){
 /* Die Nummer steht oben in der Kopfzeile und ist dazu da, zwei Geräte
    nebeneinanderlegen zu können. Bei jeder Änderung, die man merkt,
    weiterdrehen. */
-var VERSION = "0.8.0";
+var VERSION = "0.9.0";
 
 /* ============================== Daten ==============================
 
@@ -1196,8 +1272,8 @@ function sichern(){
 function speicherWarnung(){
   var w=$("speicherHinweis");
   w.classList.remove("hide");
-  w.textContent="Dieses Gerät speichert gerade nicht dauerhaft. Sicherung speichern, "+
-                "bevor die Seite geschlossen wird.";
+  w.textContent=_t("Dieses Gerät speichert gerade nicht dauerhaft. Sicherung speichern, ")+
+                _t("bevor die Seite geschlossen wird.");
 }
 
 /* ============================ Werkzeug ============================ */
@@ -1225,7 +1301,7 @@ function uhrzeit(ts){
 }
 function zeitpunkt(ts){
   var d=new Date(ts); if(isNaN(d.getTime())) return "";
-  return zwei(d.getDate())+"."+zwei(d.getMonth()+1)+"."+d.getFullYear()+", "+uhrzeit(ts)+" Uhr";
+  return zwei(d.getDate())+"."+zwei(d.getMonth()+1)+"."+d.getFullYear()+", "+uhrzeit(ts)+_t(" Uhr");
 }
 function melden(t){
   var e=$("meldung"); e.textContent=t; e.classList.add("an");
@@ -1423,9 +1499,9 @@ function urteilZwei(tab, abCent, abSub, restCent, restSub, offen){
   feld.className="befund b-zwei";
   feld.style.removeProperty("--urteilmass");
   feld.innerHTML=
-    '<div class="hz hz-ab"><div class="hz-t">Abgebucht</div><div class="hz-b">'+esc(euro(abCent))+
+    _t('<div class="hz hz-ab"><div class="hz-t">Abgebucht</div><div class="hz-b">')+esc(euro(abCent))+
       '</div><div class="hz-s">'+esc(abSub||"")+'</div></div>'+
-    '<div class="hz '+(offen?'hz-offen':'hz-rest')+'"><div class="hz-t">'+(offen?'Noch zu zahlen':'Noch auf der Karte')+'</div><div class="hz-b">'+esc(euro(restCent))+
+    '<div class="hz '+(offen?'hz-offen':'hz-rest')+'"><div class="hz-t">'+(offen?_t('Noch zu zahlen'):_t('Noch auf der Karte'))+'</div><div class="hz-b">'+esc(euro(restCent))+
       '</div><div class="hz-s">'+esc(restSub||"")+'</div></div>';
   zweiAnpassen(feld);
   feld.classList.remove("leuchtet"); void feld.offsetWidth;
@@ -1446,8 +1522,8 @@ function urteilBereit(tab, text){
   var feld=$(tab==="ab"?"befund2":"befund");
   feld.className="befund b-still";
   feld.style.removeProperty("--urteilmass");
-  feld.innerHTML='<div class="urteilblock"><div class="wort">Bereit</div>'+
-    '<div class="dazu">'+esc(text||"Betrag eintippen, dann die Karte vor die Kamera halten.")+
+  feld.innerHTML=_t('<div class="urteilblock"><div class="wort">Bereit</div>')+
+    '<div class="dazu">'+esc(text||_t("Betrag eintippen, dann die Karte vor die Kamera halten."))+
     '</div></div>';
 }
 
@@ -1497,9 +1573,9 @@ function schreibHinweisZeigen(){
   k.classList.toggle("hide", d<=0);
   if(d<=0) anschreibenAn=false;
   k.setAttribute("aria-pressed", anschreibenAn ? "true":"false");
-  k.textContent=anschreibenAn ? "Anschreiben: an" : "Anschreiben";
-  if(anschreibenAn){ h.textContent="Anschreiben: bis "+euro(d)+" offen, nur Karten mit Namen"; h.classList.remove("hide"); }
-  else h.classList.add("hide");
+  k.textContent=anschreibenAn ? _t("Anschreiben: an") : _t("Anschreiben");
+  if(anschreibenAn){ h.textContent=_t("Anschreiben: bis ")+euro(d)+_t(" offen, nur Karten mit Namen"); h.classList.remove("hide"); }
+  else { h.classList.add("hide"); h.textContent=""; }
 }
 
 /* Darf die Karte danach auf diesem Stand stehen? {ok} oder {ok:false, titel, text} */
@@ -1507,10 +1583,10 @@ function minusErlaubt(nr, ziel){
   if(ziel>=0) return {ok:true};
   var d=deckelCent();
   if(!anschreibenAn || d<=0) return {ok:false};
-  if(!kartenName(nr)) return {ok:false, titel:"Karte ohne Namen",
-    text:"Anschreiben geht nur mit Namen auf der Karte. Unter Karten die Karte antippen und den Namen eintragen. "+kartenCode(nr)};
-  if(ziel<-d) return {ok:false, titel:"Über der Grenze",
-    text:"Offen wären "+euro(-ziel)+", erlaubt sind höchstens "+euro(d)+" je Karte. "+kartenLabel(nr)};
+  if(!kartenName(nr)) return {ok:false, titel:_t("Karte ohne Namen"),
+    text:_t("Anschreiben geht nur mit Namen auf der Karte. Unter Karten die Karte antippen und den Namen eintragen. ")+kartenCode(nr)};
+  if(ziel<-d) return {ok:false, titel:_t("Über der Grenze"),
+    text:_t("Offen wären ")+euro(-ziel)+_t(", erlaubt sind höchstens ")+euro(d)+_t(" je Karte. ")+kartenLabel(nr)};
   return {ok:true};
 }
 
@@ -1520,8 +1596,8 @@ function begleichAnbieten(tab, nr){
   var s=saldo(nr);
   if(s>=0){ reihe.classList.add("hide"); return; }
   letzterVerkauf=null;
-  reihe.innerHTML='<span class="trinkTitel">Beim Gehen bezahlt?</span>'+
-    '<button data-begleichen="'+esc(nr)+'"><b>Begleichen</b><span>+ '+esc(euro(-s))+' aufbuchen</span></button>';
+  reihe.innerHTML=_t('<span class="trinkTitel">Beim Gehen bezahlt?</span>')+
+    '<button data-begleichen="'+esc(nr)+_t('"><b>Begleichen</b><span>+ ')+esc(euro(-s))+_t(' aufbuchen</span></button>');
   reihe.classList.remove("hide");
 }
 
@@ -1532,8 +1608,8 @@ function begleichen(nr){
   trinkVerbergen();
   $("begleichReihe").classList.add("hide");
   var tab=(document.getElementById("reiter-ab").classList.contains("hide")) ? "auf" : "ab";
-  if(tab==="ab") urteil("ab","b-auf","Beglichen","Karte "+kartenLabel(nr)+" · "+euro(-s)+" aufgebucht, Guthaben "+euro(saldo(nr)));
-  else urteil("auf","b-auf","Beglichen","Karte "+kartenLabel(nr)+" · "+euro(-s)+" aufgebucht, Guthaben "+euro(saldo(nr)));
+  if(tab==="ab") urteil("ab","b-auf",_t("Beglichen"),_t("Karte ")+kartenLabel(nr)+" · "+euro(-s)+_t(" aufgebucht, Guthaben ")+euro(saldo(nr)));
+  else urteil("auf","b-auf",_t("Beglichen"),_t("Karte ")+kartenLabel(nr)+" · "+euro(-s)+_t(" aufgebucht, Guthaben ")+euro(saldo(nr)));
   klingen("auf"); zeichneAlles(); wolkeVormerken();
 }
 
@@ -1544,12 +1620,12 @@ function bestandZeigen(tab, nr){
   var s=saldo(nr), bekannt=!!db.karten[nr];
   if(tab==="ab") trinkVerbergen();
   if(s<0){
-    urteil(tab,"b-offen","Offen "+euro(-s),"Karte "+kartenLabel(nr)+" · muss noch zahlen · nichts gebucht");
+    urteil(tab,"b-offen",_t("Offen ")+euro(-s),_t("Karte ")+kartenLabel(nr)+_t(" · muss noch zahlen · nichts gebucht"));
     begleichAnbieten(tab,nr);
   } else {
-    urteil(tab,"b-bestand","Bestand "+euro(s),
-         "Karte "+kartenLabel(nr)+" · nichts gebucht"+
-         (bekannt?"":" · hier nicht bekannt, vielleicht fehlt ein Abgleich"));
+    urteil(tab,"b-bestand",_t("Bestand ")+euro(s),
+         _t("Karte ")+kartenLabel(nr)+_t(" · nichts gebucht")+
+         (bekannt?"":_t(" · hier nicht bekannt, vielleicht fehlt ein Abgleich")));
     if(tab==="auf") $("begleichReihe").classList.add("hide");
   }
   if(istHandy()){ setPhase(tab,"ergebnis"); kameraAus(); }
@@ -1562,12 +1638,12 @@ function scanBeginnen(tab){
   /* Kein Betrag ist erlaubt: dann zeigt die Karte nur ihren Bestand. Ein
      unsinniger Betrag (Buchstaben, minus) wird weiter abgewiesen. */
   var leer=String($(tab==="ab"?"abBetrag":"aufBetrag").value||"").trim()==="";
-  if(!leer && !betragOhne(cent) && !(cent>0)){ melden("Erst den Betrag eintippen"); return; }
+  if(!leer && !betragOhne(cent) && !(cent>0)){ melden(_t("Erst den Betrag eintippen")); return; }
   klangWecken();
   if(istHandy()){
     setPhase(tab,"scan");
-    urteilBereit(tab,cent>0 ? "Karte vor die Kamera halten."
-                            : "Karte vor die Kamera halten — ohne Betrag zeigt sie ihren Bestand.");
+    urteilBereit(tab,cent>0 ? _t("Karte vor die Kamera halten.")
+                            : _t("Karte vor die Kamera halten — ohne Betrag zeigt sie ihren Bestand."));
     kameraAn(tab);
   } else {
     $(tab==="ab"?"abCode":"aufCode").focus();
@@ -1619,12 +1695,12 @@ function aufrundenTrinkgeld(cent){
 function rundeHinweisZeigen(){
   var h=$("rundeHinweis"), b=$("abRunde");
   b.setAttribute("aria-pressed", db.aufrunden ? "true":"false");
-  b.textContent=db.aufrunden ? "Aufrunden: an" : "Aufrunden";
+  b.textContent=db.aufrunden ? _t("Aufrunden: an") : _t("Aufrunden");
   var cent=centAus($("abBetrag").value), tip=cent>0 ? aufrundenTrinkgeld(cent) : 0;
   if(tip>0){
-    h.textContent="Aufgerundet auf "+euro(cent+tip)+" · Trinkgeld "+euro(tip);
+    h.textContent=_t("Aufgerundet auf ")+euro(cent+tip)+_t(" · Trinkgeld ")+euro(tip);
     h.classList.remove("hide");
-  } else h.classList.add("hide");
+  } else { h.classList.add("hide"); h.textContent=""; }
 }
 
 function trinkWerteListe(){
@@ -1675,17 +1751,17 @@ function trinkVerbergen(){
   letzterVerkauf=null;
   $("trinkReihe").classList.add("hide");
   $("trinkReihe").innerHTML="";
-  $("begleichReihe").classList.add("hide");
+  $("begleichReihe").classList.add("hide"); $("begleichReihe").innerHTML="";
 }
 
 /* Das zweiteilige Ergebnis beim Abbuchen. Oben steht alles, was abgebucht
    wurde, Trinkgeld eingeschlossen; unten, was noch auf der Karte ist. */
 function ergebnisAb(nr, cent, tip, notiz){
-  var sub=tip>0 ? "davon Trinkgeld "+euro(tip) : "";
+  var sub=tip>0 ? _t("davon Trinkgeld ")+euro(tip) : "";
   if(notiz) sub+=(sub?" · ":"")+notiz;
   var rest=saldo(nr);
-  if(rest<0) urteilZwei("ab", cent+tip, sub, -rest, "Karte "+kartenLabel(nr)+" · angeschrieben", true);
-  else urteilZwei("ab", cent+tip, sub, rest, "Karte "+kartenLabel(nr));
+  if(rest<0) urteilZwei("ab", cent+tip, sub, -rest, _t("Karte ")+kartenLabel(nr)+_t(" · angeschrieben"), true);
+  else urteilZwei("ab", cent+tip, sub, rest, _t("Karte ")+kartenLabel(nr));
 }
 
 function trinkAnbieten(nr, verkaufId, schonAufgerundet, cent){
@@ -1695,7 +1771,7 @@ function trinkAnbieten(nr, verkaufId, schonAufgerundet, cent){
   var opt=trinkOptionen(cent); if(!opt.length) return;
   letzterVerkauf={nr:nr, id:verkaufId, cent:cent};
   var rest=saldo(nr);
-  reihe.innerHTML='<span class="trinkTitel">Trinkgeld dazu?</span>'+
+  reihe.innerHTML=_t('<span class="trinkTitel">Trinkgeld dazu?</span>')+
     opt.map(function(o){
       return '<button data-trinkgeld="'+o.c+'"'+(o.c>rest?' disabled':'')+'><b>'+esc(o.kopf)+'</b>'+
         (o.zeile?'<span>'+esc(o.zeile)+'</span>':'')+'</button>';
@@ -1705,7 +1781,7 @@ function trinkAnbieten(nr, verkaufId, schonAufgerundet, cent){
 
 function trinkgeldBuchen(cent){
   var v=letzterVerkauf; if(!v || !(cent>0)) return;
-  if(saldo(v.nr)<cent){ melden("Dafür reicht das Guthaben nicht"); return; }
+  if(saldo(v.nr)<cent){ melden(_t("Dafür reicht das Guthaben nicht")); return; }
   var t=buchen(v.nr, -cent, "trinkgeld"); t.zu=v.id; sichern();
   trinkVerbergen();
   ergebnisAb(v.nr, v.cent, cent, "");
@@ -1717,12 +1793,12 @@ function trinkgeldBuchen(cent){
 function buche(tab, roh){
   var nr=kartenNummer(roh);
   if(!nr){
-    urteil(tab,"b-nein","Keine Guthabenkarte",
-           "Gelesen: "+String(roh||"").slice(0,40)+(String(roh||"").length>40?" …":""));
+    urteil(tab,"b-nein",_t("Keine Guthabenkarte"),
+           _t("Gelesen: ")+String(roh||"").slice(0,40)+(String(roh||"").length>40?" …":""));
     klingen("nein"); return;
   }
   if(istGeloescht(nr)){
-    urteil(tab,"b-nein","Karte gelöscht",kartenCode(nr)+" gilt nicht mehr. Eine neue Karte nehmen.");
+    urteil(tab,"b-nein",_t("Karte gelöscht"),kartenCode(nr)+_t(" gilt nicht mehr. Eine neue Karte nehmen."));
     klingen("nein"); return;
   }
   var feldId = tab==="ab" ? "abBetrag" : "aufBetrag";
@@ -1733,13 +1809,13 @@ function buche(tab, roh){
   if(isNaN(cent) && String($(feldId).value||"").trim()==="") cent=0;
   if(cent===0){ bestandZeigen(tab,nr); return; }
   if(!(cent>0)){
-    urteil(tab,"b-nein","Erst den Betrag","Mit dem Ziffernblock eintippen, dann scannen.");
+    urteil(tab,"b-nein",_t("Erst den Betrag"),_t("Mit dem Ziffernblock eintippen, dann scannen."));
     klingen("nein"); return;
   }
   /* Ein Tippfehler im Betrag kostet hier echtes Geld: aus 5,00 wird 500. Bis
      fünfhundert Euro geht es ohne Frage; darüber wird gefragt. */
-  if(cent>50000 && !confirm(euro(cent)+" "+(tab==="ab"?"abbuchen":"aufbuchen")+" — stimmt das?")){
-    urteil(tab,"b-nein","Nicht gebucht","Betrag nicht bestätigt."); klingen("nein"); return;
+  if(cent>50000 && !confirm(euro(cent)+" "+(tab==="ab"?_t("abbuchen"):_t("aufbuchen"))+_t(" — stimmt das?"))){
+    urteil(tab,"b-nein",_t("Nicht gebucht"),_t("Betrag nicht bestätigt.")); klingen("nein"); return;
   }
 
   /* Das Urteil zeigt, was jetzt auf der Karte steht — das ist, was der Gast
@@ -1748,8 +1824,8 @@ function buche(tab, roh){
     var neu=!db.karten[nr];
     buchen(nr, cent, "auf");
     if(istHandy()) setPhase("auf","ergebnis");
-    urteil("auf","b-auf","Guthaben "+euro(saldo(nr)),
-           "Aufgebucht "+euro(cent)+" · Karte "+kartenLabel(nr)+(neu?" · neu angelegt":""));
+    urteil("auf","b-auf",_t("Guthaben ")+euro(saldo(nr)),
+           _t("Aufgebucht ")+euro(cent)+_t(" · Karte ")+kartenLabel(nr)+(neu?_t(" · neu angelegt"):""));
     klingen("auf");
     /* Wie beim Abbuchen: der Betrag verschwindet nach der Buchung. Bliebe er
        stehen, buchte ein zweites Lesen derselben oder der nächsten Karte
@@ -1764,9 +1840,9 @@ function buche(tab, roh){
       urteil("ab","b-nein",erlaubt.titel,erlaubt.text); klingen("nein"); return;
     }
     if(vorher<cent && !erlaubt.ok){
-      urteil("ab","b-nein","Zu wenig Guthaben",
-             "Es fehlen "+euro(cent-vorher)+" · Guthaben "+euro(vorher)+" · Karte "+kartenLabel(nr)+
-             (db.karten[nr]?"":" · hier nicht bekannt, vielleicht fehlt ein Abgleich"));
+      urteil("ab","b-nein",_t("Zu wenig Guthaben"),
+             _t("Es fehlen ")+euro(cent-vorher)+_t(" · Guthaben ")+euro(vorher)+_t(" · Karte ")+kartenLabel(nr)+
+             (db.karten[nr]?"":_t(" · hier nicht bekannt, vielleicht fehlt ein Abgleich")));
       klingen("nein"); return;
     }
     /* Aufrunden: der Rest bis zum vollen Euro ist Trinkgeld, eine eigene
@@ -1782,7 +1858,7 @@ function buche(tab, roh){
        Schrift des Ergebnisses wird für den Rest gerechnet. */
     trinkAnbieten(nr, verkauf.id, tip>0, cent);
     if(saldo(nr)<0) begleichAnbieten("ab",nr);
-    ergebnisAb(nr, cent, tip, nichtGereicht?"zum Aufrunden reichte das Guthaben nicht":"");
+    ergebnisAb(nr, cent, tip, nichtGereicht?_t("zum Aufrunden reichte das Guthaben nicht"):"");
     klingen("ab");
     /* Der Betrag wird geleert: der nächste Gast kauft etwas anderes, und ein
        vergessener Betrag würde ihm das Falsche abziehen. */
@@ -1810,8 +1886,8 @@ function kameraUmschalten(tab){
   if(liest){ kameraAus(); return; }
   var id=kameraIds(tab), hin=$(id.hinweis); hin.classList.add("hide");
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-    hin.textContent="Diese Ansicht darf nicht auf die Kamera zugreifen. Das gelingt nur über "+
-                    "eine https-Adresse, nicht aus einer geöffneten Datei. Bis dahin den Code eintippen.";
+    hin.textContent=_t("Diese Ansicht darf nicht auf die Kamera zugreifen. Das gelingt nur über ")+
+                    _t("eine https-Adresse, nicht aus einer geöffneten Datei. Bis dahin den Code eintippen.");
     hin.classList.remove("hide"); return;
   }
   navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}}).then(function(s){
@@ -1821,12 +1897,12 @@ function kameraUmschalten(tab){
     v.muted=true;
     var lauf=v.play(); if(lauf&&lauf.catch) lauf.catch(function(){});
     leser = ("BarcodeDetector" in window) ? new window.BarcodeDetector({formats:["qr_code"]}) : null;
-    liest=true; $(id.knopf).textContent="Kamera aus";
+    liest=true; $(id.knopf).textContent=_t("Kamera aus");
     lichtNachStart();
     v.addEventListener("playing",function(){ if(liest) lichtNachStart(); },{once:true});
     takt();
   }).catch(function(e){
-    hin.textContent="Die Kamera ist nicht freigegeben ("+e.name+"). Den Code bitte eintippen.";
+    hin.textContent=_t("Die Kamera ist nicht freigegeben (")+e.name+_t("). Den Code bitte eintippen.");
     hin.classList.remove("hide");
   });
 }
@@ -1847,7 +1923,7 @@ function zeichneLicht(){
     var k=$(x[1]), da=liest && kameraTab===x[0] && lichtMoeglich();
     k.classList.toggle("hide",!da);
     k.setAttribute("aria-pressed",lichtAn?"true":"false");
-    k.textContent=lichtAn?"Licht an":"Licht";
+    k.textContent=lichtAn?_t("Licht an"):_t("Licht");
   });
 }
 function lichtSetzen(an){
@@ -1869,9 +1945,9 @@ var lichtStand="", lichtMeldung=false, lichtLauf=0;
 function lichtStandSetzen(w){ lichtStand=w; var k=$("lichtStand"); if(k) zeichneLichtStand(); }
 function zeichneLichtStand(){
   var k=$("lichtStand"); if(!k) return;
-  k.textContent = lichtStand==="ja" ? "Der Blitz dieses Geräts wird vom Browser freigegeben."
-    : lichtStand==="nein" ? "Der Browser gibt den Blitz dieses Geräts nicht frei (zuletzt geprüft)."
-    : "Wird beim ersten Scannen geprüft.";
+  k.textContent = lichtStand==="ja" ? _t("Der Blitz dieses Geräts wird vom Browser freigegeben.")
+    : lichtStand==="nein" ? _t("Der Browser gibt den Blitz dieses Geräts nicht frei (zuletzt geprüft).")
+    : _t("Wird beim ersten Scannen geprüft.");
 }
 
 /* Nach dem Start der Kamera nachsehen und das Licht bei Bedarf einschalten.
@@ -1891,7 +1967,7 @@ function lichtNachStart(){
     if(++versuche<20){ setTimeout(pruefen,250); return; }
     lichtStandSetzen("nein");
     /* Einmal je Sitzung sagen, woran es liegt — nicht bei jedem Scan. */
-    if(!lichtMeldung && db.licht!=="aus"){ lichtMeldung=true; melden("Der Browser gibt den Blitz dieses Geräts nicht frei"); }
+    if(!lichtMeldung && db.licht!=="aus"){ lichtMeldung=true; melden(_t("Der Browser gibt den Blitz dieses Geräts nicht frei")); }
   }
   pruefen();
 }
@@ -1902,7 +1978,7 @@ function kameraAus(){
   if(strom){ strom.getTracks().forEach(function(t){t.stop();}); strom=null; }
   ["auf","ab"].forEach(function(t){
     var id=kameraIds(t);
-    $(id.video).classList.add("hide"); $(id.knopf).textContent="Kamera";
+    $(id.video).classList.add("hide"); $(id.knopf).textContent=_t("Kamera");
   });
   zeichneLicht();
 }
@@ -1955,9 +2031,9 @@ var offeneKarte="";
 
 function zeichneKopf(){
   var a=db.anlass||{};
-  $("kopfAnlass").textContent=a.name||"Guthabenkasse";
-  var rolle={beide:"Aufbuchen und Abbuchen",auf:"Nur Aufbuchen",ab:"Nur Abbuchen"}[db.rolle];
-  $("kopfZusatz").textContent=(db.bediener ? db.bediener+" · " : "")+"Gerät "+(db.geraet||"?")+" · "+rolle;
+  $("kopfAnlass").textContent=a.name||_t("Guthabenkasse");
+  var rolle={beide:_t("Aufbuchen und Abbuchen"),auf:_t("Nur Aufbuchen"),ab:_t("Nur Abbuchen")}[db.rolle];
+  $("kopfZusatz").textContent=(db.bediener ? db.bediener+" · " : "")+_t("Gerät ")+(db.geraet||"?")+" · "+rolle;
   $("kopfSumme").textContent=eur(gesamt().rest)+" €";
 }
 
@@ -1967,10 +2043,10 @@ function zeichneZahlen(){
   var nKarten=aktiveKarten().length;
   var mitGuthaben=0, imMinus=0;
   for(var nr in s){ if(istGeloescht(nr)) continue; if(s[nr]>0) mitGuthaben++; else if(s[nr]<0) imMinus++; }
-  $("zZeile").textContent=mehrzahl(nKarten,"Karte","Karten")+" bekannt, "+
-    mehrzahl(mitGuthaben,"mit Guthaben","mit Guthaben")+
-    (imMinus ? ", "+mehrzahl(imMinus,"Karte offen","Karten offen")+" mit zusammen "+eur(g.offen)+" € (angeschrieben, oder zwei Geräte haben zugleich abgebucht)" : "")+
-    "."+(g.tip>0 ? " Davon als Trinkgeld abgebucht: "+eur(g.tip)+" €." : "");
+  $("zZeile").textContent=mehrzahl(nKarten,_t("Karte"),_t("Karten"))+_t(" bekannt, ")+
+    mehrzahl(mitGuthaben,_t("mit Guthaben"),_t("mit Guthaben"))+
+    (imMinus ? ", "+mehrzahl(imMinus,_t("Karte offen"),_t("Karten offen"))+_t(" mit zusammen ")+eur(g.offen)+_t(" € (angeschrieben, oder zwei Geräte haben zugleich abgebucht)") : "")+
+    "."+(g.tip>0 ? _t(" Davon als Trinkgeld abgebucht: ")+eur(g.tip)+" €." : "");
 }
 
 /* Die Liste und, wenn eine Karte angetippt ist, deren Einzelheiten gleich
@@ -1987,34 +2063,34 @@ function detailHtml(nr){
   db.buchungen.forEach(function(b){ if(b.ref) zurueck[b.ref]=true; });
   return '<div class="aufgeklappt" id="detailInhalt">'+
     '<div class="reihe" style="align-items:flex-end">'+
-      '<label class="feld grow"><span>Neues Guthaben</span>'+
+      _t('<label class="feld grow"><span>Neues Guthaben</span>')+
       '<input id="korrBetrag" inputmode="decimal" placeholder="'+esc(eur(g))+'" autocomplete="off" '+
       'style="text-align:right"></label>'+
-      '<button class="knopf voll" data-tat="korrigieren">Setzen</button></div>'+
-    '<p class="muted" style="margin:6px 0 12px" id="korrVorschau">Der Unterschied wird als Korrekturbuchung '+
-      'eingetragen — die alten Buchungen bleiben stehen.</p>'+
-    '<label class="feld" style="margin-bottom:12px"><span>Name auf der Karte (freiwillig)</span>'+
+      _t('<button class="knopf voll" data-tat="korrigieren">Setzen</button></div>')+
+    _t('<p class="muted" style="margin:6px 0 12px" id="korrVorschau">Der Unterschied wird als Korrekturbuchung ')+
+      _t('eingetragen — die alten Buchungen bleiben stehen.</p>')+
+    _t('<label class="feld" style="margin-bottom:12px"><span>Name auf der Karte (freiwillig)</span>')+
       '<input id="kartenName" maxlength="40" value="'+esc(kartenName(nr))+'" autocomplete="off" '+
-      'placeholder="zum Beispiel Anna Müller"></label>'+
-    '<label class="feld" style="margin-bottom:12px"><span>Weitere Angaben auf der Karte (freiwillig)</span>'+
+      _t('placeholder="zum Beispiel Anna Müller"></label>')+
+    _t('<label class="feld" style="margin-bottom:12px"><span>Weitere Angaben auf der Karte (freiwillig)</span>')+
       '<input id="kartenZusatz" maxlength="60" value="'+esc(kartenZusatz(nr))+'" autocomplete="off" '+
-      'placeholder="zum Beispiel Tisch 5 · vegetarisch"></label>'+
+      _t('placeholder="zum Beispiel Tisch 5 · vegetarisch"></label>')+
     '<div class="reihe umbruch">'+
-      '<button class="knopf" data-tat="drucken">Karte nochmal drucken</button>'+
-      '<button class="knopf" data-tat="auszahlen"'+(g>0?'':' disabled')+'>Restguthaben auszahlen</button>'+
-      '<button class="knopf warn" data-tat="loeschen"'+(g!==0?' disabled':'')+'>Karte löschen</button>'+
-      '<button class="knopf" data-tat="zu">Schließen</button>'+
+      _t('<button class="knopf" data-tat="drucken">Karte nochmal drucken</button>')+
+      '<button class="knopf" data-tat="auszahlen"'+(g>0?'':' disabled')+_t('>Restguthaben auszahlen</button>')+
+      '<button class="knopf warn" data-tat="loeschen"'+(g!==0?' disabled':'')+_t('>Karte löschen</button>')+
+      _t('<button class="knopf" data-tat="zu">Schließen</button>')+
     '</div>'+
-    (g!==0?'<p class="muted" style="margin:6px 0 0">Gelöscht werden kann erst, wenn kein Guthaben '+
-      'mehr drauf ist — erst auszahlen.</p>':'')+
+    (g!==0?_t('<p class="muted" style="margin:6px 0 0">Gelöscht werden kann erst, wenn kein Guthaben ')+
+      _t('mehr drauf ist — erst auszahlen.</p>'):'')+
     '<div class="verlauf">'+(liste.length ? liste.map(function(b){
       var knopf=(!b.ref && !zurueck[b.id] && b.art!=="storno")
-        ? '<button class="knopf klein" data-zurueck="'+esc(b.id)+'">zurücknehmen</button>' : '';
+        ? '<button class="knopf klein" data-zurueck="'+esc(b.id)+_t('">zurücknehmen</button>') : '';
       return '<div class="zeile"><span class="zeit">'+uhrzeit(b.zeit)+'</span><span>'+
-        esc(NAMEN[b.art]||b.art)+(zurueck[b.id]?' <span class="muted">(zurückgenommen)</span>':'')+
-        ' <span class="muted">· '+(b.wer ? esc(b.wer)+', ' : '')+'Gerät '+esc(b.geraet)+'</span></span>'+
+        esc(istTR()&&NAMEN_TR[b.art]?NAMEN_TR[b.art]:(NAMEN[b.art]||b.art))+(zurueck[b.id]?_t(' <span class="muted">(zurückgenommen)</span>'):'')+
+        ' <span class="muted">· '+(b.wer ? esc(b.wer)+', ' : '')+_t('Gerät ')+esc(b.geraet)+'</span></span>'+
         '<span class="betrag">'+(b.cent>0?"+":"")+euro(b.cent)+'</span>'+knopf+'</div>';
-    }).join("") : '<p class="muted" style="margin:0">Noch keine Buchungen.</p>')+'</div></div>';
+    }).join("") : _t('<p class="muted" style="margin:0">Noch keine Buchungen.</p>'))+'</div></div>';
 }
 
 /* Beim Neuzeichnen wird das fokussierte Eingabefeld aus dem Dokument
@@ -2048,22 +2124,22 @@ function zeichneKartenListeEigentlich(){
   nrs=nrs.slice(0,200);
   if(!nrs.length){
     $("kartenListe").innerHTML='<p class="muted" style="margin:0">'+
-      (suche?"Keine Karte gefunden.":"Noch keine Karten. Oben neue drucken.")+'</p>';
+      (suche?_t("Keine Karte gefunden."):_t("Noch keine Karten. Oben neue drucken."))+'</p>';
     detailGezeigt=""; return;
   }
   var zeigtOffene=false;
   $("kartenListe").innerHTML=nrs.map(function(nr){
     var g=s[nr]||0, offen=(nr===offeneKarte);
-    var marker=g<0?'<span class="marker m-weg">offen</span>'
-              :g>0?'<span class="marker m-auf">Guthaben</span>'
-                  :'<span class="marker m-leer">leer</span>';
+    var marker=g<0?_t('<span class="marker m-weg">offen</span>')
+              :g>0?_t('<span class="marker m-auf">Guthaben</span>')
+                  :_t('<span class="marker m-leer">leer</span>');
     if(offen) zeigtOffene=true;
     return '<div class="kartenzeile'+(offen?' offen':'')+'" data-karte="'+esc(nr)+'"><span class="nr">'+
            esc(kartenCode(nr))+(kartenName(nr)?'<span class="rname">'+esc(kartenName(nr))+'</span>':'')+
            '</span>'+marker+'<span class="guthaben'+(g===0?' null':'')+'">'+
            euro(g)+'</span></div>'+(offen?detailHtml(nr):"");
-  }).join("")+(gesamtAnzahl>200?'<p class="muted" style="margin:8px 0 0">… und '+(gesamtAnzahl-200)+
-    ' weitere. Mit der Suche eingrenzen.</p>':"");
+  }).join("")+(gesamtAnzahl>200?_t('<p class="muted" style="margin:8px 0 0">… und ')+(gesamtAnzahl-200)+
+    _t(' weitere. Mit der Suche eingrenzen.</p>'):"");
 
   detailGezeigt=zeigtOffene?offeneKarte:"";
   if(!zeigtOffene) return;
@@ -2086,11 +2162,11 @@ function zeichneKartenListeEigentlich(){
 
 function korrVorschau(){
   var nr=offeneKarte, g=saldo(nr), cent=centAus($("korrBetrag").value), t=$("korrVorschau");
-  if($("korrBetrag").value.trim()===""){ t.textContent="Der Unterschied wird als Korrekturbuchung eingetragen — die alten Buchungen bleiben stehen."; return; }
-  if(!(cent>=0)){ t.textContent="Kein gültiger Betrag."; return; }
+  if($("korrBetrag").value.trim()===""){ t.textContent=_t("Der Unterschied wird als Korrekturbuchung eingetragen — die alten Buchungen bleiben stehen."); return; }
+  if(!(cent>=0)){ t.textContent=_t("Kein gültiger Betrag."); return; }
   var d=cent-g;
-  t.textContent = d===0 ? "Das ist schon das Guthaben."
-    : "Von "+euro(g)+" auf "+euro(cent)+" — "+(d>0?"+":"")+euro(d)+" als Korrektur.";
+  t.textContent = d===0 ? _t("Das ist schon das Guthaben.")
+    : _t("Von ")+euro(g)+_t(" auf ")+euro(cent)+" — "+(d>0?"+":"")+euro(d)+_t(" als Korrektur.");
 }
 
 /* Eine Korrektur ist eine gewöhnliche Buchung über den Unterschied. Es wird
@@ -2098,30 +2174,30 @@ function korrVorschau(){
    die Berichtigung nebeneinander. Das ist der Sinn eines Kassenbuchs. */
 function korrigieren(nr){
   var cent=centAus($("korrBetrag").value), g=saldo(nr);
-  if(!(cent>=0)){ melden("Erst einen Betrag eintragen"); return; }
+  if(!(cent>=0)){ melden(_t("Erst einen Betrag eintragen")); return; }
   var d=cent-g;
-  if(d===0){ melden("Das ist schon das Guthaben"); return; }
-  if(!confirm("Guthaben von "+kartenCode(nr)+" von "+euro(g)+" auf "+euro(cent)+" setzen ("+
+  if(d===0){ melden(_t("Das ist schon das Guthaben")); return; }
+  if(!confirm(_t("Guthaben von ")+kartenCode(nr)+_t(" von ")+euro(g)+_t(" auf ")+euro(cent)+_t(" setzen (")+
               (d>0?"+":"")+euro(d)+")?")) return;
   buchen(nr, d, "korrektur");
   $("korrBetrag").value="";
-  zeichneAlles(); wolkeVormerken(); melden("Korrigiert auf "+euro(cent));
+  zeichneAlles(); wolkeVormerken(); melden(_t("Korrigiert auf ")+euro(cent));
 }
 
 function nehmeZurueck(id){
   var b=db.buchungen.filter(function(x){ return x.id===id; })[0];
   if(!b) return;
   var wirkung=saldo(b.karte)-b.cent;
-  if(wirkung<0 && !confirm("Das lässt die Karte mit "+eur(wirkung)+" € im Minus zurück. Trotzdem?")) return;
+  if(wirkung<0 && !confirm(_t("Das lässt die Karte mit ")+eur(wirkung)+_t(" € im Minus zurück. Trotzdem?"))) return;
   buchen(b.karte, -b.cent, "storno", b.id);
-  zeichneAlles(); wolkeVormerken(); melden("Zurückgenommen");
+  zeichneAlles(); wolkeVormerken(); melden(_t("Zurückgenommen"));
 }
 
 function auszahlen(nr){
   var g=saldo(nr); if(g<=0) return;
-  if(!confirm(eur(g)+" € von "+kartenCode(nr)+" auszahlen und die Karte auf 0 setzen?")) return;
+  if(!confirm(eur(g)+_t(" € von ")+kartenCode(nr)+_t(" auszahlen und die Karte auf 0 setzen?"))) return;
   buchen(nr, -g, "auszahlung");
-  zeichneAlles(); wolkeVormerken(); melden(eur(g)+" € ausgezahlt");
+  zeichneAlles(); wolkeVormerken(); melden(eur(g)+_t(" € ausgezahlt"));
 }
 
 /* ===================== Karten vorab aufladen =====================
@@ -2143,19 +2219,19 @@ function stapelPruefen(){
   var cent=centAus($("sBetrag").value);
   if(!$("sVon").value.trim() && !$("sBis").value.trim() && !$("sBetrag").value.trim())
     return {leer:true};
-  if(!von || !bis) return {fehler:"Von und Bis als Kartennummer eintragen, zum Beispiel 1 und 20."};
-  if(von.charAt(0)!==bis.charAt(0)) return {fehler:"Von und Bis müssen vom selben Gerät sein (gleicher Buchstabe)."};
+  if(!von || !bis) return {fehler:_t("Von und Bis als Kartennummer eintragen, zum Beispiel 1 und 20.")};
+  if(von.charAt(0)!==bis.charAt(0)) return {fehler:_t("Von und Bis müssen vom selben Gerät sein (gleicher Buchstabe).")};
   var n1=parseInt(von.slice(1),10), n2=parseInt(bis.slice(1),10);
-  if(n2<n1) return {fehler:"Bis liegt vor Von."};
-  if(n2-n1>=1000) return {fehler:"Höchstens 1000 Karten auf einmal."};
+  if(n2<n1) return {fehler:_t("Bis liegt vor Von.")};
+  if(n2-n1>=1000) return {fehler:_t("Höchstens 1000 Karten auf einmal.")};
   var karten=[], fehlend=[], s=salden(), schonGeladen=0;
   for(var n=n1;n<=n2;n++){
     var nr=von.charAt(0)+("0000"+n).slice(-4);
     if(db.karten[nr] && !istGeloescht(nr)){ karten.push(nr); if(s[nr]>0) schonGeladen++; } else fehlend.push(nr);
   }
   var r={karten:karten, fehlend:fehlend, schonGeladen:schonGeladen, von:von, bis:bis, cent:cent};
-  if(!karten.length) r.fehler="In diesem Bereich gibt es noch keine Karten. Erst drucken (oder abgleichen).";
-  else if(!(cent>0)) r.fehler="Betrag je Karte fehlt.";
+  if(!karten.length) r.fehler=_t("In diesem Bereich gibt es noch keine Karten. Erst drucken (oder abgleichen).");
+  else if(!(cent>0)) r.fehler=_t("Betrag je Karte fehlt.");
   return r;
 }
 
@@ -2164,30 +2240,30 @@ function zeichneStapelVorschau(){
   $("btnStapel").disabled = !!(r.leer||r.fehler);
   if(r.leer){ t.textContent=""; return; }
   if(r.fehler && !r.karten){ t.textContent=r.fehler; return; }
-  var z=mehrzahl(r.karten.length,"Karte","Karten")+" ("+kartenCode(r.karten[0])+
-        (r.karten.length>1?" bis "+kartenCode(r.karten[r.karten.length-1]):"")+")";
+  var z=mehrzahl(r.karten.length,_t("Karte"),_t("Karten"))+" ("+kartenCode(r.karten[0])+
+        (r.karten.length>1?_t(" bis ")+kartenCode(r.karten[r.karten.length-1]):"")+")";
   var text=r.fehler ? z+" — "+r.fehler
-    : z+" je "+euro(r.cent)+" = "+euro(r.cent*r.karten.length);
-  if(r.fehlend.length) text+=" · "+mehrzahl(r.fehlend.length,"Nummer","Nummern")+" im Bereich ohne Karte, "+
-    (r.fehlend.length===1?"sie wird":"sie werden")+" übersprungen";
-  if(r.schonGeladen) text+=" · "+mehrzahl(r.schonGeladen,"Karte hat","Karten haben")+" schon Guthaben, es kommt dazu";
+    : z+_t(" je ")+euro(r.cent)+" = "+euro(r.cent*r.karten.length);
+  if(r.fehlend.length) text+=" · "+mehrzahl(r.fehlend.length,_t("Nummer"),_t("Nummern"))+_t(" im Bereich ohne Karte, ")+
+    (r.fehlend.length===1?_t("sie wird"):_t("sie werden"))+_t(" übersprungen");
+  if(r.schonGeladen) text+=" · "+mehrzahl(r.schonGeladen,_t("Karte hat"),_t("Karten haben"))+_t(" schon Guthaben, es kommt dazu");
   t.textContent=text;
 }
 
 function stapelBuchen(){
   var r=stapelPruefen();
-  if(r.leer||r.fehler){ melden(r.fehler||"Erst ausfüllen"); return; }
+  if(r.leer||r.fehler){ melden(r.fehler||_t("Erst ausfüllen")); return; }
   var summe=r.cent*r.karten.length;
-  if(!confirm(mehrzahl(r.karten.length,"Karte","Karten")+" mit je "+euro(r.cent)+" aufladen?\n"+
-              "Zusammen "+euro(summe)+"."+
-              (r.schonGeladen?"\n"+mehrzahl(r.schonGeladen,"Karte hat","Karten haben")+" schon Guthaben; der Betrag kommt dazu.":"")))
+  if(!confirm(mehrzahl(r.karten.length,_t("Karte"),_t("Karten"))+_t(" mit je ")+euro(r.cent)+_t(" aufladen?\n")+
+              _t("Zusammen ")+euro(summe)+"."+
+              (r.schonGeladen?"\n"+mehrzahl(r.schonGeladen,_t("Karte hat"),_t("Karten haben"))+_t(" schon Guthaben; der Betrag kommt dazu."):"")))
     return;
   var id="S"+neueId();
   r.karten.forEach(function(nr){ buchen(nr, r.cent, "auf", null, id, true); });
   sichern();
   $("sVon").value=""; $("sBis").value=""; $("sBetrag").value="";
   zeichneAlles(); wolkeVormerken();
-  melden(mehrzahl(r.karten.length,"Karte","Karten")+" aufgeladen · "+euro(summe));
+  melden(mehrzahl(r.karten.length,_t("Karte"),_t("Karten"))+_t(" aufgeladen · ")+euro(summe));
 }
 
 /* Die letzten Stapel stehen darunter, jeder mit einem Knopf zum Zurücknehmen.
@@ -2212,15 +2288,15 @@ function stapelListe(){
 function zeichneStapelListe(){
   var gs=stapelListe(), k=$("stapelListe");
   if(!gs.length){ k.innerHTML=""; return; }
-  k.innerHTML='<div class="feldTitel">Zuletzt aufgeladene Stapel</div>'+gs.map(function(g){
+  k.innerHTML=_t('<div class="feldTitel">Zuletzt aufgeladene Stapel</div>')+gs.map(function(g){
     var nrs=g.buchungen.map(function(b){ return b.karte; }).sort();
     var summe=g.buchungen.reduce(function(a,b){ return a+b.cent; },0);
     return '<div class="zeile"><span class="zeit muted">'+uhrzeit(g.zeit)+'</span><span>'+
-      mehrzahl(nrs.length,"Karte","Karten")+' ('+esc(nrs[0])+(nrs.length>1?' bis '+esc(nrs[nrs.length-1]):'')+
-      ') · '+euro(g.buchungen[0].cent)+' je Karte</span>'+
+      mehrzahl(nrs.length,_t("Karte"),_t("Karten"))+' ('+esc(nrs[0])+(nrs.length>1?_t(' bis ')+esc(nrs[nrs.length-1]):'')+
+      ') · '+euro(g.buchungen[0].cent)+_t(' je Karte</span>')+
       (g.offen.length
-        ? '<button class="knopf klein" style="margin-left:auto" data-stapel="'+esc(g.id)+'">zurücknehmen</button>'
-        : '<span class="muted" style="margin-left:auto">zurückgenommen</span>')+'</div>';
+        ? '<button class="knopf klein" style="margin-left:auto" data-stapel="'+esc(g.id)+_t('">zurücknehmen</button>')
+        : _t('<span class="muted" style="margin-left:auto">zurückgenommen</span>'))+'</div>';
   }).join("");
 }
 
@@ -2229,11 +2305,11 @@ function stapelZurueck(id){
   if(!gs || !gs.offen.length) return;
   var s=salden(), ins=0;
   gs.offen.forEach(function(b){ if(s[b.karte]-b.cent<0) ins++; });
-  if(!confirm(mehrzahl(gs.offen.length,"Aufladung","Aufladungen")+" dieses Stapels zurücknehmen?"+
-              (ins?"\n"+mehrzahl(ins,"Karte wäre","Karten wären")+" danach im Minus, weil schon abgebucht wurde.":"")))
+  if(!confirm(mehrzahl(gs.offen.length,_t("Aufladung"),_t("Aufladungen"))+_t(" dieses Stapels zurücknehmen?")+
+              (ins?"\n"+mehrzahl(ins,_t("Karte wäre"),_t("Karten wären"))+_t(" danach im Minus, weil schon abgebucht wurde."):"")))
     return;
   gs.offen.forEach(function(b){ buchen(b.karte, -b.cent, "storno", b.id); });
-  zeichneAlles(); wolkeVormerken(); melden("Stapel zurückgenommen");
+  zeichneAlles(); wolkeVormerken(); melden(_t("Stapel zurückgenommen"));
 }
 
 /* ============================== Gästeliste ==============================
@@ -2372,7 +2448,7 @@ function csvZeilen(text, trenner){
 function zipEintraege(buf){
   var dv=new DataView(buf), u8=new Uint8Array(buf), i=u8.length-22;
   for(; i>=0 && i>=u8.length-65557; i--) if(dv.getUint32(i,true)===0x06054b50) break;
-  if(i<0 || dv.getUint32(i,true)!==0x06054b50) throw new Error("Das ist keine gültige ZIP-/Excel-Datei.");
+  if(i<0 || dv.getUint32(i,true)!==0x06054b50) throw new Error(_t("Das ist keine gültige ZIP-/Excel-Datei."));
   var anzahl=dv.getUint16(i+10,true), off=dv.getUint32(i+16,true), aus={}, dek=new TextDecoder();
   for(var k=0;k<anzahl;k++){
     if(dv.getUint32(off,true)!==0x02014b50) break;
@@ -2390,9 +2466,9 @@ async function zipText(buf, eintraege, name){
   var start=e.lo+30+dv.getUint16(e.lo+26,true)+dv.getUint16(e.lo+28,true);
   var daten=u8.subarray(start,start+e.csize);
   if(e.meth===0) return new TextDecoder().decode(daten);
-  if(e.meth!==8) throw new Error("Die Datei ist auf eine Art gepackt, die hier nicht gelesen wird.");
+  if(e.meth!==8) throw new Error(_t("Die Datei ist auf eine Art gepackt, die hier nicht gelesen wird."));
   if(typeof DecompressionStream==="undefined")
-    throw new Error("Dieser Browser kann solche Dateien nicht entpacken. Bitte als CSV speichern oder einen neueren Browser nehmen.");
+    throw new Error(_t("Dieser Browser kann solche Dateien nicht entpacken. Bitte als CSV speichern oder einen neueren Browser nehmen."));
   var strom=new Blob([daten]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
   return await new Response(strom).text();
 }
@@ -2425,7 +2501,7 @@ async function xlsxBlaetter(buf, ein){
   });
   var blaetter=xmlAlle(wb,"sheet").map(function(s,i){
     var rid=s.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships","id")||s.getAttribute("r:id");
-    return {name:s.getAttribute("name")||("Blatt "+(i+1)), pfad:rels[rid]||("xl/worksheets/sheet"+(i+1)+".xml"),
+    return {name:s.getAttribute("name")||(_t("Blatt ")+(i+1)), pfad:rels[rid]||("xl/worksheets/sheet"+(i+1)+".xml"),
             versteckt:/hidden/i.test(s.getAttribute("state")||"")};
   });
   var sichtbar=blaetter.filter(function(b){ return !b.versteckt; });
@@ -2484,7 +2560,7 @@ async function xlsxBlaetter(buf, ein){
 function cfbOeffnen(buf){
   var u8=new Uint8Array(buf), dv=new DataView(buf);
   var sig=[0xD0,0xCF,0x11,0xE0,0xA1,0xB1,0x1A,0xE1];
-  for(var i=0;i<8;i++) if(u8[i]!==sig[i]) throw new Error("Das ist keine Excel-Datei.");
+  for(var i=0;i<8;i++) if(u8[i]!==sig[i]) throw new Error(_t("Das ist keine Excel-Datei."));
   var ss=1<<dv.getUint16(30,true), mss=1<<dv.getUint16(32,true);
   var dirStart=dv.getUint32(48,true), cutoff=dv.getUint32(56,true), mfStart=dv.getUint32(60,true);
   var difStart=dv.getUint32(68,true), nDif=dv.getUint32(72,true);
@@ -2546,11 +2622,11 @@ function cfbOeffnen(buf){
 function xlsBlaetter(buf){
   var c=cfbOeffnen(buf);
   if(c.hat("EncryptedPackage") || c.hat("EncryptionInfo"))
-    throw new Error("Die Datei ist mit einem Kennwort geschützt. In Excel das Kennwort entfernen oder als CSV speichern.");
+    throw new Error(_t("Die Datei ist mit einem Kennwort geschützt. In Excel das Kennwort entfernen oder als CSV speichern."));
   var wb=c.strom("Workbook");
   if(!wb){
-    if(c.strom("Book")) throw new Error("Das ist eine Excel-Datei vor Version 97. In Excel öffnen und als .xlsx oder CSV speichern.");
-    throw new Error("In dieser Datei steckt keine Excel-Tabelle.");
+    if(c.strom("Book")) throw new Error(_t("Das ist eine Excel-Datei vor Version 97. In Excel öffnen und als .xlsx oder CSV speichern."));
+    throw new Error(_t("In dieser Datei steckt keine Excel-Tabelle."));
   }
   var dv=new DataView(wb.buffer,wb.byteOffset,wb.byteLength);
   function u16(o){ return dv.getUint16(o,true); }
@@ -2562,16 +2638,16 @@ function xlsBlaetter(buf){
     var id=u16(p), len=u16(p+2);
     nachOffset[p]=recs.length; recs.push({id:id, off:p+4, len:len}); p+=4+len;
   }
-  if(!recs.length || recs[0].id!==0x0809) throw new Error("Das ist keine lesbare Excel-Datei.");
+  if(!recs.length || recs[0].id!==0x0809) throw new Error(_t("Das ist keine lesbare Excel-Datei."));
   if(u16(recs[0].off)!==0x0600)
-    throw new Error("Das ist eine Excel-Datei vor Version 97. In Excel öffnen und als .xlsx oder CSV speichern.");
+    throw new Error(_t("Das ist eine Excel-Datei vor Version 97. In Excel öffnen und als .xlsx oder CSV speichern."));
 
   /* ---- Arbeitsmappen-Teil ---- */
   var d1904=false, xf=[], codes={}, sst=[], blaetter=[], i;
   for(i=1;i<recs.length;i++){
     var r=recs[i];
     if(r.id===0x000A) break;                                  /* Ende des Arbeitsmappen-Teils */
-    if(r.id===0x002F) throw new Error("Die Datei ist mit einem Kennwort geschützt. In Excel das Kennwort entfernen oder als CSV speichern.");
+    if(r.id===0x002F) throw new Error(_t("Die Datei ist mit einem Kennwort geschützt. In Excel das Kennwort entfernen oder als CSV speichern."));
     if(r.id===0x0022) d1904=u16(r.off)===1;
     else if(r.id===0x00E0) xf.push(u16(r.off+2));             /* welches Zahlenformat hat dieser Zellstil */
     else if(r.id===0x041E){                                   /* eigenes Zahlenformat */
@@ -2748,7 +2824,7 @@ function odsBlaetter(text){
       while(zeile.length && String(zeile[zeile.length-1]).trim()==="") zeile.pop();
       if(zeile.some(function(x){ return String(x).trim()!==""; })) for(var n=0;n<wdh;n++) zeilen.push(zeile.slice());
     });
-    aus.push({name:t.getAttribute("table:name")||("Tabelle "+(aus.length+1)), zeilen:zeilenAufraeumen(zeilen)});
+    aus.push({name:t.getAttribute("table:name")||(_t("Tabelle ")+(aus.length+1)), zeilen:zeilenAufraeumen(zeilen)});
   });
   return aus;
 }
@@ -2773,7 +2849,7 @@ function xml2003Blaetter(text){
       });
       zeilen.push(zeile);
     });
-    aus.push({name:ws.getAttribute("ss:Name")||("Blatt "+(wi+1)), zeilen:zeilenAufraeumen(zeilen)});
+    aus.push({name:ws.getAttribute("ss:Name")||(_t("Blatt ")+(wi+1)), zeilen:zeilenAufraeumen(zeilen)});
   });
   return aus;
 }
@@ -2793,7 +2869,7 @@ function htmlBlaetter(text){
       zeilen.push(zeile);
     });
     var titel=t.querySelector("caption");
-    aus.push({name:(titel&&titel.textContent.trim())||("Tabelle "+(ti+1)), zeilen:zeilenAufraeumen(zeilen)});
+    aus.push({name:(titel&&titel.textContent.trim())||(_t("Tabelle ")+(ti+1)), zeilen:zeilenAufraeumen(zeilen)});
   });
   return aus;
 }
@@ -2804,7 +2880,7 @@ function textBlaetter(text,trenner){
   if(/urn:schemas-microsoft-com:office:spreadsheet/.test(text.slice(0,4000)) && /^</.test(t)) return xml2003Blaetter(text);
   if(/<office:document[\s>]/.test(text.slice(0,4000))) return odsBlaetter(text);
   if(/^<(!doctype\s+html|html|table|head|body|meta)/i.test(t) || /<table[\s>]/i.test(text.slice(0,20000))) return htmlBlaetter(text);
-  return [{name:"Liste", zeilen:csvZeilen(text,trenner)}];
+  return [{name:_t("Liste"), zeilen:csvZeilen(text,trenner)}];
 }
 
 async function gaesteDateiLesen(datei){
@@ -2812,17 +2888,17 @@ async function gaesteDateiLesen(datei){
   if(u8[0]===0x50 && u8[1]===0x4B){                                              /* "PK": ZIP */
     var ein=zipEintraege(buf), namen=Object.keys(ein);
     if(ein["xl/workbook.xml"]) blaetter=await xlsxBlaetter(buf,ein);
-    else if(ein["xl/workbook.bin"]) throw new Error("Das ist das binäre Excel-Format (.xlsb). In Excel als .xlsx oder CSV speichern.");
+    else if(ein["xl/workbook.bin"]) throw new Error(_t("Das ist das binäre Excel-Format (.xlsb). In Excel als .xlsx oder CSV speichern."));
     else if(ein["content.xml"]) blaetter=odsBlaetter(await zipText(buf,ein,"content.xml"));
     else if(namen.some(function(n){ return /^Index\//.test(n); })) throw new Error("Das ist eine Numbers-Datei. In Numbers über „Exportieren“ als Excel oder CSV sichern.");
-    else if(ein["word/document.xml"]) throw new Error("Das ist ein Word-Dokument, keine Tabelle.");
-    else throw new Error("In dieser ZIP-Datei steckt keine Tabelle.");
+    else if(ein["word/document.xml"]) throw new Error(_t("Das ist ein Word-Dokument, keine Tabelle."));
+    else throw new Error(_t("In dieser ZIP-Datei steckt keine Tabelle."));
   }
   else if(u8[0]===0xD0 && u8[1]===0xCF) blaetter=xlsBlaetter(buf);               /* Compound File: xls */
-  else if(u8[0]===0x25 && u8[1]===0x50 && u8[2]===0x44 && u8[3]===0x46) throw new Error("Das ist ein PDF, keine Tabelle. Bitte die Liste als Excel oder CSV exportieren.");
+  else if(u8[0]===0x25 && u8[1]===0x50 && u8[2]===0x44 && u8[3]===0x46) throw new Error(_t("Das ist ein PDF, keine Tabelle. Bitte die Liste als Excel oder CSV exportieren."));
   else blaetter=textBlaetter(textDekodieren(u8));
   blaetter=blaetter.filter(function(b){ return b.zeilen.length; });
-  if(!blaetter.length) throw new Error("In der Datei steht nichts.");
+  if(!blaetter.length) throw new Error(_t("In der Datei steht nichts."));
   return blaetter;
 }
 
@@ -2844,10 +2920,10 @@ function gaesteLaden(datei){
   gaesteFehler("");
   if(!datei) return Promise.resolve();
   return gaesteDateiLesen(datei).then(function(blaetter){
-    gaesteSetzen(datei.name||"Liste", blaetter);
+    gaesteSetzen(datei.name||_t("Liste"), blaetter);
   }).catch(function(f){
     gaeste=null; zeichneGaeste();
-    gaesteFehler("Die Datei konnte nicht gelesen werden: "+(f&&f.message?f.message:f));
+    gaesteFehler(_t("Die Datei konnte nicht gelesen werden: ")+(f&&f.message?f.message:f));
   });
 }
 
@@ -2857,8 +2933,8 @@ function gaesteLaden(datei){
 function gaesteAusText(text){
   gaesteFehler("");
   var zeilen=csvZeilen(text, text.indexOf("\t")>=0 ? "\t" : "\u0001");
-  if(!zeilen.length){ gaesteFehler("Die Zwischenablage ist leer."); return; }
-  gaesteSetzen("Zwischenablage",[{name:"Liste",zeilen:zeilen}]);
+  if(!zeilen.length){ gaesteFehler(_t("Die Zwischenablage ist leer.")); return; }
+  gaesteSetzen(_t("Zwischenablage"),[{name:_t("Liste"),zeilen:zeilen}]);
 }
 
 /* Das gewählte Tabellenblatt wechseln. */
@@ -2876,7 +2952,7 @@ function gaesteBreite(){
 function spaltenBuchstabe(i){ return String.fromCharCode(65+(i%26)); }
 function gaesteKopfText(i){
   var k=gaeste.kopf ? (gaeste.zeilen[0][i]||"") : "";
-  return k || ("Spalte "+spaltenBuchstabe(i));
+  return k || (_t("Spalte ")+spaltenBuchstabe(i));
 }
 function istNamensSpalte(i){ return gaeste.kopf && /name|gast/i.test(gaeste.zeilen[0][i]||""); }
 
@@ -2910,12 +2986,12 @@ function zeichneGaeste(){
   $("gBlattFeld").classList.toggle("hide",!(da && gaeste.blaetter.length>1));
   if(da && gaeste.blaetter.length>1){
     $("gBlatt").innerHTML=gaeste.blaetter.map(function(b,i){
-      return '<option value="'+i+'"'+(i===gaeste.blatt?" selected":"")+'>'+esc(b.name)+" ("+b.zeilen.length+" Zeilen)</option>";
+      return '<option value="'+i+'"'+(i===gaeste.blatt?" selected":"")+'>'+esc(b.name)+" ("+b.zeilen.length+_t(" Zeilen)</option>");
     }).join("");
   }
   if(da){
     var n=gaesteBreite(), zeilen=gaeste.zeilen, daten=gaesteDaten();
-    $("gaesteTitel").textContent=gaeste.datei+" · "+mehrzahl(daten.length,"Gast","Gäste");
+    $("gaesteTitel").textContent=gaeste.datei+" · "+mehrzahl(daten.length,_t("Gast"),_t("Gäste"));
     var kopf="<tr>", i;
     for(i=0;i<n;i++)
       kopf+='<th class="'+(gaeste.wahl[i]?"an":"")+'"><label><input type="checkbox" data-spalte="'+i+'"'+
@@ -2929,11 +3005,11 @@ function zeichneGaeste(){
     });
     $("gaesteTabelle").innerHTML=kopf+koerper;
     $("gaesteVorschau").innerHTML = daten.length
-      ? '<div class="feldTitel" style="margin-top:8px">So steht es auf den ersten Karten</div>'+
+      ? _t('<div class="feldTitel" style="margin-top:8px">So steht es auf den ersten Karten</div>')+
         daten.slice(0,3).map(function(d){
           return '<span class="karte1">'+esc(d.name||"—")+(d.zusatz?"<small>"+esc(d.zusatz)+"</small>":"")+"</span>";
         }).join("")
-      : '<span class="muted">Noch nichts angekreuzt — ohne Häkchen gibt es nichts zu drucken.</span>';
+      : _t('<span class="muted">Noch nichts angekreuzt — ohne Häkchen gibt es nichts zu drucken.</span>');
   }
   zeichneKartenVorschau();
 }
@@ -2949,7 +3025,7 @@ function nameSetzen(nr, text){
   var k=db.karten[nr]; if(!k || (k.name||"")===name) return;
   k.name=name; k.nts=Date.now();
   sichern(); zeichneAlles(); wolkeVormerken();
-  melden(name ? "Name gespeichert" : "Name entfernt");
+  melden(name ? _t("Name gespeichert") : _t("Name entfernt"));
 }
 
 function zusatzSetzen(nr, text){
@@ -2957,7 +3033,7 @@ function zusatzSetzen(nr, text){
   var k=db.karten[nr]; if(!k || (k.zusatz||"")===z) return;
   k.zusatz=z; k.nts=Date.now();
   sichern(); zeichneAlles(); wolkeVormerken();
-  melden(z ? "Angaben gespeichert" : "Angaben entfernt");
+  melden(z ? _t("Angaben gespeichert") : _t("Angaben entfernt"));
 }
 
 /* ============================ Löschen ============================ */
@@ -2965,11 +3041,11 @@ function zusatzSetzen(nr, text){
 function bereichNummern(vonText, bisText){
   var von=stapelNummer(vonText), bis=stapelNummer(bisText);
   if(!String(vonText).trim() && !String(bisText).trim()) return {leer:true};
-  if(!von || !bis) return {fehler:"Von und Bis als Kartennummer eintragen, zum Beispiel 1 und 20."};
-  if(von.charAt(0)!==bis.charAt(0)) return {fehler:"Von und Bis müssen vom selben Gerät sein (gleicher Buchstabe)."};
+  if(!von || !bis) return {fehler:_t("Von und Bis als Kartennummer eintragen, zum Beispiel 1 und 20.")};
+  if(von.charAt(0)!==bis.charAt(0)) return {fehler:_t("Von und Bis müssen vom selben Gerät sein (gleicher Buchstabe).")};
   var n1=parseInt(von.slice(1),10), n2=parseInt(bis.slice(1),10);
-  if(n2<n1) return {fehler:"Bis liegt vor Von."};
-  if(n2-n1>=1000) return {fehler:"Höchstens 1000 Karten auf einmal."};
+  if(n2<n1) return {fehler:_t("Bis liegt vor Von.")};
+  if(n2-n1>=1000) return {fehler:_t("Höchstens 1000 Karten auf einmal.")};
   var alle=[];
   for(var n=n1;n<=n2;n++) alle.push(von.charAt(0)+("0000"+n).slice(-4));
   return {alle:alle};
@@ -2992,8 +3068,8 @@ function loeschPruefen(){
   if(b.leer||b.fehler) return b;
   var r=loeschSortieren(b.alle); r.alle=b.alle;
   if(!r.weg.length) r.fehler=r.mitGuthaben.length
-    ? "Keine der Karten kann gelöscht werden: sie haben noch Guthaben."
-    : "In diesem Bereich gibt es keine Karten zu löschen.";
+    ? _t("Keine der Karten kann gelöscht werden: sie haben noch Guthaben.")
+    : _t("In diesem Bereich gibt es keine Karten zu löschen.");
   return r;
 }
 
@@ -3003,11 +3079,11 @@ function zeichneLoeschVorschau(){
   if(r.leer){ t.textContent=""; return; }
   if(!r.alle){ t.textContent=r.fehler; return; }
   var teile=[];
-  if(r.weg.length) teile.push(mehrzahl(r.weg.length,"Karte wird","Karten werden")+" gelöscht ("+
-                              kartenCode(r.weg[0])+(r.weg.length>1?" bis "+kartenCode(r.weg[r.weg.length-1]):"")+")");
-  if(r.mitGuthaben.length) teile.push(mehrzahl(r.mitGuthaben.length,"Karte hat","Karten haben")+
-                                      " noch Guthaben und "+(r.mitGuthaben.length===1?"bleibt":"bleiben"));
-  if(r.ohneKarte.length) teile.push(mehrzahl(r.ohneKarte.length,"Nummer","Nummern")+" ohne Karte");
+  if(r.weg.length) teile.push(mehrzahl(r.weg.length,_t("Karte wird"),_t("Karten werden"))+_t(" gelöscht (")+
+                              kartenCode(r.weg[0])+(r.weg.length>1?_t(" bis ")+kartenCode(r.weg[r.weg.length-1]):"")+")");
+  if(r.mitGuthaben.length) teile.push(mehrzahl(r.mitGuthaben.length,_t("Karte hat"),_t("Karten haben"))+
+                                      _t(" noch Guthaben und ")+(r.mitGuthaben.length===1?_t("bleibt"):_t("bleiben")));
+  if(r.ohneKarte.length) teile.push(mehrzahl(r.ohneKarte.length,_t("Nummer"),_t("Nummern"))+_t(" ohne Karte"));
   t.textContent=(r.fehler&&!r.weg.length ? r.fehler+" " : "")+teile.join(" · ");
 }
 
@@ -3020,15 +3096,15 @@ function vermerken(nrs){
 
 function kartenLoeschen(){
   var r=loeschPruefen();
-  if(r.leer||r.fehler||!r.weg.length){ melden(r.fehler||"Erst Von und Bis eintragen"); return; }
-  if(!confirm(mehrzahl(r.weg.length,"Karte","Karten")+" löschen?\n\nDie Buchungen bleiben im Abschluss "+
-              "stehen. Das lässt sich nicht rückgängig machen."+
-              (r.mitGuthaben.length?"\n"+mehrzahl(r.mitGuthaben.length,"Karte hat","Karten haben")+" noch Guthaben und "+
-               (r.mitGuthaben.length===1?"bleibt":"bleiben")+" stehen.":"")))
+  if(r.leer||r.fehler||!r.weg.length){ melden(r.fehler||_t("Erst Von und Bis eintragen")); return; }
+  if(!confirm(mehrzahl(r.weg.length,_t("Karte"),_t("Karten"))+_t(" löschen?\n\nDie Buchungen bleiben im Abschluss ")+
+              _t("stehen. Das lässt sich nicht rückgängig machen.")+
+              (r.mitGuthaben.length?"\n"+mehrzahl(r.mitGuthaben.length,_t("Karte hat"),_t("Karten haben"))+_t(" noch Guthaben und ")+
+               (r.mitGuthaben.length===1?_t("bleibt"):_t("bleiben"))+_t(" stehen."):"")))
     return;
   vermerken(r.weg);
   $("lVon").value=""; $("lBis").value=""; zeichneLoeschVorschau();
-  melden(mehrzahl(r.weg.length,"Karte","Karten")+" gelöscht");
+  melden(mehrzahl(r.weg.length,_t("Karte"),_t("Karten"))+_t(" gelöscht"));
 }
 
 /* Karten, mit denen nie etwas gebucht wurde: das sind die, die zu viel
@@ -3037,22 +3113,22 @@ function unbenutzteLoeschen(){
   var benutzt={};
   db.buchungen.forEach(function(b){ benutzt[b.karte]=true; });
   var weg=aktiveKarten().filter(function(n){ return !benutzt[n]; });
-  if(!weg.length){ melden("Es gibt keine unbenutzten Karten"); return; }
-  if(!confirm(mehrzahl(weg.length,"Karte","Karten")+", mit denen noch nie gebucht wurde, löschen?\n\n"+
-              "Das lässt sich nicht rückgängig machen."))
+  if(!weg.length){ melden(_t("Es gibt keine unbenutzten Karten")); return; }
+  if(!confirm(mehrzahl(weg.length,_t("Karte"),_t("Karten"))+_t(", mit denen noch nie gebucht wurde, löschen?\n\n")+
+              _t("Das lässt sich nicht rückgängig machen.")))
     return;
   vermerken(weg);
-  melden(mehrzahl(weg.length,"Karte","Karten")+" gelöscht");
+  melden(mehrzahl(weg.length,_t("Karte"),_t("Karten"))+_t(" gelöscht"));
 }
 
 function karteLoeschen(nr){
-  if(saldo(nr)!==0){ melden("Erst das Guthaben auszahlen"); return; }
+  if(saldo(nr)!==0){ melden(_t("Erst das Guthaben auszahlen")); return; }
   var n=kartenName(nr);
-  if(!confirm(kartenCode(nr)+(n?" ("+n+")":"")+" löschen?\n\nDie Karte gilt danach nicht mehr. "+
-              "Ihre Buchungen bleiben im Abschluss stehen."))
+  if(!confirm(kartenCode(nr)+(n?" ("+n+")":"")+_t(" löschen?\n\nDie Karte gilt danach nicht mehr. ")+
+              _t("Ihre Buchungen bleiben im Abschluss stehen.")))
     return;
   vermerken([nr]);
-  melden(kartenCode(nr)+" gelöscht");
+  melden(kartenCode(nr)+_t(" gelöscht"));
 }
 
 function zeichneAlles(){
@@ -3075,8 +3151,8 @@ function kartenBlatt(nrs){
     return '<div class="wertkarte'+(kartenZusatz(nr)?' mitzus':'')+'"><div class="qr">'+qrSvg(kartenCode(nr))+'</div>'+
       '<div class="daten"><div class="verein">'+(a.verein?esc(a.verein):"&nbsp;")+
       (a.zusatz?'<br>'+esc(a.zusatz):"")+'</div>'+
-      '<div><div class="anlass">'+esc(a.name||"Guthabenkarte")+'</div>'+
-      '<div class="art">Guthabenkarte</div>'+
+      '<div><div class="anlass">'+esc(a.name||_t("Guthabenkarte"))+'</div>'+
+      _t('<div class="art">Guthabenkarte</div>')+
       (kartenName(nr)?'<div class="kname '+nameGroesse(kartenName(nr))+'">'+esc(kartenName(nr))+'</div>':'')+
       (kartenZusatz(nr)?'<div class="kzus">'+esc(kartenZusatz(nr))+'</div>':'')+
       '</div>'+
@@ -3118,16 +3194,16 @@ function zeichneKartenVorschau(){
   var n=eintraege ? eintraege.length : parseInt($("kAnzahl").value,10);
   if(!(n>0)){ $("kVorschau").textContent=""; return; }
   var von=nummerSchreiben(naechsteKartenNummer()), bis=nummerSchreiben(naechsteKartenNummer()+n-1);
-  $("kVorschau").textContent=(n===1 ? kartenCode(von) : kartenCode(von)+" bis "+kartenCode(bis))+
-    (eintraege?" · "+mehrzahl(n,"Karte mit Namen","Karten mit Namen"):"");
+  $("kVorschau").textContent=(n===1 ? kartenCode(von) : kartenCode(von)+_t(" bis ")+kartenCode(bis))+
+    (eintraege?" · "+mehrzahl(n,_t("Karte mit Namen"),_t("Karten mit Namen")):"");
 }
 
 function kartenDrucken(){
   var eintraege=kartenEintraege();
-  if(gaeste && !eintraege.length){ melden("Nichts angekreuzt oder die Liste ist leer"); return; }
+  if(gaeste && !eintraege.length){ melden(_t("Nichts angekreuzt oder die Liste ist leer")); return; }
   var n=eintraege ? eintraege.length : parseInt($("kAnzahl").value,10);
-  if(!(n>0 && n<=1000)){ melden("Anzahl zwischen 1 und 1000"); return; }
-  if(!/^[A-Z]$/.test(db.geraet||"")){ melden("Erst ein Gerätezeichen eintragen"); return; }
+  if(!(n>0 && n<=1000)){ melden(_t("Anzahl zwischen 1 und 1000")); return; }
+  if(!/^[A-Z]$/.test(db.geraet||"")){ melden(_t("Erst ein Gerätezeichen eintragen")); return; }
   var start=naechsteKartenNummer(), nrs=[], jetzt=Date.now();
   for(var i=0;i<n;i++){
     var nr=nummerSchreiben(start+i), e=eintraege && eintraege[i];
@@ -3151,7 +3227,7 @@ function abschlussDrucken(){
   db.buchungen.forEach(function(b){
     /* Nach Namen, wo einer dabeisteht: "Anna" statt "Gerät B". Derselbe Name
        an zwei Geräten zählt zusammen, ein Gerät mit zwei Namen zählt getrennt. */
-    var wer=b.wer || ("Gerät "+b.geraet);
+    var wer=b.wer || (_t("Gerät ")+b.geraet);
     var z=proGeraet[wer]||(proGeraet[wer]={auf:0,ab:0,tip:0,anzahl:0});
     z.anzahl++;
     if(b.art==="auf") z.auf+=b.cent; else if(b.art==="ab") z.ab+=-b.cent;
@@ -3161,34 +3237,34 @@ function abschlussDrucken(){
   var schuld=Object.keys(s).filter(function(n){ return s[n]<0 && !istGeloescht(n); }).sort();
   $("bogen").className="bericht";
   $("bogen").innerHTML=
-    '<div class="briefkopf"><div class="wer">'+esc(a.verein||"Guthabenkasse")+'</div>'+
+    '<div class="briefkopf"><div class="wer">'+esc(a.verein||_t("Guthabenkasse"))+'</div>'+
     (a.zusatz?'<div>'+esc(a.zusatz)+'</div>':'')+'</div>'+
-    '<div class="titel">Abschluss Guthabenkarten'+(a.name?' · '+esc(a.name):'')+'</div>'+
-    '<div>Stand '+esc(heute)+'</div>'+
-    '<table><tr><th>Aufgebucht</th><th class="n">'+eur(g.auf)+' €</th></tr>'+
-    '<tr><td>Abgebucht (verkauft)</td><td class="n">'+eur(g.ab)+' €</td></tr>'+
-    '<tr><td>Abgebucht als Trinkgeld</td><td class="n">'+eur(g.tip)+' €</td></tr>'+
-    '<tr><td>Ausgezahlt, zurückgenommen oder korrigiert</td><td class="n">'+eur(g.auf-g.ab-g.tip-g.rest)+' €</td></tr>'+
-    '<tr><td><b>Noch auf Karten</b></td><td class="n"><b>'+eur(g.rest)+' €</b></td></tr>'+
-    (g.offen>0 ? '<tr><td>davon Guthaben auf Karten</td><td class="n">'+eur(g.guthaben)+' €</td></tr>'+
-                 '<tr><td>davon offen (angeschrieben, noch zu zahlen)</td><td class="n">−'+eur(g.offen)+' €</td></tr>' : '')+
+    _t('<div class="titel">Abschluss Guthabenkarten')+(a.name?' · '+esc(a.name):'')+'</div>'+
+    _t('<div>Stand ')+esc(heute)+'</div>'+
+    _t('<table><tr><th>Aufgebucht</th><th class="n">')+eur(g.auf)+' €</th></tr>'+
+    _t('<tr><td>Abgebucht (verkauft)</td><td class="n">')+eur(g.ab)+' €</td></tr>'+
+    _t('<tr><td>Abgebucht als Trinkgeld</td><td class="n">')+eur(g.tip)+' €</td></tr>'+
+    _t('<tr><td>Ausgezahlt, zurückgenommen oder korrigiert</td><td class="n">')+eur(g.auf-g.ab-g.tip-g.rest)+' €</td></tr>'+
+    _t('<tr><td><b>Noch auf Karten</b></td><td class="n"><b>')+eur(g.rest)+' €</b></td></tr>'+
+    (g.offen>0 ? _t('<tr><td>davon Guthaben auf Karten</td><td class="n">')+eur(g.guthaben)+' €</td></tr>'+
+                 _t('<tr><td>davon offen (angeschrieben, noch zu zahlen)</td><td class="n">−')+eur(g.offen)+' €</td></tr>' : '')+
     '</table>'+
-    '<div class="titel" style="margin-top:8mm">Je Bedienung</div>'+
-    '<table><tr><th>Name / Gerät</th><th class="n">Buchungen</th><th class="n">aufgebucht</th><th class="n">abgebucht</th><th class="n">Trinkgeld</th></tr>'+
+    _t('<div class="titel" style="margin-top:8mm">Je Bedienung</div>')+
+    _t('<table><tr><th>Name / Gerät</th><th class="n">Buchungen</th><th class="n">aufgebucht</th><th class="n">abgebucht</th><th class="n">Trinkgeld</th></tr>')+
     Object.keys(proGeraet).sort().map(function(k){
       var z=proGeraet[k];
       return '<tr><td>'+esc(k)+'</td><td class="n">'+z.anzahl+'</td><td class="n">'+eur(z.auf)+
              ' €</td><td class="n">'+eur(z.ab)+' €</td><td class="n">'+eur(z.tip)+' €</td></tr>';
     }).join("")+'</table>'+
-    (schuld.length ? '<div class="titel" style="margin-top:8mm">Offen — noch zu zahlen ('+schuld.length+', zusammen '+eur(-schuld.reduce(function(a,n){ return a+s[n]; },0))+' €)</div>'+
-      '<table><tr><th>Karte</th><th>Name</th><th class="n">offen</th></tr>'+
+    (schuld.length ? _t('<div class="titel" style="margin-top:8mm">Offen — noch zu zahlen (')+schuld.length+_t(', zusammen ')+eur(-schuld.reduce(function(a,n){ return a+s[n]; },0))+' €)</div>'+
+      _t('<table><tr><th>Karte</th><th>Name</th><th class="n">offen</th></tr>')+
       schuld.map(function(n){ return '<tr><td>'+esc(kartenCode(n))+'</td><td>'+esc(kartenName(n)||"—")+
         (kartenZusatz(n)?' · '+esc(kartenZusatz(n)):'')+'</td><td class="n">'+eur(-s[n])+' €</td></tr>'; }).join("")+'</table>' : '')+
-    '<div class="titel" style="margin-top:8mm">Karten mit Restbetrag ('+offen.length+')</div>'+
-    (offen.length?'<table><tr><th>Karte</th><th class="n">Guthaben</th></tr>'+
+    _t('<div class="titel" style="margin-top:8mm">Karten mit Restbetrag (')+offen.length+')</div>'+
+    (offen.length?_t('<table><tr><th>Karte</th><th class="n">Guthaben</th></tr>')+
       offen.map(function(n){ return '<tr><td>'+esc(kartenCode(n))+'</td><td class="n">'+eur(s[n])+' €</td></tr>'; }).join("")+
-      '</table>':'<p>Keine.</p>')+
-    '<div class="fuss">Guthabenkasse '+VERSION+' · Gerät '+esc(db.geraet||"?")+'</div>';
+      '</table>':_t('<p>Keine.</p>'))+
+    _t('<div class="fuss">Guthabenkasse ')+VERSION+_t(' · Gerät ')+esc(db.geraet||"?")+'</div>';
   setTimeout(function(){ window.print(); },80);
 }
 
@@ -3206,7 +3282,7 @@ function abschlussDrucken(){
    neuere. */
 function zusammenfuehren(roh, ausDatei){
   if(!roh || typeof roh!=="object" || !Array.isArray(roh.buchungen) || typeof roh.karten!=="object")
-    return {fehler:"Die Ablage enthält etwas, das keine Guthabenkasse ist."};
+    return {fehler:_t("Die Ablage enthält etwas, das keine Guthabenkasse ist.")};
   var b={kartenNeu:0, buchungenNeu:0, anlassUebernommen:false, namenNeu:0, vermerkeNeu:0,
          neubeginn:false, veraltet:false};
   /* Der Neubeginn ist eine Zeit. Hat ein anderes Gerät später auf Null gesetzt
@@ -3288,7 +3364,7 @@ function wolkeBereit(){ return !!(db.ablage && db.ablage.adresse); }
 function zeichneWolke(){
   var an=wolkeBereit();
   $("wolkeStand").textContent = wolkeStandText ||
-    (an ? "Noch nicht abgeglichen." : "Keine Ablage eingetragen.");
+    (an ? _t("Noch nicht abgeglichen.") : _t("Keine Ablage eingetragen."));
   $("btnWolkeJetzt").disabled = !an || wolkeLaeuft;
 }
 function wolkeSagen(text){ wolkeStandText=text; zeichneWolke(); }
@@ -3307,19 +3383,19 @@ function wolkeDeuten(status, text){
 
   if(klein.indexOf("accounts.google.com")>=0 || klein.indexOf("signinchooser")>=0 ||
      (klein.indexOf("<html")>=0 && (klein.indexOf("anmeld")>=0 || klein.indexOf("sign in")>=0))){
-    return "Die Ablage schickt eine Anmeldeseite statt einer Antwort. In Apps Script "+
-           "unter Bereitstellen → Bereitstellungen verwalten muss bei "+
-           "\u201eWer hat Zugriff\u201c ausdrücklich Jeder stehen — nicht "+
-           "\u201eJeder mit einem Google-Konto\u201c.";
+    return _t("Die Ablage schickt eine Anmeldeseite statt einer Antwort. In Apps Script ")+
+           _t("unter Bereitstellen → Bereitstellungen verwalten muss bei ")+
+           _t("\u201eWer hat Zugriff\u201c ausdrücklich Jeder stehen — nicht ")+
+           _t("\u201eJeder mit einem Google-Konto\u201c.");
   }
   if(klein.indexOf("<html")>=0 || klein.indexOf("<!doctype")>=0){
-    return "Die Ablage antwortet mit einer Internetseite statt mit Daten"+
-           (status?" (Status "+status+")":"")+". Meist heißt das: die Adresse "+
-           "gehört nicht zu einer bereitgestellten Web-App, oder sie endet nicht "+
-           "auf /exec. Anfang der Antwort: "+anfang.slice(0,90);
+    return _t("Die Ablage antwortet mit einer Internetseite statt mit Daten")+
+           (status?_t(" (Status ")+status+")":"")+_t(". Meist heißt das: die Adresse ")+
+           _t("gehört nicht zu einer bereitgestellten Web-App, oder sie endet nicht ")+
+           _t("auf /exec. Anfang der Antwort: ")+anfang.slice(0,90);
   }
-  if(!anfang) return "Die Ablage antwortet leer"+(status?" (Status "+status+")":"")+".";
-  return "Unverständliche Antwort der Ablage"+(status?" (Status "+status+")":"")+": "+
+  if(!anfang) return _t("Die Ablage antwortet leer")+(status?_t(" (Status ")+status+")":"")+".";
+  return _t("Unverständliche Antwort der Ablage")+(status?_t(" (Status ")+status+")":"")+": "+
          anfang.slice(0,120);
 }
 
@@ -3332,15 +3408,15 @@ function wolkeRufen(anfrage){
   }).catch(function(f){
     /* Hierher führt kein Serverfehler, sondern gar keine Antwort: kein Netz,
        eine falsche Adresse, oder der Browser lässt den Aufruf nicht zu. */
-    throw new Error("Die Ablage ist nicht erreichbar ("+f.message+"). Entweder fehlt "+
-                    "das Netz, oder die Adresse stimmt nicht. Sie muss mit "+
-                    "https://script.google.com/ beginnen und auf /exec enden.");
+    throw new Error(_t("Die Ablage ist nicht erreichbar (")+f.message+_t("). Entweder fehlt ")+
+                    _t("das Netz, oder die Adresse stimmt nicht. Sie muss mit ")+
+                    _t("https://script.google.com/ beginnen und auf /exec enden."));
   }).then(function(a){
     return a.text().then(function(text){
       var antwort=null;
       try{ antwort=JSON.parse(text); }catch(e){}
       if(!antwort || typeof antwort!=="object") throw new Error(wolkeDeuten(a.status,text));
-      if(!a.ok) throw new Error("Die Ablage antwortet mit Status "+a.status+".");
+      if(!a.ok) throw new Error(_t("Die Ablage antwortet mit Status ")+a.status+".");
       return antwort;
     });
   });
@@ -3351,7 +3427,7 @@ function wolkeRufen(anfrage){
 function wolkePruefen(){
   var kasten=$("wolkeProbe");
   kasten.className="hinweis";
-  kasten.textContent="Frage die Ablage …";
+  kasten.textContent=_t("Frage die Ablage …");
   kasten.classList.remove("hide");
 
   var begonnen=Date.now();
@@ -3366,22 +3442,22 @@ function wolkePruefen(){
     var dauer=Date.now()-begonnen, antwort=null;
     try{ antwort=JSON.parse(e.text); }catch(f){}
     var zeilen=[
-      "Status "+e.a.status+" · "+(e.a.headers.get("content-type")||"ohne Typ")+
-        " · "+dauer+" ms",
-      "Antwort: "+String(e.text).replace(/\s+/g," ").trim().slice(0,200)
+      _t("Status ")+e.a.status+" · "+(e.a.headers.get("content-type")||_t("ohne Typ"))+
+        " · "+dauer+_t(" ms"),
+      _t("Antwort: ")+String(e.text).replace(/\s+/g," ").trim().slice(0,200)
     ];
     var urteil;
-    if(antwort && antwort.ok) urteil="Die Ablage antwortet richtig. Stand "+antwort.stand+
-      ", "+(antwort.daten?"Daten vorhanden":"noch leer")+".";
-    else if(antwort && antwort.fehler) urteil="Die Ablage antwortet, lehnt aber ab: "+antwort.fehler;
+    if(antwort && antwort.ok) urteil=_t("Die Ablage antwortet richtig. Stand ")+antwort.stand+
+      ", "+(antwort.daten?_t("Daten vorhanden"):_t("noch leer"))+".";
+    else if(antwort && antwort.fehler) urteil=_t("Die Ablage antwortet, lehnt aber ab: ")+_t(antwort.fehler);
     else urteil=wolkeDeuten(e.a.status, e.text);
     kasten.className = (antwort&&antwort.ok) ? "hinweis" : "hinweis";
     kasten.innerHTML="<b>"+esc(urteil)+"</b><div class=\"mono\" style=\"margin-top:8px;"+
       "font-size:12px;word-break:break-all\">"+esc(zeilen.join(" — "))+"</div>";
   }).catch(function(f){
-    kasten.innerHTML="<b>Keine Antwort: "+esc(f.message)+"</b>"+
-      "<div style=\"margin-top:8px\">Das kommt vor, wenn kein Netz da ist, die Adresse "+
-      "nicht stimmt, oder der Browser den Aufruf nicht zulässt.</div>";
+    kasten.innerHTML=_t("<b>Keine Antwort: ")+esc(f.message)+"</b>"+
+      _t("<div style=\"margin-top:8px\">Das kommt vor, wenn kein Netz da ist, die Adresse ")+
+      _t("nicht stimmt, oder der Browser den Aufruf nicht zulässt.</div>");
   });
 }
 
@@ -3398,15 +3474,15 @@ function wolkeAbgleichen(versuch){
   versuch=versuch||1;
   if(!wolkeBereit()) return Promise.resolve();
   if(wolkeLaeuft && versuch===1) return Promise.resolve();
-  wolkeLaeuft=true; zeichneWolke(); wolkeSagen("Gleicht ab …");
+  wolkeLaeuft=true; zeichneWolke(); wolkeSagen(_t("Gleicht ab …"));
 
   return wolkeRufen({aktion:"holen", wort:db.ablage.wort})
     .then(function(a){
-      if(a.fehler) throw new Error(a.fehler);
+      if(a.fehler) throw new Error(_t(a.fehler));
       var bericht=null;
       if(a.daten){
         bericht=zusammenfuehren(a.daten);
-        if(bericht.fehler) throw new Error(bericht.fehler);
+        if(bericht.fehler) throw new Error(_t(bericht.fehler));
         if(bericht.kartenNeu||bericht.buchungenNeu||bericht.anlassUebernommen||bericht.namenNeu||bericht.vermerkeNeu||bericht.neubeginn) sichern();
       }
       if(standZaehler===hochgeladenBei)
@@ -3423,31 +3499,31 @@ function wolkeAbgleichen(versuch){
     .then(function(e){
       if(e.ablegen.fehler==="veraltet"){
         if(versuch<3){ wolkeLaeuft=false; return wolkeAbgleichen(versuch+1); }
-        throw new Error("Die Ablage war mehrfach in Benutzung. Nächster Versuch später.");
+        throw new Error(_t("Die Ablage war mehrfach in Benutzung. Nächster Versuch später."));
       }
-      if(e.ablegen.fehler) throw new Error(e.ablegen.fehler);
+      if(e.ablegen.fehler) throw new Error(_t(e.ablegen.fehler));
       var b=e.bericht;
       if(b && b.neubeginn){
         offeneKarte=""; db.aufBetrag="";
         $("aufBetrag").value=""; $("abBetrag").value="";
         urteilBereit("auf"); urteilBereit("ab");
-        melden("Neubeginn von einem anderen Gerät übernommen");
+        melden(_t("Neubeginn von einem anderen Gerät übernommen"));
       }
       zeichneAlles(); zeichneEinstellungen();
       var dazu = b && (b.kartenNeu||b.buchungenNeu||b.namenNeu||b.vermerkeNeu||b.neubeginn)
-        ? " · "+[b.neubeginn?"Neubeginn von einem anderen Gerät":"",
-                 mehrzahl(b.buchungenNeu,"Buchung","Buchungen"),
-                 mehrzahl(b.kartenNeu,"Karte","Karten"),
-                 mehrzahl(b.namenNeu,"Name","Namen"),
-                 mehrzahl(b.vermerkeNeu,"Löschvermerk","Löschvermerke")].filter(Boolean).join(", ")+" übernommen"
+        ? " · "+[b.neubeginn?_t("Neubeginn von einem anderen Gerät"):"",
+                 mehrzahl(b.buchungenNeu,_t("Buchung"),_t("Buchungen")),
+                 mehrzahl(b.kartenNeu,_t("Karte"),_t("Karten")),
+                 mehrzahl(b.namenNeu,_t("Name"),_t("Namen")),
+                 mehrzahl(b.vermerkeNeu,_t("Löschvermerk"),_t("Löschvermerke"))].filter(Boolean).join(", ")+_t(" übernommen")
         : "";
-      wolkeSagen("Abgeglichen "+uhrzeit(Date.now())+" Uhr"+dazu+
-                 (e.ablegen.unveraendert && !dazu ? " · nichts Neues" : ""));
+      wolkeSagen(_t("Abgeglichen ")+uhrzeit(Date.now())+_t(" Uhr")+dazu+
+                 (e.ablegen.unveraendert && !dazu ? _t(" · nichts Neues") : ""));
       return true;
     })
     .catch(function(f){
-      wolkeSagen("Nicht abgeglichen: "+f.message+" · Die Kasse arbeitet weiter, "+
-                 "der nächste Versuch folgt.");
+      wolkeSagen(_t("Nicht abgeglichen: ")+f.message+_t(" · Die Kasse arbeitet weiter, ")+
+                 _t("der nächste Versuch folgt."));
       return false;
     })
     .then(function(erg){ wolkeLaeuft=false; zeichneWolke(); return erg; });
@@ -3500,6 +3576,9 @@ function zeichneEinstellungen(){
   if(document.activeElement!==$("trinkWerte")) $("trinkWerte").value=db.trinkwerte||"";
   rundeHinweisZeigen(); schreibHinweisZeigen();
   if(document.activeElement!==$("deckelBetrag")) $("deckelBetrag").value=deckelCent()>0 ? eur(deckelCent()).replace(/\.(?=\d{3})/g,"").replace(/,00$/,"") : "0";
+  document.querySelectorAll("#wahlSprache button").forEach(function(b){
+    b.setAttribute("aria-pressed", b.getAttribute("data-sprache")===(db.sprache==="tr"?"tr":"de") ? "true":"false");
+  });
   document.querySelectorAll("#wahlTon button").forEach(function(b){
     b.setAttribute("aria-pressed", (b.getAttribute("data-ton")==="1")===!!db.ton ? "true":"false");
   });
@@ -3541,9 +3620,9 @@ function sicherungEinspielen(datei){
     var roh=null;
     try{ roh=JSON.parse(leser.result); }catch(e){}
     var b=zusammenfuehren(roh,true);
-    if(b.fehler){ melden("Das ist keine Sicherung der Guthabenkasse"); return; }
+    if(b.fehler){ melden(_t("Das ist keine Sicherung der Guthabenkasse")); return; }
     sichern(); zeichneAlles(); zeichneEinstellungen(); wolkeVormerken();
-    melden(mehrzahl(b.buchungenNeu,"Buchung","Buchungen")+" übernommen");
+    melden(mehrzahl(b.buchungenNeu,_t("Buchung"),_t("Buchungen"))+_t(" übernommen"));
   };
   leser.readAsText(datei);
 }
@@ -3585,20 +3664,20 @@ function nullen(nummernNeu){
 function betriebAufNull(){
   var n=db.buchungen.length, k=aktiveKarten().length, rest=gesamt().rest;
   var bei1=$("nummernNeu").checked;
-  if(!confirm("Betrieb auf Null setzen?\n\n"+
-              "Gelöscht werden — auf ALLEN Geräten — "+mehrzahl(k,"Karte","Karten")+" und "+
-              mehrzahl(n,"Buchung","Buchungen")+", dazu alle Summen. Noch auf den Karten liegen "+
+  if(!confirm(_t("Betrieb auf Null setzen?\n\n")+
+              _t("Gelöscht werden — auf ALLEN Geräten — ")+mehrzahl(k,_t("Karte"),_t("Karten"))+_t(" und ")+
+              mehrzahl(n,_t("Buchung"),_t("Buchungen"))+_t(", dazu alle Summen. Noch auf den Karten liegen ")+
               euro(rest)+".\n\n"+
-              "Bleiben: Gerätezeichen, Rolle, Anlass, Adresse und Zugangswort der Ablage.\n\n"+
-              (bei1?"Die Kartennummern fangen wieder bei 1 an.":"Die Kartennummern zählen weiter, damit eine alte Karte nicht zufällig wieder gilt.")+
-              "\n\nVorher sollten alle Geräte einmal abgeglichen sein: was ein Gerät später ohne Netz "+
-              "bucht, geht beim nächsten Abgleich verloren. Eine Sicherung wird vorher automatisch gespeichert."))
+              _t("Bleiben: Gerätezeichen, Rolle, Anlass, Adresse und Zugangswort der Ablage.\n\n")+
+              (bei1?_t("Die Kartennummern fangen wieder bei 1 an."):_t("Die Kartennummern zählen weiter, damit eine alte Karte nicht zufällig wieder gilt."))+
+              _t("\n\nVorher sollten alle Geräte einmal abgeglichen sein: was ein Gerät später ohne Netz ")+
+              _t("bucht, geht beim nächsten Abgleich verloren. Eine Sicherung wird vorher automatisch gespeichert.")))
     return;
-  var wort=prompt("Zur Bestätigung das Wort NULL eintippen:");
-  if(wort===null || String(wort).trim().toUpperCase()!=="NULL"){ melden("Nicht zurückgesetzt"); return; }
+  var wort=prompt(_t("Zur Bestätigung das Wort NULL eintippen:"));
+  if(wort===null || String(wort).trim().toUpperCase()!=="NULL"){ melden(_t("Nicht zurückgesetzt")); return; }
   try{ sicherungSpeichern(); }catch(e){}
   nullen(bei1);
-  melden("Auf Null gesetzt");
+  melden(_t("Auf Null gesetzt"));
   if(wolkeBereit()) wolkeAbgleichen();
 }
 
@@ -3615,28 +3694,29 @@ var neueFassung="", letztePruefung=0;
 
 function zeichneFassung(){
   $("fassungsHinweis").classList.toggle("hide",!neueFassung);
-  if(neueFassung) $("fassungsText").textContent="Eine neue Fassung ist da: "+neueFassung+
-    " (hier läuft "+VERSION+").";
+  if(neueFassung) $("fassungsText").textContent=_t("Eine neue Fassung ist da: ")+neueFassung+
+    _t(" (hier läuft ")+VERSION+").";
+  else $("fassungsText").textContent="";
   var z=$("fassungZeile");
-  if(z) z.textContent="Fassung "+VERSION+(neueFassung ? " · neuere "+neueFassung+" liegt bereit" : "");
+  if(z) z.textContent=_t("Fassung ")+VERSION+(neueFassung ? _t(" · neuere ")+neueFassung+_t(" liegt bereit") : "");
 }
 
 function fassungPruefen(vonHand){
   if(location.protocol==="file:" || !window.fetch){
-    if(vonHand) melden("Das geht nur über die Internetadresse");
+    if(vonHand) melden(_t("Das geht nur über die Internetadresse"));
     return Promise.resolve();
   }
   letztePruefung=Date.now();
   return fetch(location.pathname+"?pruefen="+Date.now(),{cache:"no-store"})
-    .then(function(r){ if(!r.ok) throw new Error("Status "+r.status); return r.text(); })
+    .then(function(r){ if(!r.ok) throw new Error(_t("Status ")+r.status); return r.text(); })
     .then(function(t){
       var m=/var VERSION = "([^"]+)"/.exec(t);
       if(!m) throw new Error("keine Fassungsnummer gefunden");
       neueFassung = m[1]!==VERSION ? m[1] : "";
       zeichneFassung();
-      if(vonHand) melden(neueFassung ? "Neue Fassung "+neueFassung+" gefunden" : "Das ist die neueste Fassung");
+      if(vonHand) melden(neueFassung ? _t("Neue Fassung ")+neueFassung+_t(" gefunden") : _t("Das ist die neueste Fassung"));
     })
-    .catch(function(){ if(vonHand) melden("Nachsehen nicht möglich — kein Netz?"); });
+    .catch(function(){ if(vonHand) melden(_t("Nachsehen nicht möglich — kein Netz?")); });
 }
 
 /* Die Seite selbst neu holen und dabei den Eintrag im Zwischenspeicher
@@ -3663,6 +3743,21 @@ function reiterZeigen(name){
   if(name==="einstellungen") zeichneEinstellungen();
 }
 
+
+/* Sprache wechseln: Seite neu beschriften und alles neu zeichnen, was Text
+   aus dem Code trägt. Die Daten bleiben unberührt. */
+function spracheSetzen(s){
+  db.sprache=s; sichern();
+  uebersetzeSeite();
+  trinkVerbergen();
+  urteilBereit("auf"); urteilBereit("ab");
+  zeichneAlles(); zeichneEinstellungen(); rolleAnwenden();
+  schreibHinweisZeigen(); rundeHinweisZeigen();
+  wolkeStandText="";   /* die Statuszeile des Abgleichs trägt Text in der alten Sprache */
+  zeichneWolke(); zeichneFassung(); zeichneGaeste(); zeichneLichtStand();
+  zeichneKartenVorschau(); zeichneStapelVorschau(); zeichneLoeschVorschau();
+}
+
 function start(){
   laden();
   if(nurImSpeicher) speicherWarnung();
@@ -3670,6 +3765,7 @@ function start(){
   /* Die Fassung steht immer im Kopf, auch auf dem Handy, wo die obere Zeile fehlt:
      wer zwei Geräte vergleicht, sieht sofort, ob beide dieselbe haben. */
   $("kopfFassung").textContent="v"+VERSION;
+  uebersetzeSeite();
   $("aufBetrag").value=db.aufBetrag||"";
   urteilBereit("auf"); urteilBereit("ab");
   zeichneAlles(); zeichneEinstellungen(); rolleAnwenden();
@@ -3908,6 +4004,11 @@ function start(){
     db.deckel=(c>0 ? Math.min(c,100000) : 0); sichern(); zeichneEinstellungen();
   });
   $("abBetrag").addEventListener("input",rundeHinweisZeigen);
+  $("wahlSprache").addEventListener("click",function(e){
+    var s=e.target.getAttribute&&e.target.getAttribute("data-sprache");
+    if(s!=="de" && s!=="tr") return;
+    spracheSetzen(s);
+  });
   $("wahlTon").addEventListener("click",function(e){
     var t=e.target.getAttribute&&e.target.getAttribute("data-ton");
     if(t===null||t===undefined) return;
@@ -3940,7 +4041,7 @@ function start(){
   $("btnWolkeJetzt").addEventListener("click",function(){ ablageSpeichern(); wolkeAbgleichen(); });
   $("btnWolkePruefen").addEventListener("click",function(){
     ablageSpeichern();
-    if(!wolkeBereit()){ melden("Erst die Adresse eintragen"); return; }
+    if(!wolkeBereit()){ melden(_t("Erst die Adresse eintragen")); return; }
     wolkePruefen();
   });
   $("btnExport").addEventListener("click",sicherungSpeichern);
