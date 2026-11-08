@@ -28,6 +28,16 @@ Rücknahme oder Korrektur ist eine Gegenbuchung, keine Löschung.
 | **Karten** | Neue Karten drucken (8 je A4, 85 × 54 mm), wahlweise **mit Namen** (ein Name je Zeile) oder aus einer **Gästeliste** (Excel/CSV in den Kasten ziehen, Spalten ankreuzen). **Karten vorab aufladen** (Von/Bis/Betrag, etwa Karten 1–20 je 50 €). **Karten löschen** (Von/Bis, alle unbenutzten, oder einzeln). Liste aller Karten mit Suche nach Nummer und Name. Nummer antippen klappt die Karte auf: Guthaben direkt auf einen Betrag setzen, Namen ändern, Verlauf, einzelne Buchungen zurücknehmen, Restguthaben auszahlen, Karte nochmal drucken oder löschen. Abschluss drucken. |
 | **Einstellungen** | Rolle des Geräts (beides / nur Aufbuchen / nur Abbuchen), Gerätezeichen, Anlass, Ablage, Sicherung. |
 
+**Anschreiben:** Am Abbuchen-Schirm der Knopf „Anschreiben“. Ist er an, darf die Karte für
+diesen einen Kauf **ins Minus** (der Schalter geht nach der Buchung von selbst wieder aus). Bedingungen:
+die Karte hat einen **Namen** (sonst „Karte ohne Namen“, nichts wird gebucht) und das Minus bleibt
+**innerhalb der Obergrenze** (Einstellungen, voreingestellt 50 €; „Über der Grenze“; 0 schaltet das
+Anschreiben ab). Das Ergebnis zeigt oben rötlich den abgebuchten Betrag, unten bernsteinfarben **„Noch
+zu zahlen“**. Beim Gehen: Knopf **Begleichen** (bucht den offenen Betrag auf) oder ganz normal aufbuchen.
+Eine Karte ohne Betrag scannen zeigt „Offen 20,00 €“ mit demselben Knopf. Keine Trinkgeld-Kacheln im
+Minus; „Aufrunden“ gilt auch hier. Karten im Minus lassen sich nicht löschen, stehen in der Liste als
+„offen“ und im **Abschluss** in einem eigenen Block „Offen — noch zu zahlen“ mit Karte, Name und Zusatz.
+
 **Bestand ansehen:** Eine Karte scannen (oder ihren Code eintippen) **ohne Betrag** – Feld leer oder 0,00 –
 bucht nichts, sondern zeigt grünlich „Bestand 17,30 €“ mit Kartennummer und Namen. Das gilt in
 beiden Reitern; am Handy startet „Scannen“ dann auch ohne Betrag. Ein unsinniger Betrag
@@ -170,7 +180,8 @@ in der `index.html`.
 
 | | |
 | --- | --- |
-| **0.7.1** | Scannen ohne Betrag (leer oder 0,00) zeigt den Kartenbestand, bucht nichts; Scannen am Handy geht auch ohne Betrag |
+| **0.8.0** | Anschreiben: Karten mit Namen dürfen bis zu einer Grenze (50 €) ins Minus, „Noch zu zahlen“, Begleichen, Block „Offen“ im Abschluss |
+| 0.7.1 | Scannen ohne Betrag (leer oder 0,00) zeigt den Kartenbestand, bucht nichts; Scannen am Handy geht auch ohne Betrag |
 | 0.7.0 | Abbuchen: zweigeteiltes Ergebnis (oben rötlich abgebucht, unten grünlich Rest, gleich groß); Trinkgeld-Tasten in Prozent (5 / 7,5 / 10 %) mit Betrag auf der Kachel, auf 0,50 € genau gerundet; Euro-Tasten weiter wählbar |
 | 0.6.1 | Name der Bedienung je Gerät: steht bei jeder Buchung, im Verlauf und im Abschluss („Je Bedienung“, mit Trinkgeld) |
 | 0.6.0 | Trinkgeld: Aufrunden auf den vollen Euro und Tasten nach der Buchung, als eigene Buchungsart, im Abschluss getrennt |

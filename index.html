@@ -229,7 +229,7 @@ td.n,th.n{text-align:right}
 .schirm{display:flex;flex-direction:column;gap:10px}
 .betragKarte{margin:0}
 .betragKarte>.inhalt{padding:12px}
-.kopfReihe{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.kopfReihe{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;row-gap:6px}
 .kopfReihe .feldTitel{margin:0}
 .anzeige{position:relative}
 #aufBetrag,#abBetrag{
@@ -244,7 +244,7 @@ td.n,th.n{text-align:right}
   touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .tasten button:active{background:var(--wattHell);transform:translateY(1px)}
 .tasten button.zurueck{font-size:22px;color:var(--tinteWeich)}
-.kopfKnoepfe{display:flex;gap:6px}
+.kopfKnoepfe{display:flex;gap:6px;margin-left:auto}
 .kopfKnoepfe .knopf[aria-pressed="true"]{background:var(--messing);border-color:var(--messing);color:#fff}
 .rundeHinweis{margin:6px 0 0;font-size:14px;color:var(--messing);font-weight:600;text-align:right}
 .befund.b-zwei{padding:0;gap:0;justify-content:stretch;align-items:stretch;border:0}
@@ -252,6 +252,9 @@ td.n,th.n{text-align:right}
   justify-content:center;text-align:center;padding:6px 10px;overflow:hidden}
 .b-zwei .hz-ab{background:#F5D9D2;color:#8A2C1C}
 .b-zwei .hz-rest{background:#D6EADB;color:#1B5A3A}
+.b-zwei .hz-offen{background:#F6E3B8;color:#6B4E08}
+.schreibHinweis{margin:6px 0 0;font-size:14px;color:var(--ziegel);font-weight:600;text-align:right}
+.kopfKnoepfe .knopf.schreibt[aria-pressed="true"]{background:var(--ziegel);border-color:var(--ziegel);color:#fff}
 .b-zwei .hz-t{font-family:'Inter',system-ui,sans-serif;font-size:calc(var(--zmass,40px)*.34);
   font-weight:600;letter-spacing:.04em;text-transform:uppercase;opacity:.85;line-height:1.2}
 .b-zwei .hz-b{font-size:var(--zmass,40px);line-height:1.05;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -305,6 +308,7 @@ td.n,th.n{text-align:right}
 .b-auf{background:var(--watt);color:#fff;border-color:var(--watt)}
 .b-ab{background:var(--messing);color:#fff;border-color:var(--messing)}
 .b-bestand{background:#D6EADB;color:#1B5A3A;border-color:#B7D6C0}
+.b-offen{background:#F6E3B8;color:#6B4E08;border-color:#E3C77E}
 .b-nein{background:var(--ziegel);color:#fff;border-color:var(--ziegel)}
 @keyframes aufleuchten{from{filter:brightness(1.85)}to{filter:brightness(1)}}
 .befund.leuchtet{animation:aufleuchten .45s ease-out}
@@ -569,6 +573,7 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     <button class="knopf nurHandy ak" data-aendern="auf">Betrag ändern</button>
   </div>
   <div class="befund b-still" id="befund"></div>
+  <div class="trinkReihe hide" id="begleichReihe"></div>
   <button class="knopf voll gross nurHandy wk" data-weiter="auf">Nächste Karte</button>
   <div class="eingabe">
     <input id="aufCode" placeholder="Code eintippen oder scannen" autocomplete="off"
@@ -581,11 +586,13 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 <section id="reiter-ab" class="schirm breit phase-eingabe hide">
   <div class="karte betragKarte"><div class="inhalt">
     <div class="kopfReihe"><span class="feldTitel">Betrag abbuchen</span>
-      <span class="kopfKnoepfe"><button class="knopf klein" id="abRunde" aria-pressed="false">Aufrunden</button>
+      <span class="kopfKnoepfe"><button class="knopf klein schreibt hide" id="abSchreib" aria-pressed="false">Anschreiben</button>
+      <button class="knopf klein" id="abRunde" aria-pressed="false">Aufrunden</button>
       <button class="knopf klein" id="abNull">Leeren</button></span></div>
     <div class="anzeige"><input id="abBetrag" inputmode="none" placeholder="0,00" autocomplete="off"
          aria-label="Betrag abbuchen"><span class="eurozeichen">€</span></div>
     <p class="rundeHinweis hide" id="rundeHinweis"></p>
+    <p class="schreibHinweis hide" id="schreibHinweis"></p>
     <div class="tasten" data-fuer="abBetrag">
       <button data-taste="7">7</button><button data-taste="8">8</button><button data-taste="9">9</button>
       <button data-taste="4">4</button><button data-taste="5">5</button><button data-taste="6">6</button>
@@ -751,6 +758,13 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         <label class="feld grow"><span>Aufrunden auf den vollen Euro</span>
           <div class="wahl" id="wahlRunde"><button data-runde="1">An</button><button data-runde="0">Aus</button></div></label>
       </div>
+      <div class="reihe" style="margin-top:14px">
+        <label class="feld grow"><span>Anschreiben: höchstens offen je Karte (Euro, 0 = aus)</span>
+          <input id="deckelBetrag" class="mono" inputmode="decimal" maxlength="8" autocomplete="off" placeholder="50"></label>
+      </div>
+      <p class="muted" style="margin:6px 0 0">Mit dem Knopf „Anschreiben“ am Abbuchen-Schirm darf eine Karte
+        ins Minus, bis zu dieser Grenze — und nur, wenn auf der Karte ein <b>Name</b> steht (Karten →
+        Karte antippen). Beim Gehen wird der offene Betrag aufgebucht.</p>
       <div class="reihe" style="margin-top:14px">
         <label class="feld grow"><span>Trinkgeld-Tasten rechnen in</span>
           <div class="wahl" id="wahlTrinkArt"><button data-trinkart="prozent">Prozent</button><button data-trinkart="euro">Euro</button></div></label>
@@ -1097,7 +1111,7 @@ function qrSvg(text){
 /* Die Nummer steht oben in der Kopfzeile und ist dazu da, zwei Geräte
    nebeneinanderlegen zu können. Bei jeder Änderung, die man merkt,
    weiterdrehen. */
-var VERSION = "0.7.1";
+var VERSION = "0.8.0";
 
 /* ============================== Daten ==============================
 
@@ -1128,6 +1142,7 @@ function leereDaten(){
     bediener:"",                   /* Name der Bedienung (Vorname), steht bei jeder Buchung */
     trink:true,                    /* nach dem Abbuchen Trinkgeld-Tasten anbieten */
     aufrunden:false,               /* beim Abbuchen auf den vollen Euro aufrunden */
+    deckel:5000,                   /* Anschreiben: höchstens so viel Cent offen je Karte; 0 = aus */
     trinkart:"prozent",            /* prozent | euro: wie die Tasten rechnen */
     trinkprozent:"5 7,5 10",       /* Prozent vom Verkauf, durch Leerzeichen getrennt */
     trinkwerte:"0,50 1 2",         /* die Tasten, in Euro, durch Leerzeichen getrennt */
@@ -1346,8 +1361,13 @@ function gesamt(){
     else if(b.art==="ab") ab+=-b.cent;
     else if(b.art==="trinkgeld") tip+=-b.cent;
   });
-  for(var nr in s) rest+=s[nr];
-  return {auf:auf, ab:ab, tip:tip, rest:rest};
+  var guthaben=0, offen=0, nOffen=0;
+  for(var nr in s){
+    rest+=s[nr];
+    if(istGeloescht(nr)) continue;
+    if(s[nr]>0) guthaben+=s[nr]; else if(s[nr]<0){ offen+=-s[nr]; nOffen++; }
+  }
+  return {auf:auf, ab:ab, tip:tip, rest:rest, guthaben:guthaben, offen:offen, nOffen:nOffen};
 }
 
 /* ======================= Das große Urteil =======================
@@ -1398,14 +1418,14 @@ function zweiAnpassen(feld){
   }
 }
 
-function urteilZwei(tab, abCent, abSub, restCent, restSub){
+function urteilZwei(tab, abCent, abSub, restCent, restSub, offen){
   var feld=$(tab==="ab"?"befund2":"befund");
   feld.className="befund b-zwei";
   feld.style.removeProperty("--urteilmass");
   feld.innerHTML=
     '<div class="hz hz-ab"><div class="hz-t">Abgebucht</div><div class="hz-b">'+esc(euro(abCent))+
       '</div><div class="hz-s">'+esc(abSub||"")+'</div></div>'+
-    '<div class="hz hz-rest"><div class="hz-t">Noch auf der Karte</div><div class="hz-b">'+esc(euro(restCent))+
+    '<div class="hz '+(offen?'hz-offen':'hz-rest')+'"><div class="hz-t">'+(offen?'Noch zu zahlen':'Noch auf der Karte')+'</div><div class="hz-b">'+esc(euro(restCent))+
       '</div><div class="hz-s">'+esc(restSub||"")+'</div></div>';
   zweiAnpassen(feld);
   feld.classList.remove("leuchtet"); void feld.offsetWidth;
@@ -1463,15 +1483,75 @@ function kameraAn(tab){
   kameraUmschalten(tab);
 }
 
+/* ============================ Anschreiben ============================
+   Der Gast kauft, die Karte rutscht ins Minus, beim Gehen wird bezahlt: der
+   offene Betrag wird mit dem normalen Aufbuchen ausgeglichen. Die Gäste sind
+   an ihrem Namen auf der Karte zu erkennen, deshalb gilt es nur für Karten
+   mit Namen, und nur bis zu einer Grenze. */
+var anschreibenAn=false;
+
+function deckelCent(){ return Math.max(0, Number(db.deckel)||0); }
+
+function schreibHinweisZeigen(){
+  var k=$("abSchreib"), h=$("schreibHinweis"), d=deckelCent();
+  k.classList.toggle("hide", d<=0);
+  if(d<=0) anschreibenAn=false;
+  k.setAttribute("aria-pressed", anschreibenAn ? "true":"false");
+  k.textContent=anschreibenAn ? "Anschreiben: an" : "Anschreiben";
+  if(anschreibenAn){ h.textContent="Anschreiben: bis "+euro(d)+" offen, nur Karten mit Namen"; h.classList.remove("hide"); }
+  else h.classList.add("hide");
+}
+
+/* Darf die Karte danach auf diesem Stand stehen? {ok} oder {ok:false, titel, text} */
+function minusErlaubt(nr, ziel){
+  if(ziel>=0) return {ok:true};
+  var d=deckelCent();
+  if(!anschreibenAn || d<=0) return {ok:false};
+  if(!kartenName(nr)) return {ok:false, titel:"Karte ohne Namen",
+    text:"Anschreiben geht nur mit Namen auf der Karte. Unter Karten die Karte antippen und den Namen eintragen. "+kartenCode(nr)};
+  if(ziel<-d) return {ok:false, titel:"Über der Grenze",
+    text:"Offen wären "+euro(-ziel)+", erlaubt sind höchstens "+euro(d)+" je Karte. "+kartenLabel(nr)};
+  return {ok:true};
+}
+
+/* Der offene Betrag einer Karte, mit einem Tipp aufgebucht. */
+function begleichAnbieten(tab, nr){
+  var reihe=$(tab==="ab"?"trinkReihe":"begleichReihe");
+  var s=saldo(nr);
+  if(s>=0){ reihe.classList.add("hide"); return; }
+  letzterVerkauf=null;
+  reihe.innerHTML='<span class="trinkTitel">Beim Gehen bezahlt?</span>'+
+    '<button data-begleichen="'+esc(nr)+'"><b>Begleichen</b><span>+ '+esc(euro(-s))+' aufbuchen</span></button>';
+  reihe.classList.remove("hide");
+}
+
+function begleichen(nr){
+  var s=saldo(nr);
+  if(!(s<0)) return;
+  buchen(nr, -s, "auf");
+  trinkVerbergen();
+  $("begleichReihe").classList.add("hide");
+  var tab=(document.getElementById("reiter-ab").classList.contains("hide")) ? "auf" : "ab";
+  if(tab==="ab") urteil("ab","b-auf","Beglichen","Karte "+kartenLabel(nr)+" · "+euro(-s)+" aufgebucht, Guthaben "+euro(saldo(nr)));
+  else urteil("auf","b-auf","Beglichen","Karte "+kartenLabel(nr)+" · "+euro(-s)+" aufgebucht, Guthaben "+euro(saldo(nr)));
+  klingen("auf"); zeichneAlles(); wolkeVormerken();
+}
+
 /* Leer oder genau null: kein Betrag, nur nachsehen. */
 function betragOhne(cent){ return isNaN(cent) ? false : cent===0; }
 
 function bestandZeigen(tab, nr){
   var s=saldo(nr), bekannt=!!db.karten[nr];
-  urteil(tab,"b-bestand","Bestand "+euro(s),
+  if(tab==="ab") trinkVerbergen();
+  if(s<0){
+    urteil(tab,"b-offen","Offen "+euro(-s),"Karte "+kartenLabel(nr)+" · muss noch zahlen · nichts gebucht");
+    begleichAnbieten(tab,nr);
+  } else {
+    urteil(tab,"b-bestand","Bestand "+euro(s),
          "Karte "+kartenLabel(nr)+" · nichts gebucht"+
-         (bekannt?"":" · hier nicht bekannt, vielleicht fehlt ein Abgleich")+
-         (s<0?" · im Minus":""));
+         (bekannt?"":" · hier nicht bekannt, vielleicht fehlt ein Abgleich"));
+    if(tab==="auf") $("begleichReihe").classList.add("hide");
+  }
   if(istHandy()){ setPhase(tab,"ergebnis"); kameraAus(); }
   klingen("auf");
   if(navigator.vibrate) navigator.vibrate(30);
@@ -1595,6 +1675,7 @@ function trinkVerbergen(){
   letzterVerkauf=null;
   $("trinkReihe").classList.add("hide");
   $("trinkReihe").innerHTML="";
+  $("begleichReihe").classList.add("hide");
 }
 
 /* Das zweiteilige Ergebnis beim Abbuchen. Oben steht alles, was abgebucht
@@ -1602,13 +1683,15 @@ function trinkVerbergen(){
 function ergebnisAb(nr, cent, tip, notiz){
   var sub=tip>0 ? "davon Trinkgeld "+euro(tip) : "";
   if(notiz) sub+=(sub?" · ":"")+notiz;
-  urteilZwei("ab", cent+tip, sub, saldo(nr), "Karte "+kartenLabel(nr));
+  var rest=saldo(nr);
+  if(rest<0) urteilZwei("ab", cent+tip, sub, -rest, "Karte "+kartenLabel(nr)+" · angeschrieben", true);
+  else urteilZwei("ab", cent+tip, sub, rest, "Karte "+kartenLabel(nr));
 }
 
 function trinkAnbieten(nr, verkaufId, schonAufgerundet, cent){
   var reihe=$("trinkReihe");
   trinkVerbergen();
-  if(db.trink===false || schonAufgerundet) return;
+  if(db.trink===false || schonAufgerundet || saldo(nr)<=0) return;
   var opt=trinkOptionen(cent); if(!opt.length) return;
   letzterVerkauf={nr:nr, id:verkaufId, cent:cent};
   var rest=saldo(nr);
@@ -1643,7 +1726,7 @@ function buche(tab, roh){
     klingen("nein"); return;
   }
   var feldId = tab==="ab" ? "abBetrag" : "aufBetrag";
-  if(tab==="ab") trinkVerbergen();
+  if(tab==="ab") trinkVerbergen(); else $("begleichReihe").classList.add("hide");
   var cent=centAus($(feldId).value);
   /* Ohne Betrag (leer oder 0,00) bucht nichts: die Karte zeigt, was auf ihr
      steht. Das ist die Frage "wie viel habe ich noch?" am Tresen. */
@@ -1676,7 +1759,11 @@ function buche(tab, roh){
     $("aufBetrag").value=""; db.aufBetrag=""; sichern();
   } else {
     var vorher=saldo(nr);
-    if(vorher<cent){
+    var erlaubt=vorher<cent ? minusErlaubt(nr, vorher-cent) : {ok:true};
+    if(vorher<cent && !erlaubt.ok && erlaubt.titel){
+      urteil("ab","b-nein",erlaubt.titel,erlaubt.text); klingen("nein"); return;
+    }
+    if(vorher<cent && !erlaubt.ok){
       urteil("ab","b-nein","Zu wenig Guthaben",
              "Es fehlen "+euro(cent-vorher)+" · Guthaben "+euro(vorher)+" · Karte "+kartenLabel(nr)+
              (db.karten[nr]?"":" · hier nicht bekannt, vielleicht fehlt ein Abgleich"));
@@ -1687,18 +1774,19 @@ function buche(tab, roh){
        nur für den Betrag selbst, wird nicht aufgerundet — der Gast soll
        nicht an einem Cent scheitern. */
     var tip=aufrundenTrinkgeld(cent), nichtGereicht=false;
-    if(tip>0 && vorher<cent+tip){ tip=0; nichtGereicht=true; }
+    if(tip>0 && vorher<cent+tip && !minusErlaubt(nr, vorher-cent-tip).ok){ tip=0; nichtGereicht=true; }
     var verkauf=buchen(nr, -cent, "ab", null, null, tip>0);
     if(tip>0){ var tb=buchen(nr, -tip, "trinkgeld"); tb.zu=verkauf.id; sichern(); }
     if(istHandy()) setPhase("ab","ergebnis");
     /* Erst die Tasten, dann das Ergebnis: die Tasten nehmen Platz weg, und die
        Schrift des Ergebnisses wird für den Rest gerechnet. */
     trinkAnbieten(nr, verkauf.id, tip>0, cent);
+    if(saldo(nr)<0) begleichAnbieten("ab",nr);
     ergebnisAb(nr, cent, tip, nichtGereicht?"zum Aufrunden reichte das Guthaben nicht":"");
     klingen("ab");
     /* Der Betrag wird geleert: der nächste Gast kauft etwas anderes, und ein
        vergessener Betrag würde ihm das Falsche abziehen. */
-    $("abBetrag").value=""; rundeHinweisZeigen();
+    $("abBetrag").value=""; anschreibenAn=false; schreibHinweisZeigen(); rundeHinweisZeigen();
   }
   /* Nach einem Erfolg ruht die Kamera: sonst bucht die nächste Karte, die
      zufällig ins Bild kommt, ungefragt noch einmal. Weiter geht es erst
@@ -1881,7 +1969,7 @@ function zeichneZahlen(){
   for(var nr in s){ if(istGeloescht(nr)) continue; if(s[nr]>0) mitGuthaben++; else if(s[nr]<0) imMinus++; }
   $("zZeile").textContent=mehrzahl(nKarten,"Karte","Karten")+" bekannt, "+
     mehrzahl(mitGuthaben,"mit Guthaben","mit Guthaben")+
-    (imMinus ? ", "+mehrzahl(imMinus,"Karte im Minus","Karten im Minus")+" (zwei Geräte haben zugleich abgebucht)" : "")+
+    (imMinus ? ", "+mehrzahl(imMinus,"Karte offen","Karten offen")+" mit zusammen "+eur(g.offen)+" € (angeschrieben, oder zwei Geräte haben zugleich abgebucht)" : "")+
     "."+(g.tip>0 ? " Davon als Trinkgeld abgebucht: "+eur(g.tip)+" €." : "");
 }
 
@@ -1966,7 +2054,7 @@ function zeichneKartenListeEigentlich(){
   var zeigtOffene=false;
   $("kartenListe").innerHTML=nrs.map(function(nr){
     var g=s[nr]||0, offen=(nr===offeneKarte);
-    var marker=g<0?'<span class="marker m-weg">Minus</span>'
+    var marker=g<0?'<span class="marker m-weg">offen</span>'
               :g>0?'<span class="marker m-auf">Guthaben</span>'
                   :'<span class="marker m-leer">leer</span>';
     if(offen) zeigtOffene=true;
@@ -3069,7 +3157,8 @@ function abschlussDrucken(){
     if(b.art==="auf") z.auf+=b.cent; else if(b.art==="ab") z.ab+=-b.cent;
     else if(b.art==="trinkgeld") z.tip+=-b.cent;
   });
-  var offen=Object.keys(s).filter(function(n){ return s[n]!==0 && !istGeloescht(n); }).sort();
+  var offen=Object.keys(s).filter(function(n){ return s[n]>0 && !istGeloescht(n); }).sort();
+  var schuld=Object.keys(s).filter(function(n){ return s[n]<0 && !istGeloescht(n); }).sort();
   $("bogen").className="bericht";
   $("bogen").innerHTML=
     '<div class="briefkopf"><div class="wer">'+esc(a.verein||"Guthabenkasse")+'</div>'+
@@ -3080,7 +3169,10 @@ function abschlussDrucken(){
     '<tr><td>Abgebucht (verkauft)</td><td class="n">'+eur(g.ab)+' €</td></tr>'+
     '<tr><td>Abgebucht als Trinkgeld</td><td class="n">'+eur(g.tip)+' €</td></tr>'+
     '<tr><td>Ausgezahlt, zurückgenommen oder korrigiert</td><td class="n">'+eur(g.auf-g.ab-g.tip-g.rest)+' €</td></tr>'+
-    '<tr><td><b>Noch auf Karten</b></td><td class="n"><b>'+eur(g.rest)+' €</b></td></tr></table>'+
+    '<tr><td><b>Noch auf Karten</b></td><td class="n"><b>'+eur(g.rest)+' €</b></td></tr>'+
+    (g.offen>0 ? '<tr><td>davon Guthaben auf Karten</td><td class="n">'+eur(g.guthaben)+' €</td></tr>'+
+                 '<tr><td>davon offen (angeschrieben, noch zu zahlen)</td><td class="n">−'+eur(g.offen)+' €</td></tr>' : '')+
+    '</table>'+
     '<div class="titel" style="margin-top:8mm">Je Bedienung</div>'+
     '<table><tr><th>Name / Gerät</th><th class="n">Buchungen</th><th class="n">aufgebucht</th><th class="n">abgebucht</th><th class="n">Trinkgeld</th></tr>'+
     Object.keys(proGeraet).sort().map(function(k){
@@ -3088,6 +3180,10 @@ function abschlussDrucken(){
       return '<tr><td>'+esc(k)+'</td><td class="n">'+z.anzahl+'</td><td class="n">'+eur(z.auf)+
              ' €</td><td class="n">'+eur(z.ab)+' €</td><td class="n">'+eur(z.tip)+' €</td></tr>';
     }).join("")+'</table>'+
+    (schuld.length ? '<div class="titel" style="margin-top:8mm">Offen — noch zu zahlen ('+schuld.length+', zusammen '+eur(-schuld.reduce(function(a,n){ return a+s[n]; },0))+' €)</div>'+
+      '<table><tr><th>Karte</th><th>Name</th><th class="n">offen</th></tr>'+
+      schuld.map(function(n){ return '<tr><td>'+esc(kartenCode(n))+'</td><td>'+esc(kartenName(n)||"—")+
+        (kartenZusatz(n)?' · '+esc(kartenZusatz(n)):'')+'</td><td class="n">'+eur(-s[n])+' €</td></tr>'; }).join("")+'</table>' : '')+
     '<div class="titel" style="margin-top:8mm">Karten mit Restbetrag ('+offen.length+')</div>'+
     (offen.length?'<table><tr><th>Karte</th><th class="n">Guthaben</th></tr>'+
       offen.map(function(n){ return '<tr><td>'+esc(kartenCode(n))+'</td><td class="n">'+eur(s[n])+' €</td></tr>'; }).join("")+
@@ -3402,7 +3498,8 @@ function zeichneEinstellungen(){
   });
   if(document.activeElement!==$("trinkProzent")) $("trinkProzent").value=db.trinkprozent||"";
   if(document.activeElement!==$("trinkWerte")) $("trinkWerte").value=db.trinkwerte||"";
-  rundeHinweisZeigen();
+  rundeHinweisZeigen(); schreibHinweisZeigen();
+  if(document.activeElement!==$("deckelBetrag")) $("deckelBetrag").value=deckelCent()>0 ? eur(deckelCent()).replace(/\.(?=\d{3})/g,"").replace(/,00$/,"") : "0";
   document.querySelectorAll("#wahlTon button").forEach(function(b){
     b.setAttribute("aria-pressed", (b.getAttribute("data-ton")==="1")===!!db.ton ? "true":"false");
   });
@@ -3796,6 +3893,19 @@ function start(){
   $("trinkReihe").addEventListener("click",function(e){
     var k=e.target.closest&&e.target.closest("[data-trinkgeld]");
     if(k && !k.disabled) trinkgeldBuchen(Number(k.getAttribute("data-trinkgeld")));
+    var bg=e.target.closest&&e.target.closest("[data-begleichen]");
+    if(bg) begleichen(bg.getAttribute("data-begleichen"));
+  });
+  $("begleichReihe").addEventListener("click",function(e){
+    var bg=e.target.closest&&e.target.closest("[data-begleichen]");
+    if(bg) begleichen(bg.getAttribute("data-begleichen"));
+  });
+  $("abSchreib").addEventListener("click",function(){
+    anschreibenAn=!anschreibenAn; schreibHinweisZeigen();
+  });
+  $("deckelBetrag").addEventListener("change",function(){
+    var c=centAus(this.value);
+    db.deckel=(c>0 ? Math.min(c,100000) : 0); sichern(); zeichneEinstellungen();
   });
   $("abBetrag").addEventListener("input",rundeHinweisZeigen);
   $("wahlTon").addEventListener("click",function(e){
