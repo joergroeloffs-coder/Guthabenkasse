@@ -602,9 +602,10 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     <div class="inhalt">
       <div class="zone" id="gaesteZone">
         <b>Gästeliste hierher ziehen</b>
-        <span class="muted">Excel (.xlsx), CSV oder Text — jede Zeile wird eine Karte.</span>
+        <span class="muted">Excel (.xlsx, .xls), OpenDocument (.ods), CSV oder Text — jede Zeile wird eine Karte.
+          Oder Zellen aus Excel kopieren und hier einfügen (Strg+V).</span>
         <button class="knopf klein" id="btnGaeste" type="button">Datei wählen</button>
-        <input type="file" id="gaesteDatei" accept=".xlsx,.xlsm,.csv,.tsv,.txt,text/csv,text/plain" class="hide">
+        <input type="file" id="gaesteDatei" accept=".xlsx,.xlsm,.xls,.ods,.fods,.xml,.html,.htm,.csv,.tsv,.txt,text/csv,text/plain,application/vnd.ms-excel" class="hide">
       </div>
       <div class="hinweis hide" id="gaesteFehler"></div>
 
@@ -613,6 +614,8 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
           <span class="feldTitel" id="gaesteTitel" style="margin:0"></span>
           <button class="knopf klein" id="btnGaesteWeg" type="button">Liste entfernen</button>
         </div>
+        <label class="feld hide" id="gBlattFeld" style="margin-top:8px"><span>Tabellenblatt</span>
+          <select id="gBlatt"></select></label>
         <label class="haken"><input type="checkbox" id="gKopf" checked> Erste Zeile ist die Überschrift</label>
         <div class="feldTitel" style="margin-top:8px">Was soll auf der Karte stehen? Häkchen setzen:</div>
         <div class="tabellenrahmen"><table id="gaesteTabelle"></table></div>
@@ -662,10 +665,9 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         <button class="knopf warn" id="btnUnbenutzte">Alle unbenutzten</button>
       </div>
       <p class="muted" style="margin:10px 0 0" id="lVorschau"></p>
-      <p class="muted" style="margin:6px 0 0">Gelöscht werden nur Karten ohne Guthaben. Ihre
-        Buchungen bleiben im Abschluss stehen, die Nummer wird nicht neu vergeben. Eine einzelne
-        Karte löschen Sie in der Liste unten: Nummer antippen.</p>
-      <div id="geloeschtListe" style="margin-top:10px"></div>
+      <p class="muted" style="margin:6px 0 0">Gelöscht werden nur Karten ohne Guthaben, und
+        sie sind danach nirgends mehr zu sehen. Ihre Buchungen bleiben im Abschluss mitgezählt, die
+        Nummer wird nicht neu vergeben. Eine einzelne Karte löschen Sie in der Liste unten: Nummer antippen.</p>
     </div></div>
 
   <div class="karte"><div class="titel"><h2>Alle Karten</h2></div>
@@ -1033,7 +1035,7 @@ function qrSvg(text){
 /* Die Nummer steht oben in der Kopfzeile und ist dazu da, zwei Geräte
    nebeneinanderlegen zu können. Bei jeder Änderung, die man merkt,
    weiterdrehen. */
-var VERSION = "0.4.1";
+var VERSION = "0.5";
 
 /* ============================== Daten ==============================
 
@@ -1601,7 +1603,7 @@ function zeichneZahlen(){
   $("zAuf").textContent=eur(g.auf); $("zAb").textContent=eur(g.ab); $("zRest").textContent=eur(g.rest);
   var nKarten=aktiveKarten().length;
   var mitGuthaben=0, imMinus=0;
-  for(var nr in s){ if(s[nr]>0) mitGuthaben++; else if(s[nr]<0) imMinus++; }
+  for(var nr in s){ if(istGeloescht(nr)) continue; if(s[nr]>0) mitGuthaben++; else if(s[nr]<0) imMinus++; }
   $("zZeile").textContent=mehrzahl(nKarten,"Karte","Karten")+" bekannt, "+
     mehrzahl(mitGuthaben,"mit Guthaben","mit Guthaben")+
     (imMinus ? ", "+mehrzahl(imMinus,"Karte im Minus","Karten im Minus")+" (zwei Geräte haben zugleich abgebucht)" : "")+
@@ -1831,7 +1833,7 @@ function stapelBuchen(){
 function stapelListe(){
   var gruppen={}, reihenfolge=[];
   db.buchungen.forEach(function(b){
-    if(!b.stapel) return;
+    if(!b.stapel || istGeloescht(b.karte)) return;      /* eine gelöschte Karte zählt hier nicht mehr */
     if(!gruppen[b.stapel]){ gruppen[b.stapel]={id:b.stapel,zeit:b.zeit,buchungen:[]}; reihenfolge.push(b.stapel); }
     gruppen[b.stapel].buchungen.push(b);
   });
@@ -1873,48 +1875,126 @@ function stapelZurueck(id){
 
 /* ============================== Gästeliste ==============================
 
-   Eine Liste aus Excel oder einer CSV-Datei wird in den Kasten "Neue Karten
-   drucken" gezogen; jede Zeile wird eine Karte. Welche Spalten auf der Karte
-   erscheinen, wählt man mit Häkchen.
+   Eine Liste wird in den Kasten "Neue Karten drucken" gezogen, gewählt oder
+   aus der Zwischenablage eingefügt; jede Zeile wird eine Karte. Welche Spalten
+   auf der Karte erscheinen, wählt man mit Häkchen.
 
-   Gelesen wird ohne fremde Bibliothek, wie alles in dieser Datei:
+   Gelesen wird ohne fremde Bibliothek, wie alles in dieser Datei. Was erkannt
+   wird, entscheidet nicht die Endung (eine "xls" ist oft eine HTML-Seite, eine
+   "csv" oft UTF-16), sondern der Anfang der Datei:
 
-     CSV   — Trennzeichen Semikolon, Komma oder Tabulator werden erkannt (ein
-             deutsches Excel speichert mit Semikolon), Anführungszeichen und
-             Zeilenumbrüche in Feldern ebenfalls; UTF-8 und, falls das nicht
-             passt, Windows-1252.
-     XLSX  — eine ZIP-Datei mit XML darin. Das ZIP wird von Hand geöffnet und
-             mit dem Entpacker des Browsers ("DecompressionStream") ausgepackt,
-             das XML mit dem Parser des Browsers gelesen. Die erste Tabelle
-             zählt; Datumszellen werden als Datum ausgegeben, nicht als Zahl.
-     XLS   — das alte Binärformat, nicht lesbar; die Kasse sagt, was zu tun ist.
+     xlsx, xlsm     ZIP mit XML (Excel ab 2007)
+     xls            Compound-File mit BIFF8-Datensätzen (Excel 97–2003)
+     ods, fods      OpenDocument (LibreOffice, Google Tabellen, Numbers-Export)
+     xml            "Excel-2003-XML" (SpreadsheetML)
+     html, htm      Tabellen aus einer Internetseite — auch als "xls" gespeichert
+     csv, tsv, txt  Text mit Semikolon, Komma, Tabulator oder senkrechtem Strich;
+                    UTF-8, UTF-16 (Excels "Unicode-Text") oder Windows-1252
+     Zwischenablage Zellen aus Excel, mit Tabulatoren
+
+   Nicht gelesen werden: xlsb (binär), Numbers, ein Kennwortschutz und Excel
+   vor Version 97. Die Kasse sagt dann, was zu tun ist.
+
+   Hat die Datei mehrere Tabellenblätter, wählt man das richtige aus.
 
    Auf der Karte steht in der ersten Zeile der Name, darunter klein die übrigen
    angekreuzten Angaben. Als Name gelten die Spalten, deren Überschrift "name"
    oder "gast" enthält (Vorname und Nachname ergeben so "Anna Müller"); gibt es
    keine, ist es die erste angekreuzte. */
-var gaeste=null;   /* {datei, zeilen:[[…]], kopf:bool, wahl:[bool…]} */
+var gaeste=null;   /* {datei, blaetter:[{name,zeilen}], blatt, zeilen, kopf, wahl:[bool…]} */
 
-/* ---------------- CSV ---------------- */
-function csvZeilen(text){
+/* ---------------- gemeinsame Hilfen ---------------- */
+
+/* Zellen kürzen, ganz leere Zeilen weglassen. */
+function zeilenAufraeumen(zeilen){
+  return zeilen.map(function(z){
+    return z.map(function(x){ return String(x===null||x===undefined?"":x).replace(/\s+/g," ").trim(); });
+  }).filter(function(z){ return z.some(function(x){ return x!==""; }); });
+}
+
+/* Eine Zahl so schreiben, wie ein Mensch sie in die Zelle getippt hätte:
+   keine 0,30000000000000004, ein Komma statt des Punkts. */
+function zahlText(w){
+  var z=Number(w);
+  if(!isFinite(z)) return String(w);
+  if(Math.floor(z)===z && Math.abs(z)<1e15) return String(z);
+  return String(parseFloat(z.toPrecision(12))).replace(".",",");
+}
+function prozentText(w){ return zahlText(Math.round(Number(w)*1e10)/1e8)+"%"; }
+
+function zz(n){ return (n<10?"0":"")+n; }
+
+/* Excel zählt Tage ab dem 30.12.1899 (oder, in alten Mac-Dateien, ab 1904). */
+function excelDatum(zahl, d1904){
+  var tage=Math.floor(zahl), bruch=zahl-tage;
+  var ms = d1904 ? Date.UTC(1904,0,1)+Math.round(tage*86400000) : Math.round((tage-25569)*86400000);
+  var d=new Date(ms), t="";
+  if(tage>=1) t=zz(d.getUTCDate())+"."+zz(d.getUTCMonth()+1)+"."+d.getUTCFullYear();
+  if(bruch>0.00001){
+    var min=Math.round(bruch*1440);
+    var zeit=zz(Math.floor(min/60)%24)+":"+zz(min%60);
+    t=t?t+" "+zeit:zeit;
+  }
+  return t;
+}
+
+/* Zahlenformate: ist es ein Datum, ein Prozentwert? Die eingebauten Nummern
+   stehen fest; eigene Formate werden am Formattext erkannt. */
+function formatArt(id, codes){
+  id=Number(id);
+  if(id===9 || id===10) return "prozent";
+  if((id>=14 && id<=22) || (id>=27 && id<=36) || (id>=45 && id<=47) || (id>=50 && id<=58)) return "datum";
+  var c=codes && codes[id]; if(!c) return "";
+  c=c.replace(/"[^"]*"/g,"").replace(/\[[^\]]*\]/g,"").replace(/\\./g,"");
+  if(/%/.test(c)) return "prozent";
+  return (/[dmyhs]/i.test(c) && !/^[0#?.,%\s€$E+\-_()*]+$/i.test(c)) ? "datum" : "";
+}
+
+function zahlZelle(w, art, d1904){
+  if(art==="datum") return excelDatum(Number(w), d1904);
+  if(art==="prozent") return prozentText(w);
+  return zahlText(w);
+}
+
+/* ---------------- Text und CSV ---------------- */
+function textDekodieren(u8){
+  if(u8[0]===0xFF && u8[1]===0xFE) return new TextDecoder("utf-16le").decode(u8.subarray(2));
+  if(u8[0]===0xFE && u8[1]===0xFF) return new TextDecoder("utf-16be").decode(u8.subarray(2));
+  if(u8[0]===0xEF && u8[1]===0xBB && u8[2]===0xBF) return new TextDecoder("utf-8").decode(u8.subarray(3));
+  /* UTF-16 ohne Kennung: Text aus lateinischen Buchstaben hat jedes zweite Byte 0. */
+  var n=Math.min(u8.length,400), gerade=0, ungerade=0;
+  for(var i=0;i<n;i++) if(u8[i]===0){ if(i%2) ungerade++; else gerade++; }
+  if(n>=8 && ungerade>n/8 && gerade===0) return new TextDecoder("utf-16le").decode(u8);
+  if(n>=8 && gerade>n/8 && ungerade===0) return new TextDecoder("utf-16be").decode(u8);
+  try{ return new TextDecoder("utf-8",{fatal:true}).decode(u8); }
+  catch(e){ return new TextDecoder("windows-1252").decode(u8); }
+}
+
+/* trenner: ein Zeichen, das die Spalten trennt; fehlt es, wird es aus der
+   ersten Zeile erraten. Excel schreibt manchmal "sep=;" als erste Zeile. */
+function csvZeilen(text, trenner){
   text=String(text).replace(/^﻿/,"");
-  var erste=text.split(/\r?\n/)[0]||"";
-  var trenner=";", beste=-1;
-  [";","\t",","].forEach(function(d){
-    var n=0, q=false;
-    for(var i=0;i<erste.length;i++){
-      var c=erste.charAt(i);
-      if(c==='"') q=!q; else if(!q && c===d) n++;
-    }
-    if(n>beste){ beste=n; trenner=d; }
-  });
+  var sep=/^sep=(.)\r?\n/i.exec(text);
+  if(sep){ trenner=trenner||sep[1]; text=text.slice(sep[0].length); }
+  if(!trenner){
+    var erste=text.split(/\r?\n/)[0]||"", beste=-1;
+    trenner=";";
+    [";","\t",",","|"].forEach(function(d){
+      var n=0, q=false;
+      for(var i=0;i<erste.length;i++){
+        var c=erste.charAt(i);
+        if(c==='"') q=!q; else if(!q && c===d) n++;
+      }
+      if(n>beste){ beste=n; trenner=d; }
+    });
+  }
   var zeilen=[], zeile=[], feld="", q=false;
   for(var i=0;i<text.length;i++){
     var c=text.charAt(i);
     if(q){
       if(c==='"'){ if(text.charAt(i+1)==='"'){ feld+='"'; i++; } else q=false; }
       else feld+=c;
-    } else if(c==='"') q=true;
+    } else if(c==='"' && feld==="") q=true;
     else if(c===trenner){ zeile.push(feld); feld=""; }
     else if(c==="\n" || c==="\r"){
       if(c==="\r" && text.charAt(i+1)==="\n") i++;
@@ -1925,13 +2005,7 @@ function csvZeilen(text){
   return zeilenAufraeumen(zeilen);
 }
 
-/* Zellen kürzen, ganz leere Zeilen weglassen. */
-function zeilenAufraeumen(zeilen){
-  return zeilen.map(function(z){ return z.map(function(x){ return String(x===null||x===undefined?"":x).replace(/\s+/g," ").trim(); }); })
-    .filter(function(z){ return z.some(function(x){ return x!==""; }); });
-}
-
-/* ---------------- XLSX ---------------- */
+/* ---------------- ZIP ---------------- */
 function zipEintraege(buf){
   var dv=new DataView(buf), u8=new Uint8Array(buf), i=u8.length-22;
   for(; i>=0 && i>=u8.length-65557; i--) if(dv.getUint32(i,true)===0x06054b50) break;
@@ -1953,15 +2027,18 @@ async function zipText(buf, eintraege, name){
   var start=e.lo+30+dv.getUint16(e.lo+26,true)+dv.getUint16(e.lo+28,true);
   var daten=u8.subarray(start,start+e.csize);
   if(e.meth===0) return new TextDecoder().decode(daten);
-  if(e.meth!==8) throw new Error("Die Excel-Datei ist auf eine Art gepackt, die hier nicht gelesen wird.");
+  if(e.meth!==8) throw new Error("Die Datei ist auf eine Art gepackt, die hier nicht gelesen wird.");
   if(typeof DecompressionStream==="undefined")
-    throw new Error("Dieser Browser kann Excel-Dateien nicht entpacken. Bitte als CSV speichern oder einen neueren Browser nehmen.");
+    throw new Error("Dieser Browser kann solche Dateien nicht entpacken. Bitte als CSV speichern oder einen neueren Browser nehmen.");
   var strom=new Blob([daten]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
   return await new Response(strom).text();
 }
 
 function xmlDoc(text){ return new DOMParser().parseFromString(text,"application/xml"); }
 function xmlAlle(wurzel,name){ return Array.prototype.slice.call(wurzel.getElementsByTagNameNS("*",name)); }
+function kinder(el,name){
+  return Array.prototype.filter.call(el.childNodes,function(k){ return k.localName===name; });
+}
 
 function spaltenIndex(ref){
   var m=/^([A-Z]+)/i.exec(ref||""), n=0;
@@ -1970,116 +2047,420 @@ function spaltenIndex(ref){
   return n-1;
 }
 
-/* Excel zählt Tage ab dem 30.12.1899. */
-function excelDatum(zahl){
-  var tage=Math.floor(zahl), bruch=zahl-tage;
-  var d=new Date(Math.round((tage-25569)*86400000));
-  function zz(n){ return (n<10?"0":"")+n; }
-  var t=zz(d.getUTCDate())+"."+zz(d.getUTCMonth()+1)+"."+d.getUTCFullYear();
-  if(tage<1) t="";
-  if(bruch>0.00001){
-    var min=Math.round(bruch*1440);
-    var zeit=zz(Math.floor(min/60)%24)+":"+zz(min%60);
-    t=t?t+" "+zeit:zeit;
-  }
-  return t;
-}
-
-function istDatumsFormat(id, codes){
-  id=Number(id);
-  if((id>=14 && id<=22) || (id>=27 && id<=36) || (id>=45 && id<=47) || (id>=50 && id<=58)) return true;
-  var c=codes[id]; if(!c) return false;
-  c=c.replace(/"[^"]*"/g,"").replace(/\[[^\]]*\]/g,"").replace(/\\./g,"");
-  return /[dmyhs]/i.test(c) && !/^[0#?.,%\s€$E+\-_()*]+$/i.test(c);
-}
-
-async function xlsxZeilen(buf){
-  var ein=zipEintraege(buf);
+/* ---------------- XLSX ---------------- */
+async function xlsxBlaetter(buf, ein){
   var arbeitsmappe=await zipText(buf,ein,"xl/workbook.xml");
-  if(!arbeitsmappe) throw new Error("Das ist keine Excel-Arbeitsmappe (.xlsx). Bitte als .xlsx oder CSV speichern.");
+  var wb=xmlDoc(arbeitsmappe);
+  var pr=xmlAlle(wb,"workbookPr")[0];
+  var d1904=!!(pr && /^(1|true)$/i.test(pr.getAttribute("date1904")||""));
 
-  /* Welche Datei ist die erste Tabelle? */
-  var blatt="xl/worksheets/sheet1.xml";
-  try{
-    var wb=xmlDoc(arbeitsmappe), erstes=xmlAlle(wb,"sheet")[0];
-    var rid=erstes && (erstes.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships","id")||erstes.getAttribute("r:id"));
-    var rels=await zipText(buf,ein,"xl/_rels/workbook.xml.rels");
-    if(rid && rels){
-      xmlAlle(xmlDoc(rels),"Relationship").forEach(function(r){
-        if(r.getAttribute("Id")===rid){
-          var z=r.getAttribute("Target")||"";
-          blatt = z.charAt(0)==="/" ? z.slice(1) : "xl/"+z;
-        }
-      });
-    }
-  }catch(e){}
-  if(!ein[blatt]){
-    var rest=Object.keys(ein).filter(function(n){ return /^xl\/worksheets\/sheet\d+\.xml$/.test(n); }).sort();
-    if(!rest.length) throw new Error("In der Excel-Datei wurde keine Tabelle gefunden.");
-    blatt=rest[0];
-  }
+  /* Welche Datei gehört zu welchem Blatt? */
+  var rels={}, relText=await zipText(buf,ein,"xl/_rels/workbook.xml.rels");
+  if(relText) xmlAlle(xmlDoc(relText),"Relationship").forEach(function(r){
+    var z=r.getAttribute("Target")||"";
+    rels[r.getAttribute("Id")]= z.charAt(0)==="/" ? z.slice(1) : "xl/"+z;
+  });
+  var blaetter=xmlAlle(wb,"sheet").map(function(s,i){
+    var rid=s.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships","id")||s.getAttribute("r:id");
+    return {name:s.getAttribute("name")||("Blatt "+(i+1)), pfad:rels[rid]||("xl/worksheets/sheet"+(i+1)+".xml"),
+            versteckt:/hidden/i.test(s.getAttribute("state")||"")};
+  });
+  var sichtbar=blaetter.filter(function(b){ return !b.versteckt; });
+  if(sichtbar.length) blaetter=sichtbar;
 
   var geteilt=[], gt=await zipText(buf,ein,"xl/sharedStrings.xml");
-  if(gt){
-    xmlAlle(xmlDoc(gt),"si").forEach(function(si){
-      /* Text steht in <t>, bei formatiertem Text in mehreren <r><t>; die
-         Lautschrift (<rPh>) gehört nicht dazu. */
-      var t="";
-      Array.prototype.forEach.call(si.childNodes,function(k){
-        if(k.localName==="t") t+=k.textContent;
-        else if(k.localName==="r") xmlAlle(k,"t").forEach(function(x){ t+=x.textContent; });
-      });
-      geteilt.push(t);
+  if(gt) xmlAlle(xmlDoc(gt),"si").forEach(function(si){
+    /* Text steht in <t>, bei formatiertem Text in mehreren <r><t>; die
+       Lautschrift (<rPh>) gehört nicht dazu. */
+    var t="";
+    Array.prototype.forEach.call(si.childNodes,function(k){
+      if(k.localName==="t") t+=k.textContent;
+      else if(k.localName==="r") xmlAlle(k,"t").forEach(function(x){ t+=x.textContent; });
     });
-  }
+    geteilt.push(t);
+  });
 
-  /* Welche Zellformate sind Datumsformate? */
-  var datumXf={}, st=await zipText(buf,ein,"xl/styles.xml");
+  var xfArt={}, st=await zipText(buf,ein,"xl/styles.xml");
   if(st){
     var sd=xmlDoc(st), codes={};
     xmlAlle(sd,"numFmt").forEach(function(n){ codes[n.getAttribute("numFmtId")]=n.getAttribute("formatCode"); });
     var xfs=xmlAlle(sd,"cellXfs")[0];
-    if(xfs) Array.prototype.filter.call(xfs.childNodes,function(k){ return k.localName==="xf"; }).forEach(function(x,i){
-      if(istDatumsFormat(x.getAttribute("numFmtId"),codes)) datumXf[i]=true;
-    });
+    if(xfs) kinder(xfs,"xf").forEach(function(x,i){ xfArt[i]=formatArt(x.getAttribute("numFmtId"),codes); });
   }
 
-  var tabelle=xmlDoc(await zipText(buf,ein,blatt)), zeilen=[];
-  xmlAlle(tabelle,"row").forEach(function(r){
-    var zeile=[];
-    Array.prototype.filter.call(r.childNodes,function(k){ return k.localName==="c"; }).forEach(function(c,pos){
-      var sp=c.getAttribute("r") ? spaltenIndex(c.getAttribute("r")) : pos;
-      var typ=c.getAttribute("t"), v=xmlAlle(c,"v")[0], wert=v?v.textContent:"";
-      if(typ==="s") wert=geteilt[Number(wert)]||"";
-      else if(typ==="inlineStr") wert=xmlAlle(c,"t").map(function(x){ return x.textContent; }).join("");
-      else if(typ==="b") wert=wert==="1"?"ja":"nein";
-      else if(typ==="e") wert="";
-      else if(typ!=="str" && wert!=="" && isFinite(Number(wert))){
-        if(datumXf[Number(c.getAttribute("s")||0)]) wert=excelDatum(Number(wert));
-        else if(/^-?\d+\.\d+$/.test(wert)) wert=String(Number(wert)).replace(".",",");
-      }
-      while(zeile.length<sp) zeile.push("");
-      zeile[sp]=wert;
+  var aus=[];
+  for(var b=0;b<blaetter.length;b++){
+    var text=await zipText(buf,ein,blaetter[b].pfad);
+    if(!text) continue;
+    var zeilen=[];
+    xmlAlle(xmlDoc(text),"row").forEach(function(r){
+      var zeile=[];
+      kinder(r,"c").forEach(function(c,pos){
+        var sp=c.getAttribute("r") ? spaltenIndex(c.getAttribute("r")) : pos;
+        var typ=c.getAttribute("t"), v=xmlAlle(c,"v")[0], wert=v?v.textContent:"";
+        if(typ==="s") wert=geteilt[Number(wert)]||"";
+        else if(typ==="inlineStr") wert=xmlAlle(c,"t").map(function(x){ return x.textContent; }).join("");
+        else if(typ==="b") wert=wert==="1"?"ja":"nein";
+        else if(typ==="e") wert="";
+        else if(typ!=="str" && wert!=="" && isFinite(Number(wert)))
+          wert=zahlZelle(wert,xfArt[Number(c.getAttribute("s")||0)],d1904);
+        while(zeile.length<sp) zeile.push("");
+        zeile[sp]=wert;
+      });
+      zeilen.push(zeile);
     });
-    zeilen.push(zeile);
-  });
-  return zeilenAufraeumen(zeilen);
+    aus.push({name:blaetter[b].name, zeilen:zeilenAufraeumen(zeilen)});
+  }
+  return aus;
 }
 
-/* ---------------- Datei → Liste ---------------- */
-async function gaesteDateiLesen(datei){
-  var buf=await datei.arrayBuffer(), u8=new Uint8Array(buf), zeilen;
-  if(u8[0]===0x50 && u8[1]===0x4B) zeilen=await xlsxZeilen(buf);              /* "PK": ZIP, also xlsx */
-  else if(u8[0]===0xD0 && u8[1]===0xCF)
-    throw new Error("Das ist das alte Excel-Format (.xls). In Excel „Speichern unter“ und dann .xlsx oder CSV wählen.");
-  else {
-    var text;
-    try{ text=new TextDecoder("utf-8",{fatal:true}).decode(buf); }
-    catch(e){ text=new TextDecoder("windows-1252").decode(buf); }
-    zeilen=csvZeilen(text);
+/* ---------------- XLS (Excel 97–2003) ----------------
+   Die Datei ist ein "Compound File": ein kleines Dateisystem in der Datei, mit
+   Sektoren, einer Belegungstabelle (FAT) und einem Verzeichnis. Darin liegt der
+   Datenstrom "Workbook", eine Folge von Datensätzen (Kennung, Länge, Inhalt). */
+function cfbOeffnen(buf){
+  var u8=new Uint8Array(buf), dv=new DataView(buf);
+  var sig=[0xD0,0xCF,0x11,0xE0,0xA1,0xB1,0x1A,0xE1];
+  for(var i=0;i<8;i++) if(u8[i]!==sig[i]) throw new Error("Das ist keine Excel-Datei.");
+  var ss=1<<dv.getUint16(30,true), mss=1<<dv.getUint16(32,true);
+  var dirStart=dv.getUint32(48,true), cutoff=dv.getUint32(56,true), mfStart=dv.getUint32(60,true);
+  var difStart=dv.getUint32(68,true), nDif=dv.getUint32(72,true);
+  var ENDE=0xFFFFFFFA;
+  function u32an(o){ return o+4<=u8.length ? dv.getUint32(o,true) : 0xFFFFFFFE; }
+
+  var fatIds=[], j;
+  for(i=0;i<109;i++){ var v=dv.getUint32(76+i*4,true); if(v<ENDE) fatIds.push(v); }
+  var d=difStart;
+  for(var k=0;k<nDif && d<ENDE;k++){
+    var o=(d+1)*ss;
+    for(j=0;j<ss/4-1;j++){ var w=u32an(o+j*4); if(w<ENDE) fatIds.push(w); }
+    d=u32an(o+ss-4);
   }
-  if(!zeilen.length) throw new Error("In der Datei steht nichts.");
-  return zeilen;
+  var fat=[];
+  fatIds.forEach(function(id){ var o=(id+1)*ss; for(var j=0;j<ss/4;j++) fat.push(u32an(o+j*4)); });
+
+  function kette(start,tabelle){
+    var r=[], id=start, n=0;
+    while(id<ENDE && n++<tabelle.length+8){ r.push(id); id=tabelle[id]; }
+    return r;
+  }
+  function lesen(start,groesse){
+    var ids=kette(start,fat), out=new Uint8Array(ids.length*ss);
+    ids.forEach(function(id,n){ var o=(id+1)*ss; out.set(u8.subarray(o,o+ss),n*ss); });
+    return out.subarray(0,Math.min(groesse,out.length));
+  }
+
+  var dir=lesen(dirStart,kette(dirStart,fat).length*ss);
+  var ddv=new DataView(dir.buffer,dir.byteOffset,dir.byteLength), eintraege=[];
+  for(i=0;i+128<=dir.length;i+=128){
+    var nl=ddv.getUint16(i+64,true), name="";
+    for(j=0;j+2<nl;j+=2) name+=String.fromCharCode(ddv.getUint16(i+j,true));
+    eintraege.push({name:name, typ:dir[i+66], start:ddv.getUint32(i+116,true), groesse:ddv.getUint32(i+120,true)});
+  }
+  var wurzel=eintraege[0];
+  var mini=null, miniFat=null;
+  function miniVorbereiten(){
+    if(mini) return;
+    mini=lesen(wurzel.start,wurzel.groesse);
+    var mf=lesen(mfStart,kette(mfStart,fat).length*ss);
+    var mdv=new DataView(mf.buffer,mf.byteOffset,mf.byteLength); miniFat=[];
+    for(var q=0;q+4<=mf.length;q+=4) miniFat.push(mdv.getUint32(q,true));
+  }
+  function strom(name){
+    var e=null;
+    eintraege.forEach(function(x){ if(x.typ===2 && x.name.toLowerCase()===name.toLowerCase()) e=x; });
+    if(!e) return null;
+    if(e.groesse>=cutoff) return lesen(e.start,e.groesse);
+    miniVorbereiten();
+    var ids=kette(e.start,miniFat), out=new Uint8Array(ids.length*mss);
+    ids.forEach(function(id,n){ out.set(mini.subarray(id*mss,id*mss+mss),n*mss); });
+    return out.subarray(0,e.groesse);
+  }
+  return {strom:strom, hat:function(name){
+    return eintraege.some(function(x){ return x.name.toLowerCase()===name.toLowerCase(); }); }};
+}
+
+function xlsBlaetter(buf){
+  var c=cfbOeffnen(buf);
+  if(c.hat("EncryptedPackage") || c.hat("EncryptionInfo"))
+    throw new Error("Die Datei ist mit einem Kennwort geschützt. In Excel das Kennwort entfernen oder als CSV speichern.");
+  var wb=c.strom("Workbook");
+  if(!wb){
+    if(c.strom("Book")) throw new Error("Das ist eine Excel-Datei vor Version 97. In Excel öffnen und als .xlsx oder CSV speichern.");
+    throw new Error("In dieser Datei steckt keine Excel-Tabelle.");
+  }
+  var dv=new DataView(wb.buffer,wb.byteOffset,wb.byteLength);
+  function u16(o){ return dv.getUint16(o,true); }
+  function u32(o){ return dv.getUint32(o,true); }
+
+  /* Alle Datensätze und, wo jeder beginnt. */
+  var recs=[], nachOffset={}, p=0;
+  while(p+4<=wb.length){
+    var id=u16(p), len=u16(p+2);
+    nachOffset[p]=recs.length; recs.push({id:id, off:p+4, len:len}); p+=4+len;
+  }
+  if(!recs.length || recs[0].id!==0x0809) throw new Error("Das ist keine lesbare Excel-Datei.");
+  if(u16(recs[0].off)!==0x0600)
+    throw new Error("Das ist eine Excel-Datei vor Version 97. In Excel öffnen und als .xlsx oder CSV speichern.");
+
+  /* ---- Arbeitsmappen-Teil ---- */
+  var d1904=false, xf=[], codes={}, sst=[], blaetter=[], i;
+  for(i=1;i<recs.length;i++){
+    var r=recs[i];
+    if(r.id===0x000A) break;                                  /* Ende des Arbeitsmappen-Teils */
+    if(r.id===0x002F) throw new Error("Die Datei ist mit einem Kennwort geschützt. In Excel das Kennwort entfernen oder als CSV speichern.");
+    if(r.id===0x0022) d1904=u16(r.off)===1;
+    else if(r.id===0x00E0) xf.push(u16(r.off+2));             /* welches Zahlenformat hat dieser Zellstil */
+    else if(r.id===0x041E){                                   /* eigenes Zahlenformat */
+      var cch=u16(r.off+2), fl=wb[r.off+4], s="", n;
+      if(fl&1) for(n=0;n<cch;n++) s+=String.fromCharCode(u16(r.off+5+2*n));
+      else for(n=0;n<cch;n++) s+=String.fromCharCode(wb[r.off+5+n]);
+      codes[u16(r.off)]=s;
+    }
+    else if(r.id===0x0085){                                   /* Name und Lage eines Blattes */
+      var nc=wb[r.off+6], nf=wb[r.off+7], name="";
+      if(nf&1) for(n=0;n<nc;n++) name+=String.fromCharCode(u16(r.off+8+2*n));
+      else for(n=0;n<nc;n++) name+=String.fromCharCode(wb[r.off+8+n]);
+      blaetter.push({name:name, pos:u32(r.off), versteckt:wb[r.off+4]!==0, art:wb[r.off+5]});
+    }
+    else if(r.id===0x00FC){                                   /* die Tabelle der Texte */
+      var segs=[{off:r.off,len:r.len}];
+      while(i+1<recs.length && recs[i+1].id===0x003C){ i++; segs.push({off:recs[i].off,len:recs[i].len}); }
+      sst=sstLesen(wb,segs);
+    }
+  }
+
+  var art=xf.map(function(f){ return formatArt(f,codes); });
+
+  /* ---- ein Blatt ---- */
+  function blattLesen(startIndex){
+    var zellen=[], tiefe=0, ausstehend=null;
+    function setze(zeile,spalte,text){
+      (zellen[zeile]||(zellen[zeile]=[]))[spalte]=text;
+    }
+    function zahl(zeile,spalte,xfIndex,w){ setze(zeile,spalte,zahlZelle(w,art[xfIndex],d1904)); }
+    function rk(w){
+      var wert;
+      if(w&2) wert=(w>>2);                                     /* ganze Zahl in den oberen 30 Bit */
+      else {                                                   /* Gleitkomma: obere 30 Bit des Doubles */
+        var tmp=new DataView(new ArrayBuffer(8)); tmp.setUint32(4,(w&0xFFFFFFFC)>>>0,true);
+        wert=tmp.getFloat64(0,true);
+      }
+      return (w&1) ? wert/100 : wert;
+    }
+    function kurz(o){                                          /* Text mit Länge und Kennzeichen in einem Datensatz */
+      var cch=u16(o), fl=wb[o+2], q=o+3, s="", n;
+      if(fl&8) q+=2; if(fl&4) q+=4;
+      if(fl&1) for(n=0;n<cch;n++) s+=String.fromCharCode(u16(q+2*n));
+      else for(n=0;n<cch;n++) s+=String.fromCharCode(wb[q+n]);
+      return s;
+    }
+    for(var k=startIndex;k<recs.length;k++){
+      var r=recs[k], o=r.off;
+      switch(r.id){
+        case 0x0809: tiefe++; break;
+        case 0x000A: tiefe--; if(tiefe<=0) return zellen; break;
+        case 0x00FD: setze(u16(o),u16(o+2),sst[u32(o+6)]||""); break;                /* Text aus der Tabelle */
+        case 0x0204: setze(u16(o),u16(o+2),kurz(o+6)); break;                        /* Text in der Zelle */
+        case 0x0203: zahl(u16(o),u16(o+2),u16(o+4),dv.getFloat64(o+6,true)); break;  /* Zahl */
+        case 0x027E: zahl(u16(o),u16(o+2),u16(o+4),rk(u32(o+6))); break;             /* komprimierte Zahl */
+        case 0x00BD:                                                                  /* mehrere komprimierte Zahlen */
+          var zeile=u16(o), erste=u16(o+2), anzahl=(r.len-6)/6;
+          for(var m=0;m<anzahl;m++) zahl(zeile,erste+m,u16(o+4+6*m),rk(u32(o+6+6*m)));
+          break;
+        case 0x0006:                                                                  /* Formel: gespeichertes Ergebnis */
+          var fz=u16(o), fs=u16(o+2), fx=u16(o+4);
+          if(wb[o+12]===0xFF && wb[o+13]===0xFF){
+            var ft=wb[o+6];
+            if(ft===0) ausstehend=[fz,fs];                                           /* Text folgt im nächsten Datensatz */
+            else if(ft===1) setze(fz,fs,wb[o+8]?"ja":"nein");
+            else setze(fz,fs,"");
+          } else zahl(fz,fs,fx,dv.getFloat64(o+6,true));
+          break;
+        case 0x0207:                                                                  /* der Text zu einer Formel */
+          if(ausstehend){ setze(ausstehend[0],ausstehend[1],kurz(o)); ausstehend=null; }
+          break;
+        case 0x0205:                                                                  /* Wahrheitswert oder Fehler */
+          setze(u16(o),u16(o+2),wb[o+7]?"":(wb[o+6]?"ja":"nein"));
+          break;
+      }
+    }
+    return zellen;
+  }
+
+  var aus=[];
+  blaetter.forEach(function(b){
+    if(b.art!==0 || b.versteckt) return;                                              /* nur sichtbare Tabellen, keine Diagramme */
+    var idx=nachOffset[b.pos]; if(idx===undefined) return;
+    var zellen=blattLesen(idx), zeilen=[], breit=0, zi;
+    zellen.forEach(function(z){ if(z && z.length>breit) breit=z.length; });
+    for(zi=0;zi<zellen.length;zi++){
+      var z=zellen[zi]||[], dicht=[];
+      for(var sp=0;sp<breit;sp++) dicht.push(z[sp]===undefined?"":z[sp]);
+      zeilen.push(dicht);
+    }
+    aus.push({name:b.name, zeilen:zeilenAufraeumen(zeilen)});
+  });
+  return aus;
+}
+
+/* Die Textliste einer .xls kann länger sein als ein Datensatz (8224 Byte) und
+   läuft dann in "Fortsetzungen" weiter. Mitten in einem Text beginnt die
+   Fortsetzung mit einem neuen Kennzeichenbyte, ob es 8- oder 16-bit-Zeichen
+   sind; sonst ist sie einfach die Fortsetzung der Bytes. */
+function sstLesen(wb,segs){
+  var si=0, pos=segs[0].off, ende=pos+segs[0].len, aus=[];
+  function weiter(){ si++; if(si>=segs.length) throw new Error("zu kurz"); pos=segs[si].off; ende=pos+segs[si].len; }
+  function b8(){ while(pos>=ende) weiter(); return wb[pos++]; }
+  function b16(){ var a=b8(); return a|(b8()<<8); }
+  function b32(){ var a=b16(); return (a|(b16()<<16))>>>0; }
+  function ueberspringe(n){ while(n>0){ while(pos>=ende) weiter(); var k=Math.min(n,ende-pos); pos+=k; n-=k; } }
+  function zeichen(n,breit){
+    var s="";
+    while(n>0){
+      if(pos>=ende){ weiter(); breit=(wb[pos++]&1)===1; continue; }
+      var bpz=breit?2:1, k=Math.min(n,Math.floor((ende-pos)/bpz));
+      if(k<=0){ weiter(); breit=(wb[pos++]&1)===1; continue; }
+      for(var j=0;j<k;j++) s+=String.fromCharCode(breit ? wb[pos+2*j]|(wb[pos+2*j+1]<<8) : wb[pos+j]);
+      pos+=k*bpz; n-=k;
+    }
+    return s;
+  }
+  try{
+    b32(); var einzigartig=b32();
+    for(var i=0;i<einzigartig;i++){
+      var cch=b16(), fl=b8(), crun=(fl&8)?b16():0, cbExt=(fl&4)?b32():0;
+      aus.push(zeichen(cch,(fl&1)===1));
+      ueberspringe(crun*4); ueberspringe(cbExt);
+    }
+  }catch(e){ /* was bis hierher gelesen ist, gilt */ }
+  return aus;
+}
+
+/* ---------------- ODS (OpenDocument) ---------------- */
+function odsText(el){
+  var t="";
+  Array.prototype.forEach.call(el.childNodes,function(k){
+    if(k.nodeType===3) t+=k.nodeValue;
+    else if(k.localName==="s") t+=new Array((parseInt(k.getAttribute("text:c"),10)||1)+1).join(" ");
+    else if(k.localName==="tab") t+="\t";
+    else if(k.localName==="line-break") t+=" ";
+    else t+=odsText(k);
+  });
+  return t;
+}
+function odsDatum(v){
+  var m=/^(\d{4})-(\d\d)-(\d\d)(?:T(\d\d):(\d\d))?/.exec(v||"");
+  if(!m) return v||"";
+  var t=m[3]+"."+m[2]+"."+m[1];
+  if(m[4] && (m[4]!=="00"||m[5]!=="00")) t+=" "+m[4]+":"+m[5];
+  return t;
+}
+function odsWert(zelle){
+  var typ=zelle.getAttribute("office:value-type");
+  var text=kinder(zelle,"p").map(odsText).join(" ");
+  if(typ==="float") return zahlText(zelle.getAttribute("office:value"));
+  if(typ==="currency") return zahlText(zelle.getAttribute("office:value"));
+  if(typ==="percentage") return prozentText(zelle.getAttribute("office:value"));
+  if(typ==="date") return odsDatum(zelle.getAttribute("office:date-value"));
+  if(typ==="time"){ var m=/PT(\d+)H(\d+)M/.exec(zelle.getAttribute("office:time-value")||""); return m?zz(+m[1])+":"+m[2]:text; }
+  if(typ==="boolean") return zelle.getAttribute("office:boolean-value")==="true"?"ja":"nein";
+  if(typ==="string" && zelle.getAttribute("office:string-value")!==null && !text) return zelle.getAttribute("office:string-value");
+  return text;
+}
+function odsBlaetter(text){
+  var doc=xmlDoc(text), aus=[];
+  xmlAlle(doc,"table").filter(function(t){ return t.parentNode && t.parentNode.localName==="spreadsheet"; }).forEach(function(t){
+    var zeilen=[];
+    xmlAlle(t,"table-row").forEach(function(r){
+      var wdh=Math.min(parseInt(r.getAttribute("table:number-rows-repeated"),10)||1,200), zeile=[];
+      Array.prototype.forEach.call(r.childNodes,function(c){
+        if(c.localName!=="table-cell" && c.localName!=="covered-table-cell") return;
+        var rep=parseInt(c.getAttribute("table:number-columns-repeated"),10)||1;
+        var w=c.localName==="covered-table-cell" ? "" : odsWert(c);
+        /* Eine Zelle mit riesiger Wiederholung ist nur der leere Rest der Zeile. */
+        for(var n=0;n<(w===""&&rep>50?1:Math.min(rep,200));n++) zeile.push(w);
+      });
+      /* Der leere Rest einer Zeile (LibreOffice hängt ihn an) ist keine Spalte. */
+      while(zeile.length && String(zeile[zeile.length-1]).trim()==="") zeile.pop();
+      if(zeile.some(function(x){ return String(x).trim()!==""; })) for(var n=0;n<wdh;n++) zeilen.push(zeile.slice());
+    });
+    aus.push({name:t.getAttribute("table:name")||("Tabelle "+(aus.length+1)), zeilen:zeilenAufraeumen(zeilen)});
+  });
+  return aus;
+}
+
+/* ---------------- Excel-2003-XML (SpreadsheetML) ---------------- */
+function xml2003Blaetter(text){
+  var doc=xmlDoc(text), aus=[];
+  xmlAlle(doc,"Worksheet").forEach(function(ws,wi){
+    var zeilen=[];
+    xmlAlle(ws,"Row").forEach(function(r){
+      var zeile=[], sp=0;
+      kinder(r,"Cell").forEach(function(c){
+        var idx=parseInt(c.getAttribute("ss:Index"),10);
+        if(idx) sp=idx-1;
+        var d=kinder(c,"Data")[0], w="";
+        if(d){
+          var t=d.getAttribute("ss:Type"), v=d.textContent;
+          w = t==="Number" ? zahlText(v) : t==="DateTime" ? odsDatum(v) : t==="Boolean" ? (v==="1"?"ja":"nein") : t==="Error" ? "" : v;
+        }
+        while(zeile.length<sp) zeile.push("");
+        zeile[sp]=w; sp++;
+      });
+      zeilen.push(zeile);
+    });
+    aus.push({name:ws.getAttribute("ss:Name")||("Blatt "+(wi+1)), zeilen:zeilenAufraeumen(zeilen)});
+  });
+  return aus;
+}
+
+/* ---------------- HTML-Tabellen ---------------- */
+function htmlBlaetter(text){
+  var doc=new DOMParser().parseFromString(text,"text/html"), aus=[];
+  Array.prototype.slice.call(doc.querySelectorAll("table")).filter(function(t){ return !t.querySelector("table"); })
+  .forEach(function(t,ti){
+    var zeilen=[];
+    Array.prototype.forEach.call(t.rows,function(r){
+      var zeile=[];
+      Array.prototype.forEach.call(r.cells,function(c){
+        zeile.push(c.textContent);
+        for(var n=1;n<Math.min(parseInt(c.getAttribute("colspan"),10)||1,50);n++) zeile.push("");
+      });
+      zeilen.push(zeile);
+    });
+    var titel=t.querySelector("caption");
+    aus.push({name:(titel&&titel.textContent.trim())||("Tabelle "+(ti+1)), zeilen:zeilenAufraeumen(zeilen)});
+  });
+  return aus;
+}
+
+/* ---------------- Datei → Blätter ---------------- */
+function textBlaetter(text,trenner){
+  var t=String(text).replace(/^﻿/,"").replace(/^\s+/,"");
+  if(/urn:schemas-microsoft-com:office:spreadsheet/.test(text.slice(0,4000)) && /^</.test(t)) return xml2003Blaetter(text);
+  if(/<office:document[\s>]/.test(text.slice(0,4000))) return odsBlaetter(text);
+  if(/^<(!doctype\s+html|html|table|head|body|meta)/i.test(t) || /<table[\s>]/i.test(text.slice(0,20000))) return htmlBlaetter(text);
+  return [{name:"Liste", zeilen:csvZeilen(text,trenner)}];
+}
+
+async function gaesteDateiLesen(datei){
+  var buf=await datei.arrayBuffer(), u8=new Uint8Array(buf), blaetter;
+  if(u8[0]===0x50 && u8[1]===0x4B){                                              /* "PK": ZIP */
+    var ein=zipEintraege(buf), namen=Object.keys(ein);
+    if(ein["xl/workbook.xml"]) blaetter=await xlsxBlaetter(buf,ein);
+    else if(ein["xl/workbook.bin"]) throw new Error("Das ist das binäre Excel-Format (.xlsb). In Excel als .xlsx oder CSV speichern.");
+    else if(ein["content.xml"]) blaetter=odsBlaetter(await zipText(buf,ein,"content.xml"));
+    else if(namen.some(function(n){ return /^Index\//.test(n); })) throw new Error("Das ist eine Numbers-Datei. In Numbers über „Exportieren“ als Excel oder CSV sichern.");
+    else if(ein["word/document.xml"]) throw new Error("Das ist ein Word-Dokument, keine Tabelle.");
+    else throw new Error("In dieser ZIP-Datei steckt keine Tabelle.");
+  }
+  else if(u8[0]===0xD0 && u8[1]===0xCF) blaetter=xlsBlaetter(buf);               /* Compound File: xls */
+  else if(u8[0]===0x25 && u8[1]===0x50 && u8[2]===0x44 && u8[3]===0x46) throw new Error("Das ist ein PDF, keine Tabelle. Bitte die Liste als Excel oder CSV exportieren.");
+  else blaetter=textBlaetter(textDekodieren(u8));
+  blaetter=blaetter.filter(function(b){ return b.zeilen.length; });
+  if(!blaetter.length) throw new Error("In der Datei steht nichts.");
+  return blaetter;
 }
 
 function gaesteFehler(text){
@@ -2088,19 +2469,41 @@ function gaesteFehler(text){
   k.textContent=text; k.classList.remove("hide");
 }
 
+function gaesteSetzen(name, blaetter){
+  gaeste={datei:name, blaetter:blaetter, blatt:0, zeilen:blaetter[0].zeilen, kopf:true, wahl:[]};
+  $("gKopf").checked=true;
+  gaeste.wahl=gaesteStandardWahl();
+  $("kNamen").value="";
+  zeichneGaeste();
+}
+
 function gaesteLaden(datei){
   gaesteFehler("");
   if(!datei) return Promise.resolve();
-  return gaesteDateiLesen(datei).then(function(zeilen){
-    gaeste={datei:datei.name||"Liste", zeilen:zeilen, kopf:true, wahl:[]};
-    $("gKopf").checked=true;
-    gaeste.wahl=gaesteStandardWahl();
-    $("kNamen").value="";
-    zeichneGaeste();
+  return gaesteDateiLesen(datei).then(function(blaetter){
+    gaesteSetzen(datei.name||"Liste", blaetter);
   }).catch(function(f){
     gaeste=null; zeichneGaeste();
     gaesteFehler("Die Datei konnte nicht gelesen werden: "+(f&&f.message?f.message:f));
   });
+}
+
+/* Zellen, aus Excel kopiert und eingefügt: Spalten durch Tabulatoren getrennt,
+   eine einzelne Spalte nur durch Zeilenumbrüche (dann gilt ein Komma im Namen
+   nicht als Trenner). */
+function gaesteAusText(text){
+  gaesteFehler("");
+  var zeilen=csvZeilen(text, text.indexOf("\t")>=0 ? "\t" : "\u0001");
+  if(!zeilen.length){ gaesteFehler("Die Zwischenablage ist leer."); return; }
+  gaesteSetzen("Zwischenablage",[{name:"Liste",zeilen:zeilen}]);
+}
+
+/* Das gewählte Tabellenblatt wechseln. */
+function gaesteBlattWaehlen(i){
+  if(!gaeste || !gaeste.blaetter[i]) return;
+  gaeste.blatt=i; gaeste.zeilen=gaeste.blaetter[i].zeilen; gaeste.kopf=$("gKopf").checked;
+  gaeste.wahl=gaesteStandardWahl();
+  zeichneGaeste();
 }
 
 /* ---------------- Auswahl ---------------- */
@@ -2141,6 +2544,12 @@ function zeichneGaeste(){
   var da=!!gaeste;
   $("gaesteBox").classList.toggle("hide",!da);
   $("kNamenFeld").classList.toggle("hide",da);
+  $("gBlattFeld").classList.toggle("hide",!(da && gaeste.blaetter.length>1));
+  if(da && gaeste.blaetter.length>1){
+    $("gBlatt").innerHTML=gaeste.blaetter.map(function(b,i){
+      return '<option value="'+i+'"'+(i===gaeste.blatt?" selected":"")+'>'+esc(b.name)+" ("+b.zeilen.length+" Zeilen)</option>";
+    }).join("");
+  }
   if(da){
     var n=gaesteBreite(), zeilen=gaeste.zeilen, daten=gaesteDaten();
     $("gaesteTitel").textContent=gaeste.datei+" · "+mehrzahl(daten.length,"Gast","Gäste");
@@ -2250,7 +2659,7 @@ function kartenLoeschen(){
   var r=loeschPruefen();
   if(r.leer||r.fehler||!r.weg.length){ melden(r.fehler||"Erst Von und Bis eintragen"); return; }
   if(!confirm(mehrzahl(r.weg.length,"Karte","Karten")+" löschen?\n\nDie Buchungen bleiben im Abschluss "+
-              "stehen. Eine gelöschte Karte lässt sich wiederherstellen."+
+              "stehen. Das lässt sich nicht rückgängig machen."+
               (r.mitGuthaben.length?"\n"+mehrzahl(r.mitGuthaben.length,"Karte hat","Karten haben")+" noch Guthaben und "+
                (r.mitGuthaben.length===1?"bleibt":"bleiben")+" stehen.":"")))
     return;
@@ -2267,7 +2676,7 @@ function unbenutzteLoeschen(){
   var weg=aktiveKarten().filter(function(n){ return !benutzt[n]; });
   if(!weg.length){ melden("Es gibt keine unbenutzten Karten"); return; }
   if(!confirm(mehrzahl(weg.length,"Karte","Karten")+", mit denen noch nie gebucht wurde, löschen?\n\n"+
-              "Eine gelöschte Karte lässt sich wiederherstellen."))
+              "Das lässt sich nicht rückgängig machen."))
     return;
   vermerken(weg);
   melden(mehrzahl(weg.length,"Karte","Karten")+" gelöscht");
@@ -2283,28 +2692,9 @@ function karteLoeschen(nr){
   melden(kartenCode(nr)+" gelöscht");
 }
 
-function wiederherstellen(nr){
-  db.geloescht[nr]=-Date.now();
-  sichern(); zeichneAlles(); wolkeVormerken();
-  melden(kartenCode(nr)+" wiederhergestellt");
-}
-
-function zeichneGeloeschtListe(){
-  var nrs=Object.keys(db.geloescht).filter(istGeloescht)
-    .sort(function(a,b){ return db.geloescht[b]-db.geloescht[a]; });
-  var k=$("geloeschtListe");
-  if(!nrs.length){ k.innerHTML=""; return; }
-  k.innerHTML='<div class="feldTitel">Gelöschte Karten ('+nrs.length+')</div>'+
-    nrs.slice(0,20).map(function(nr){
-      return '<div class="zeile"><span class="mono">'+esc(kartenCode(nr))+'</span>'+
-        (kartenName(nr)?'<span class="muted">'+esc(kartenName(nr))+'</span>':'')+
-        '<button class="knopf klein" style="margin-left:auto" data-zurueckholen="'+esc(nr)+'">wiederherstellen</button></div>';
-    }).join("")+(nrs.length>20?'<p class="muted" style="margin:6px 0 0">… und '+(nrs.length-20)+' weitere.</p>':"");
-}
-
 function zeichneAlles(){
   zeichneKopf(); zeichneZahlen(); zeichneKartenListe(); zeichneKartenVorschau();
-  zeichneStapelVorschau(); zeichneStapelListe(); zeichneLoeschVorschau(); zeichneGeloeschtListe();
+  zeichneStapelVorschau(); zeichneStapelListe(); zeichneLoeschVorschau();
 }
 
 /* ============================== Druck ============================== */
@@ -2400,7 +2790,7 @@ function abschlussDrucken(){
     z.anzahl++;
     if(b.art==="auf") z.auf+=b.cent; else if(b.art==="ab") z.ab+=-b.cent;
   });
-  var offen=Object.keys(s).filter(function(n){ return s[n]!==0; }).sort();
+  var offen=Object.keys(s).filter(function(n){ return s[n]!==0 && !istGeloescht(n); }).sort();
   $("bogen").className="bericht";
   $("bogen").innerHTML=
     '<div class="briefkopf"><div class="wer">'+esc(a.verein||"Guthabenkasse")+'</div>'+
@@ -2971,10 +3361,6 @@ function start(){
   ["lVon","lBis"].forEach(function(id){ $(id).addEventListener("input",zeichneLoeschVorschau); });
   $("btnLoeschen").addEventListener("click",kartenLoeschen);
   $("btnUnbenutzte").addEventListener("click",unbenutzteLoeschen);
-  $("geloeschtListe").addEventListener("click",function(e){
-    var nr=e.target.getAttribute&&e.target.getAttribute("data-zurueckholen");
-    if(nr) wiederherstellen(nr);
-  });
   $("kNamen").addEventListener("input",zeichneKartenVorschau);
 
   /* ---- Gästeliste: Datei wählen oder in den Kasten ziehen ---- */
@@ -2984,6 +3370,19 @@ function start(){
     this.value="";
   });
   $("btnGaesteWeg").addEventListener("click",gaesteEntfernen);
+  $("gBlatt").addEventListener("change",function(){ gaesteBlattWaehlen(Number(this.value)); });
+  /* Zellen aus Excel kopiert und hier eingefügt: sie kommen als Text mit
+     Tabulatoren. Im Namensfeld bleibt Einfügen, was es war, solange es nur
+     Zeilen sind; mit Tabulatoren ist es eine Tabelle. */
+  document.addEventListener("paste",function(e){
+    if($("reiter-karten").classList.contains("hide")) return;
+    var t=e.target, imFeld=!!t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName);
+    if(imFeld && t.id!=="kNamen") return;
+    var text=(e.clipboardData && e.clipboardData.getData("text/plain"))||"";
+    var tabelle=text.indexOf("\t")>=0;
+    if(!tabelle && (imFeld || text.replace(/\s+$/,"").indexOf("\n")<0)) return;
+    e.preventDefault(); gaesteAusText(text);
+  });
   $("gKopf").addEventListener("change",function(){
     if(!gaeste) return;
     gaeste.kopf=this.checked; gaeste.wahl=gaesteStandardWahl(); zeichneGaeste();

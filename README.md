@@ -37,23 +37,41 @@ alles zugleich nebeneinander. Im Querformat am Handy ist der Schirm zu
 niedrig; dort rollt die Seite.
 
 **Löschen:** Gelöscht wird nur, was kein Guthaben mehr trägt (erst auszahlen).
-Die Buchungen bleiben im Abschluss stehen, die Nummer wird nicht neu
-vergeben, und eine gelöschte Karte lässt sich wiederherstellen. Technisch
-bekommt die Karte einen Vermerk mit der Zeit, statt entfernt zu werden;
-sonst brächte der nächste Abgleich sie vom anderen Gerät zurück. Beim
-Abgleich gilt der neuere Vermerk, ob gelöscht oder wiederhergestellt. Eine
-gelöschte Karte wird an Aufbuchen und Abbuchen abgewiesen.
+Eine gelöschte Karte ist danach **nirgends mehr zu sehen**: nicht in der Liste,
+nicht in der Suche, nicht in der Stapelliste, nicht im Abschluss; es gibt
+keine Liste gelöschter Karten und kein Wiederherstellen. Ihre Buchungen bleiben
+in den Summen des Abschlusses mitgezählt (das Geld ist ja geflossen), und die
+Nummer wird nicht neu vergeben. Technisch behält jedes Gerät einen unsichtbaren
+Vermerk mit der Zeit, statt die Karte zu entfernen; sonst brächte der nächste
+Abgleich sie vom anderen Gerät zurück. Eine gelöschte Karte wird an Aufbuchen
+und Abbuchen abgewiesen.
 
-**Gästeliste:** Eine Datei aus Excel (`.xlsx`), CSV (Semikolon, Komma oder
-Tabulator; UTF-8 oder Windows-1252) oder Text wird in den Kasten *Neue Karten
-drucken* gezogen. Jede Zeile wird eine Karte. Über jeder Spalte steht ein
-Häkchen: was angekreuzt ist, steht auf der Karte. Spalten, deren Überschrift
-„name" oder „gast" enthält (Vorname, Nachname), ergeben den Namen, die übrigen
-angekreuzten stehen klein darunter (*Tisch 5 · vegetarisch*). Gelesen wird ohne
-Bibliothek: ZIP und XML einer `.xlsx` öffnet die Kasse selbst, Datumszellen
-kommen als Datum heraus, nicht als Zahl. Das alte `.xls` liest sie nicht
-(in Excel als `.xlsx` oder CSV speichern). Name und Angaben lassen sich später
-in der Kartenliste ändern; beim Abgleich gilt der neuere Stand.
+**Gästeliste:** Eine Datei wird in den Kasten *Neue Karten drucken* gezogen, über
+*Datei wählen* geöffnet oder als Zellen aus Excel eingefügt (Strg+V). Jede Zeile
+wird eine Karte. Über jeder Spalte steht ein Häkchen: was angekreuzt ist, steht
+auf der Karte. Spalten, deren Überschrift „name" oder „gast" enthält (Vorname,
+Nachname), ergeben den Namen, die übrigen angekreuzten stehen klein darunter
+(*Tisch 5 · vegetarisch*). Hat die Datei mehrere Tabellenblätter, wählt man das
+richtige aus; leere Blätter fallen weg.
+
+Gelesen wird ohne Bibliothek, und nach dem Anfang der Datei, nicht nach der
+Endung (eine „.xls" ist oft eine HTML-Seite, eine „.csv" oft UTF-16):
+
+| Format | |
+| --- | --- |
+| `.xlsx`, `.xlsm` | ZIP mit XML; Zahlen, Prozent, Datum und Uhrzeit (auch im 1904-System), Formelergebnisse, formatierter Text |
+| `.xls` | Excel 97–2003 (Compound File, BIFF8): Textliste über mehrere Fortsetzungen, komprimierte und Gleitkommazahlen, Formelergebnisse, Datum, Prozent |
+| `.ods`, `.fods` | OpenDocument (LibreOffice, Google Tabellen) |
+| `.xml` | Excel-2003-XML |
+| `.html`, `.htm`, auch als `.xls` | Tabellen aus einer Internetseite, Windows-1252 oder UTF-8 |
+| `.csv`, `.tsv`, `.txt` | Semikolon, Komma, Tabulator oder senkrechter Strich, Zeile `sep=;`; UTF-8, UTF-16 (Excels „Unicode-Text") oder Windows-1252 |
+| Zwischenablage | Zellen aus Excel (Tabulator-getrennt) |
+
+Nicht gelesen werden `.xlsb`, Numbers-Dateien, Excel vor Version 97 und Dateien
+mit Kennwort; die Kasse sagt, was zu tun ist (als `.xlsx` oder CSV speichern).
+Datums- und Prozentzellen kommen so heraus, wie man sie liest (`17.05.1980`,
+`25%`), nicht als Zahl. Name und Angaben lassen sich später in der Kartenliste
+ändern; beim Abgleich gilt der neuere Stand.
 
 **Kamera und Licht:** Beim Scannen nimmt das Kamerabild auf dem Handy den
 größten Teil des Schirms ein; „Licht" und „Betrag ändern" liegen über dem
@@ -125,7 +143,8 @@ in der `index.html`.
 
 | | |
 | --- | --- |
-| **0.4.1** | erkennt eine neuere Fassung selbst und meldet es (Verknüpfung auf dem Startbildschirm) |
+| **0.5** | Gästelisten in allen gängigen Formaten (.xls, .xlsx, .ods, Excel-2003-XML, HTML, CSV/UTF-16, Zwischenablage), Blattauswahl; gelöschte Karten verschwinden vollständig aus der Anzeige |
+| 0.4.1 | erkennt eine neuere Fassung selbst und meldet es (Verknüpfung auf dem Startbildschirm) |
 | 0.4 | Gästeliste aus Excel/CSV mit Spaltenauswahl; Betrieb auf Null setzen (auch über den Abgleich); großes Kamerabild; Licht beim Scannen |
 | 0.3.1 | Bedienungsanleitung als PDF; Vorschau und Rollenwahl auf schmalen Handys besser lesbar |
 | 0.3 | Karten löschen (einzeln, nach Bereich, alle unbenutzten, wiederherstellbar), Karten mit Namen |
