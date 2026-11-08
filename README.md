@@ -78,6 +78,11 @@ größten Teil des Schirms ein; „Licht" und „Betrag ändern" liegen über de
 Bild. Wo der Browser den Blitz freigibt (Chrome auf Android), geht das Licht
 an, solange die Kamera sucht, und aus, sobald gebucht ist. Einstellung unter
 *Dieses Gerät*: *Automatisch* oder *Aus*. Auf dem iPhone gibt es das nicht.
+Chrome meldet den Blitz oft erst, wenn das Bild läuft; die Kasse sieht deshalb bis
+zu fünf Sekunden lang alle Viertelsekunde nach. Sie behauptet auch nicht, das Licht
+sei an, wenn der Browser es nicht bestätigt, und sagt einmal je Sitzung, wenn das
+Gerät keinen Blitz freigibt. Unter *Dieses Gerät* steht, was die Kamera zuletzt
+dazu gemeldet hat.
 
 **Neue Fassung erkennen:** Eine Verknüpfung auf dem Startbildschirm zeigt gern die
 zuletzt gespeicherte Seite, und GitHub Pages erlaubt ohnehin zehn Minuten
@@ -143,7 +148,8 @@ in der `index.html`.
 
 | | |
 | --- | --- |
-| **0.5.1** | der Betrag wird auch beim Aufbuchen nach der Buchung geleert (kein zweites Buchen aus Versehen) |
+| **0.5.2** | Licht: Blitz wird bis zu 5 s lang gesucht (Chrome meldet ihn spät), Zustand wird geprüft statt angenommen, Meldung und Statuszeile sagen, warum es nicht geht |
+| 0.5.1 | der Betrag wird auch beim Aufbuchen nach der Buchung geleert (kein zweites Buchen aus Versehen) |
 | 0.5 | Gästelisten in allen gängigen Formaten (.xls, .xlsx, .ods, Excel-2003-XML, HTML, CSV/UTF-16, Zwischenablage), Blattauswahl; gelöschte Karten verschwinden vollständig aus der Anzeige |
 | 0.4.1 | erkennt eine neuere Fassung selbst und meldet es (Verknüpfung auf dem Startbildschirm) |
 | 0.4 | Gästeliste aus Excel/CSV mit Spaltenauswahl; Betrieb auf Null setzen (auch über den Abgleich); großes Kamerabild; Licht beim Scannen |

@@ -700,6 +700,7 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         <label class="feld grow"><span>Licht beim Scannen (Blitz der Kamera)</span>
           <div class="wahl" id="wahlLicht"><button data-licht="auto">Automatisch</button><button data-licht="aus">Aus</button></div></label>
       </div>
+      <p class="muted" style="margin:6px 0 0" id="lichtStand"></p>
       <p class="muted" style="margin:6px 0 0">Geht an, solange die Kamera sucht, und aus, sobald gebucht
         ist. Das gibt es nur, wo der Browser den Blitz freigibt (Chrome auf Android); auf dem iPhone
         nicht.</p>
@@ -1035,7 +1036,7 @@ function qrSvg(text){
 /* Die Nummer steht oben in der Kopfzeile und ist dazu da, zwei Geräte
    nebeneinanderlegen zu können. Bei jeder Änderung, die man merkt,
    weiterdrehen. */
-var VERSION = "0.5.1";
+var VERSION = "0.5.2";
 
 /* ============================== Daten ==============================
 
@@ -1488,6 +1489,7 @@ function kameraUmschalten(tab){
     leser = ("BarcodeDetector" in window) ? new window.BarcodeDetector({formats:["qr_code"]}) : null;
     liest=true; $(id.knopf).textContent="Kamera aus";
     lichtNachStart();
+    v.addEventListener("playing",function(){ if(liest) lichtNachStart(); },{once:true});
     takt();
   }).catch(function(e){
     hin.textContent="Die Kamera ist nicht freigegeben ("+e.name+"). Den Code bitte eintippen.";
@@ -1518,21 +1520,50 @@ function lichtSetzen(an){
   var t=lichtSpur();
   if(!t || !lichtMoeglich()){ lichtAn=false; zeichneLicht(); return Promise.resolve(false); }
   return t.applyConstraints({advanced:[{torch:!!an}]}).then(function(){
-    lichtAn=!!an; zeichneLicht(); return true;
+    /* "Angenommen" heißt noch nicht "leuchtet": manche Geräte nehmen die
+       Einstellung an und lassen den Blitz trotzdem aus. Wo der Browser den
+       Zustand meldet, gilt das, was er meldet. */
+    var ist=!!an;
+    try{ var e=t.getSettings && t.getSettings(); if(e && e.torch!==undefined) ist=!!e.torch; }catch(x){}
+    lichtAn=ist; zeichneLicht(); return ist===!!an;
   }).catch(function(){ lichtAn=false; zeichneLicht(); return false; });
 }
-/* Nach dem Start der Kamera nachsehen — manche Geräte melden die Fähigkeit
-   erst einen Augenblick später — und das Licht bei Bedarf einschalten. */
+
+/* Was die Kamera dieses Geräts zum Blitz sagt: "" (noch nicht nachgesehen),
+   "ja" oder "nein". Steht unter Einstellungen, damit man nicht raten muss. */
+var lichtStand="", lichtMeldung=false, lichtLauf=0;
+function lichtStandSetzen(w){ lichtStand=w; var k=$("lichtStand"); if(k) zeichneLichtStand(); }
+function zeichneLichtStand(){
+  var k=$("lichtStand"); if(!k) return;
+  k.textContent = lichtStand==="ja" ? "Der Blitz dieses Geräts wird vom Browser freigegeben."
+    : lichtStand==="nein" ? "Der Browser gibt den Blitz dieses Geräts nicht frei (zuletzt geprüft)."
+    : "Wird beim ersten Scannen geprüft.";
+}
+
+/* Nach dem Start der Kamera nachsehen und das Licht bei Bedarf einschalten.
+   Chrome meldet den Blitz oft erst, wenn das Bild läuft; deshalb wird bis zu
+   fünf Sekunden lang alle Viertelsekunde nachgesehen, nicht nur ein- oder
+   zweimal. Wer einen neuen Start macht, beendet den alten Lauf. */
 function lichtNachStart(){
+  var lauf=++lichtLauf, versuche=0;
   function pruefen(){
+    if(lauf!==lichtLauf || !liest) return;
     zeichneLicht();
-    if(lichtMoeglich() && !lichtAn && db.licht!=="aus") lichtSetzen(true);
+    if(lichtMoeglich()){
+      lichtStandSetzen("ja");
+      if(!lichtAn && db.licht!=="aus") lichtSetzen(true);
+      return;
+    }
+    if(++versuche<20){ setTimeout(pruefen,250); return; }
+    lichtStandSetzen("nein");
+    /* Einmal je Sitzung sagen, woran es liegt — nicht bei jedem Scan. */
+    if(!lichtMeldung && db.licht!=="aus"){ lichtMeldung=true; melden("Der Browser gibt den Blitz dieses Geräts nicht frei"); }
   }
-  pruefen(); setTimeout(function(){ if(liest) pruefen(); },400);
+  pruefen();
 }
 
 function kameraAus(){
-  lichtAn=false;
+  lichtAn=false; lichtLauf++;
   liest=false; leser=null; letzterCode="";
   if(strom){ strom.getTracks().forEach(function(t){t.stop();}); strom=null; }
   ["auf","ab"].forEach(function(t){
@@ -3105,6 +3136,7 @@ function zeichneEinstellungen(){
   document.querySelectorAll("#wahlRolle button").forEach(function(b){
     b.setAttribute("aria-pressed", b.getAttribute("data-rolle")===db.rolle ? "true":"false");
   });
+  zeichneLichtStand();
   document.querySelectorAll("#wahlLicht button").forEach(function(b){
     b.setAttribute("aria-pressed", b.getAttribute("data-licht")===(db.licht||"auto") ? "true":"false");
   });
