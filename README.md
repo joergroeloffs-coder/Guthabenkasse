@@ -28,6 +28,11 @@ Rücknahme oder Korrektur ist eine Gegenbuchung, keine Löschung.
 | **Karten** | Neue Karten drucken (8 je A4, 85 × 54 mm), wahlweise **mit Namen** (ein Name je Zeile) oder aus einer **Gästeliste** (Excel/CSV in den Kasten ziehen, Spalten ankreuzen). **Karten vorab aufladen** (Von/Bis/Betrag, etwa Karten 1–20 je 50 €). **Karten löschen** (Von/Bis, alle unbenutzten, oder einzeln). Liste aller Karten mit Suche nach Nummer und Name. Nummer antippen klappt die Karte auf: Guthaben direkt auf einen Betrag setzen, Namen ändern, Verlauf, einzelne Buchungen zurücknehmen, Restguthaben auszahlen, Karte nochmal drucken oder löschen. Abschluss drucken. |
 | **Einstellungen** | Rolle des Geräts (beides / nur Aufbuchen / nur Abbuchen), Gerätezeichen, Anlass, Ablage, Sicherung. |
 
+**Bestand ansehen:** Eine Karte scannen (oder ihren Code eintippen) **ohne Betrag** – Feld leer oder 0,00 –
+bucht nichts, sondern zeigt grünlich „Bestand 17,30 €“ mit Kartennummer und Namen. Das gilt in
+beiden Reitern; am Handy startet „Scannen“ dann auch ohne Betrag. Ein unsinniger Betrag
+(Buchstaben, minus) wird weiter abgewiesen.
+
 **Trinkgeld** (Einstellungen: Tasten an/aus, Aufrunden an/aus, die Werte der
 Tasten) – zwei Wege, ein Ergebnis: eine eigene Buchung „Trinkgeld" von
 derselben Karte, getrennt vom Verkauf.
@@ -165,7 +170,8 @@ in der `index.html`.
 
 | | |
 | --- | --- |
-| **0.7.0** | Abbuchen: zweigeteiltes Ergebnis (oben rötlich abgebucht, unten grünlich Rest, gleich groß); Trinkgeld-Tasten in Prozent (5 / 7,5 / 10 %) mit Betrag auf der Kachel, auf 0,50 € genau gerundet; Euro-Tasten weiter wählbar |
+| **0.7.1** | Scannen ohne Betrag (leer oder 0,00) zeigt den Kartenbestand, bucht nichts; Scannen am Handy geht auch ohne Betrag |
+| 0.7.0 | Abbuchen: zweigeteiltes Ergebnis (oben rötlich abgebucht, unten grünlich Rest, gleich groß); Trinkgeld-Tasten in Prozent (5 / 7,5 / 10 %) mit Betrag auf der Kachel, auf 0,50 € genau gerundet; Euro-Tasten weiter wählbar |
 | 0.6.1 | Name der Bedienung je Gerät: steht bei jeder Buchung, im Verlauf und im Abschluss („Je Bedienung“, mit Trinkgeld) |
 | 0.6.0 | Trinkgeld: Aufrunden auf den vollen Euro und Tasten nach der Buchung, als eigene Buchungsart, im Abschluss getrennt |
 | 0.5.3 | die Fassungsnummer steht immer im Kopf, unter der Summe, auf jeder Bildschirmgröße |

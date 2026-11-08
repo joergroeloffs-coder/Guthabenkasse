@@ -304,6 +304,7 @@ td.n,th.n{text-align:right}
    in welcher Richtung das Gerät gerade bucht. */
 .b-auf{background:var(--watt);color:#fff;border-color:var(--watt)}
 .b-ab{background:var(--messing);color:#fff;border-color:var(--messing)}
+.b-bestand{background:#D6EADB;color:#1B5A3A;border-color:#B7D6C0}
 .b-nein{background:var(--ziegel);color:#fff;border-color:var(--ziegel)}
 @keyframes aufleuchten{from{filter:brightness(1.85)}to{filter:brightness(1)}}
 .befund.leuchtet{animation:aufleuchten .45s ease-out}
@@ -1096,7 +1097,7 @@ function qrSvg(text){
 /* Die Nummer steht oben in der Kopfzeile und ist dazu da, zwei Geräte
    nebeneinanderlegen zu können. Bei jeder Änderung, die man merkt,
    weiterdrehen. */
-var VERSION = "0.7.0";
+var VERSION = "0.7.1";
 
 /* ============================== Daten ==============================
 
@@ -1462,13 +1463,31 @@ function kameraAn(tab){
   kameraUmschalten(tab);
 }
 
+/* Leer oder genau null: kein Betrag, nur nachsehen. */
+function betragOhne(cent){ return isNaN(cent) ? false : cent===0; }
+
+function bestandZeigen(tab, nr){
+  var s=saldo(nr), bekannt=!!db.karten[nr];
+  urteil(tab,"b-bestand","Bestand "+euro(s),
+         "Karte "+kartenLabel(nr)+" · nichts gebucht"+
+         (bekannt?"":" · hier nicht bekannt, vielleicht fehlt ein Abgleich")+
+         (s<0?" · im Minus":""));
+  if(istHandy()){ setPhase(tab,"ergebnis"); kameraAus(); }
+  klingen("auf");
+  if(navigator.vibrate) navigator.vibrate(30);
+}
+
 function scanBeginnen(tab){
   var cent=centAus($(tab==="ab"?"abBetrag":"aufBetrag").value);
-  if(!(cent>0)){ melden("Erst den Betrag eintippen"); return; }
+  /* Kein Betrag ist erlaubt: dann zeigt die Karte nur ihren Bestand. Ein
+     unsinniger Betrag (Buchstaben, minus) wird weiter abgewiesen. */
+  var leer=String($(tab==="ab"?"abBetrag":"aufBetrag").value||"").trim()==="";
+  if(!leer && !betragOhne(cent) && !(cent>0)){ melden("Erst den Betrag eintippen"); return; }
   klangWecken();
   if(istHandy()){
     setPhase(tab,"scan");
-    urteilBereit(tab,"Karte vor die Kamera halten.");
+    urteilBereit(tab,cent>0 ? "Karte vor die Kamera halten."
+                            : "Karte vor die Kamera halten — ohne Betrag zeigt sie ihren Bestand.");
     kameraAn(tab);
   } else {
     $(tab==="ab"?"abCode":"aufCode").focus();
@@ -1626,6 +1645,10 @@ function buche(tab, roh){
   var feldId = tab==="ab" ? "abBetrag" : "aufBetrag";
   if(tab==="ab") trinkVerbergen();
   var cent=centAus($(feldId).value);
+  /* Ohne Betrag (leer oder 0,00) bucht nichts: die Karte zeigt, was auf ihr
+     steht. Das ist die Frage "wie viel habe ich noch?" am Tresen. */
+  if(isNaN(cent) && String($(feldId).value||"").trim()==="") cent=0;
+  if(cent===0){ bestandZeigen(tab,nr); return; }
   if(!(cent>0)){
     urteil(tab,"b-nein","Erst den Betrag","Mit dem Ziffernblock eintippen, dann scannen.");
     klingen("nein"); return;
