@@ -28,16 +28,19 @@ Rücknahme oder Korrektur ist eine Gegenbuchung, keine Löschung.
 | **Karten** | Neue Karten drucken (8 je A4, 85 × 54 mm), wahlweise **mit Namen** (ein Name je Zeile) oder aus einer **Gästeliste** (Excel/CSV in den Kasten ziehen, Spalten ankreuzen). **Karten vorab aufladen** (Von/Bis/Betrag, etwa Karten 1–20 je 50 €). **Karten löschen** (Von/Bis, alle unbenutzten, oder einzeln). Liste aller Karten mit Suche nach Nummer und Name. Nummer antippen klappt die Karte auf: Guthaben direkt auf einen Betrag setzen, Namen ändern, Verlauf, einzelne Buchungen zurücknehmen, Restguthaben auszahlen, Karte nochmal drucken oder löschen. Abschluss drucken. |
 | **Einstellungen** | Rolle des Geräts (beides / nur Aufbuchen / nur Abbuchen), Gerätezeichen, Anlass, Ablage, Sicherung. |
 
-**Sprache (Deutsch / Türkçe):** *Einstellungen → Dieses Gerät → Sprache / Dil.* Die ganze
+**Sprache (Deutsch / Türkçe / English):** *Einstellungen → Dieses Gerät → Sprache / Dil.* Die ganze
 Oberfläche wechselt: Reiter, Beschriftungen, Hinweise, Ergebnisse, Meldungen, Rückfragen, die
 gedruckten Karten und der Abschluss. Die Sprache gehört zum **Gerät**, nicht zu den Daten:
-ein deutsches und ein türkisches Gerät gleichen sich ohne Weiteres ab, und „Betrieb auf Null
+Geräte in verschiedenen Sprachen gleichen sich ohne Weiteres ab, und „Betrieb auf Null
 setzen“ behält sie. Technik: Texte aus dem Code laufen über `_t("deutscher Text")` (fehlt eine
 Übersetzung, bleibt der deutsche stehen), der feste Seitentext wird beim Umschalten nach seinem
 deutschen Wortlaut ersetzt (`uebersetzeSeite()`); beides steht in `index.html`. Nicht
 übersetzt sind README, Bedienungsanleitung und die Meldungen in `ablage.gs` jenseits der drei
 häufigsten Fehler. Die Begriffe: Guthaben = *bakiye*, Aufbuchen = *yükleme*, Abbuchen =
 *harcama*, Anschreiben = *veresiye*, Trinkgeld = *bahşiş*, Ablage = *depo*.
+Englisch: Aufbuchen = *Top up*, Abbuchen = *Charge*, Anschreiben = *On tab*, Ablage = *Storage*,
+Abgleich = *Sync*. Die Wörterbücher stehen je Sprache in `SPRACHEN` (J: Texte aus dem Code,
+S/A/T: fester Seitentext), eine weitere Sprache braucht dort nur einen weiteren Eintrag.
 
 **Anschreiben:** Am Abbuchen-Schirm der Knopf „Anschreiben“. Ist er an, darf die Karte für
 diesen einen Kauf **ins Minus** (der Schalter geht nach der Buchung von selbst wieder aus). Bedingungen:
@@ -191,7 +194,8 @@ in der `index.html`.
 
 | | |
 | --- | --- |
-| **0.9.0** | Türkisch: Sprachumschalter je Gerät (Deutsch / Türkçe) für die ganze Oberfläche, Druck und Abschluss |
+| **0.10.0** | Englisch als dritte Sprache; die Übersetzungsschicht kennt jetzt beliebig viele Sprachen (`SPRACHEN`) |
+| 0.9.0 | Türkisch: Sprachumschalter je Gerät (Deutsch / Türkçe) für die ganze Oberfläche, Druck und Abschluss |
 | 0.8.0 | Anschreiben: Karten mit Namen dürfen bis zu einer Grenze (50 €) ins Minus, „Noch zu zahlen“, Begleichen, Block „Offen“ im Abschluss |
 | 0.7.1 | Scannen ohne Betrag (leer oder 0,00) zeigt den Kartenbestand, bucht nichts; Scannen am Handy geht auch ohne Betrag |
 | 0.7.0 | Abbuchen: zweigeteiltes Ergebnis (oben rötlich abgebucht, unten grünlich Rest, gleich groß); Trinkgeld-Tasten in Prozent (5 / 7,5 / 10 %) mit Betrag auf der Kachel, auf 0,50 € genau gerundet; Euro-Tasten weiter wählbar |
