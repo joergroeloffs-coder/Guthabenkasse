@@ -161,6 +161,59 @@ Abgleich gilt der neuere Name.
 Jedes Gerät braucht ein eigenes **Gerätezeichen** (ein Buchstabe). Es steht
 in der Kartennummer und bei jeder Buchung.
 
+## Treuhand-Modus (Betrieb durch Dritte)
+
+Für den Fall, dass ein anderer die Kasse betreibt, du aber verlässlich erfahren willst, was
+an einem Abend umgesetzt wurde — etwa weil sich deine Gebühr nach dem Umsatz richtet. Gemeint
+ist **Schutz vor Löschen und Verändern**, nicht vor Weglassen: die Kasse sieht nur, was
+gescannt wird.
+
+**Einrichten (du, in deinem Google-Konto):** `ablage.gs` wie üblich bereitstellen, aber **in
+deinem** Konto, nicht im Konto des Betreibers. Oben im Skript setzen:
+
+| Einstellung | Bedeutung |
+| --- | --- |
+| `TREUHAND = true` | schaltet den Modus ein |
+| `ADMINWORT` | nur damit lässt sich ein neues Fest beginnen; der Betreiber kennt es nicht (leer = nie) |
+| `BERICHT_AN` | Mailadressen, durch Komma getrennt: du und der Betreiber, dieselben Zahlen für beide |
+| `GEBUEHR_PROZENT` | dein Anteil am Umsatz; steht im Bericht, wenn größer als 0 |
+
+Danach neu bereitstellen (*Bereitstellen → Bereitstellungen verwalten → Neue Version*); Google
+fragt beim ersten Mal nach der Erlaubnis zum Mailversand. Der Betreiber bekommt nur **Adresse und
+Zugangswort**. Die Kasse merkt von selbst, dass die Ablage im Treuhand-Modus läuft. Am besten
+beginnt man damit ein **neues Fest**, denn Buchungen aus früheren Fassungen tragen noch keine
+Nummer und würden im Bericht als „ohne laufende Nummer“ auffallen.
+
+**Was dann gilt**
+
+- **Die Ablage wächst nur.** Die Geräte schicken Buchungen, die Ablage legt sie dazu; Überschreiben,
+  Löschen und ein Neubeginn von einem Gerät aus werden nicht angenommen. Schickt ein Gerät nach
+  einem lokalen Zurücksetzen einen „neuen Anfang“, bleibt der alte Stand in der Ablage, und der
+  Bericht vermerkt es.
+- **Neues Fest nur mit Admin-Wort.** „Betrieb auf Null setzen“ fragt die Ablage; die archiviert den
+  alten Stand als eigene Datei im Drive (`guthabenkasse-archiv-….json`) und beginnt von vorn. Alle
+  Geräte übernehmen das beim nächsten Abgleich.
+- **Lückenlos nummeriert, mit Prüfkette.** Jede Buchung trägt die laufende Nummer ihres Geräts und
+  eine Prüfsumme, die auf der vorigen aufbaut. Der Bericht zeigt fehlende Nummern, doppelt vergebene
+  Nummern (Gerät hat von vorn begonnen, etwa nach gelöschten Browserdaten) und nachträglich
+  veränderte Buchungen. Das Original bleibt jeweils erhalten.
+- **Abschluss = Bericht.** *Abschluss drucken* gleicht ab, fragt die Ablage, schickt den Bericht per Mail
+  und druckt dann die **Zahlen der Ablage** als „Treuhand-Prüfung“. Jedes Gerät meldet beim Abschluss
+  seine letzte Nummer und Prüfsumme; erst wenn alle Geräte gemeldet haben und alles stimmt, steht dort
+  „Vollständig und unverändert“. Ohne Antwort der Ablage wird trotzdem gedruckt, aber als „Nicht
+  bestätigt“ gekennzeichnet.
+
+**Die Zahl, an der die Gebühr hängt:** *Umsatz* = alle **Abbuchungen ohne Trinkgeld**, abzüglich der
+**zurückgenommenen** Abbuchungen (Rücknahmen werden im Bericht mit Anzahl und Summe ausgewiesen).
+**Auszahlungen von Restguthaben ändern den Umsatz nicht**, ebenso wenig Aufladungen, Korrekturen
+und Trinkgeld; sie stehen getrennt im Bericht.
+
+**Grenzen:** Wer am Handy vorbei kassiert, kommt in keiner Zahl vor. Wer die Kasse ganz ohne
+Verbindung betreibt, erzeugt keine Berichte, und die Ablage meldet „Abschluss noch nicht gemeldet“.
+Die Prüfsumme ist ein Fingerabdruck, keine Geheimschrift: gegen jemanden, der das Skript in
+**deinem** Konto verändern könnte, hilft nur, dass es dein Konto ist. Ein Prüfrecht und die
+Absprache, dass die Mail die maßgebliche Zahl ist, gehören in eine kurze schriftliche Vereinbarung.
+
 ## Zwei Geräte abgleichen
 
 Beide Geräte gleichen sich über eine gemeinsame Ablage ab (ein Apps Script
@@ -194,7 +247,8 @@ in der `index.html`.
 
 | | |
 | --- | --- |
-| **0.10.0** | Englisch als dritte Sprache; die Übersetzungsschicht kennt jetzt beliebig viele Sprachen (`SPRACHEN`) |
+| **0.11.0** | Treuhand-Modus: Ablage wächst nur, Neubeginn nur mit Admin-Wort (Archiv), laufende Nummer und Prüfkette je Buchung, Bericht per Mail mit dem Umsatz (Abbuchungen ohne Trinkgeld, abzüglich Rücknahmen; Auszahlungen ändern ihn nicht) |
+| 0.10.0 | Englisch als dritte Sprache; die Übersetzungsschicht kennt jetzt beliebig viele Sprachen (`SPRACHEN`) |
 | 0.9.0 | Türkisch: Sprachumschalter je Gerät (Deutsch / Türkçe) für die ganze Oberfläche, Druck und Abschluss |
 | 0.8.0 | Anschreiben: Karten mit Namen dürfen bis zu einer Grenze (50 €) ins Minus, „Noch zu zahlen“, Begleichen, Block „Offen“ im Abschluss |
 | 0.7.1 | Scannen ohne Betrag (leer oder 0,00) zeigt den Kartenbestand, bucht nichts; Scannen am Handy geht auch ohne Betrag |
