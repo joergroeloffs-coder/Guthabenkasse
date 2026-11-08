@@ -28,6 +28,22 @@ Rücknahme oder Korrektur ist eine Gegenbuchung, keine Löschung.
 | **Karten** | Neue Karten drucken (8 je A4, 85 × 54 mm), wahlweise **mit Namen** (ein Name je Zeile) oder aus einer **Gästeliste** (Excel/CSV in den Kasten ziehen, Spalten ankreuzen). **Karten vorab aufladen** (Von/Bis/Betrag, etwa Karten 1–20 je 50 €). **Karten löschen** (Von/Bis, alle unbenutzten, oder einzeln). Liste aller Karten mit Suche nach Nummer und Name. Nummer antippen klappt die Karte auf: Guthaben direkt auf einen Betrag setzen, Namen ändern, Verlauf, einzelne Buchungen zurücknehmen, Restguthaben auszahlen, Karte nochmal drucken oder löschen. Abschluss drucken. |
 | **Einstellungen** | Rolle des Geräts (beides / nur Aufbuchen / nur Abbuchen), Gerätezeichen, Anlass, Ablage, Sicherung. |
 
+**Trinkgeld** (Einstellungen: Tasten an/aus, Aufrunden an/aus, die Werte der
+Tasten) – zwei Wege, ein Ergebnis: eine eigene Buchung „Trinkgeld" von
+derselben Karte, getrennt vom Verkauf.
+
+- *Aufrunden:* Knopf „Aufrunden" oben am Betragsfeld (Abbuchen). Aus 4,70 €
+  werden 5,00 €; die 0,30 € werden als Trinkgeld mitgebucht. Der Hinweis unter
+  dem Betrag zeigt es vorher. Reicht das Guthaben nur für den Betrag selbst,
+  wird nicht aufgerundet (die Meldung sagt es).
+- *Tasten nach der Buchung:* Auf dem Ergebnisschirm erscheinen „+ 0,50 / + 1,00 /
+  + 2,00 €" (einstellbar, bis zu fünf). Ein Tipp bucht das Trinkgeld, die Tasten
+  verschwinden; was das Guthaben nicht mehr hergibt, ist gesperrt. Nach dem
+  Aufrunden gibt es keine Tasten mehr (das Trinkgeld ist schon da).
+- Der **Abschluss** weist das Trinkgeld getrennt aus (gesamt und je Gerät); es
+  zählt nicht zu „Abgebucht (verkauft)". Im Verlauf der Karte steht „Trinkgeld",
+  und wie jede Buchung lässt es sich zurücknehmen.
+
 Auf dem **Handy** geht es in drei Schritten, jeder mit dem ganzen Schirm:
 Betrag eintippen → Karte scannen (der Betrag steht groß da) → Ergebnis. Nach
 dem Ergebnis ruht die Kamera, bis „Nächster Gast" (oder „Nächste Karte")
@@ -148,7 +164,8 @@ in der `index.html`.
 
 | | |
 | --- | --- |
-| **0.5.3** | die Fassungsnummer steht immer im Kopf, unter der Summe, auf jeder Bildschirmgröße |
+| **0.6.0** | Trinkgeld: Aufrunden auf den vollen Euro und Tasten nach der Buchung, als eigene Buchungsart, im Abschluss getrennt |
+| 0.5.3 | die Fassungsnummer steht immer im Kopf, unter der Summe, auf jeder Bildschirmgröße |
 | 0.5.2 | Licht: Blitz wird bis zu 5 s lang gesucht (Chrome meldet ihn spät), Zustand wird geprüft statt angenommen, Meldung und Statuszeile sagen, warum es nicht geht |
 | 0.5.1 | der Betrag wird auch beim Aufbuchen nach der Buchung geleert (kein zweites Buchen aus Versehen) |
 | 0.5 | Gästelisten in allen gängigen Formaten (.xls, .xlsx, .ods, Excel-2003-XML, HTML, CSV/UTF-16, Zwischenablage), Blattauswahl; gelöschte Karten verschwinden vollständig aus der Anzeige |

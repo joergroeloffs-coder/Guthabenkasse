@@ -244,6 +244,15 @@ td.n,th.n{text-align:right}
   touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .tasten button:active{background:var(--wattHell);transform:translateY(1px)}
 .tasten button.zurueck{font-size:22px;color:var(--tinteWeich)}
+.kopfKnoepfe{display:flex;gap:6px}
+.kopfKnoepfe .knopf[aria-pressed="true"]{background:var(--messing);border-color:var(--messing);color:#fff}
+.rundeHinweis{margin:6px 0 0;font-size:14px;color:var(--messing);font-weight:600;text-align:right}
+.trinkReihe{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 0}
+.trinkReihe .trinkTitel{font-size:13px;color:var(--tinteWeich);width:100%}
+.trinkReihe button{flex:1 1 0;min-width:70px;height:52px;font-size:18px;font-weight:600;
+  border:1px solid var(--messingRand);background:var(--messingHell);color:var(--messing);
+  border-radius:var(--radius);cursor:pointer}
+.trinkReihe button:active{transform:translateY(1px)}
 .schnell{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px}
 .schnell button{
   height:38px;font:inherit;font-size:15px;border-radius:var(--radius);cursor:pointer;
@@ -295,13 +304,14 @@ td.n,th.n{text-align:right}
    das Kamerabild, darunter das Urteil. */
 @media(min-width:760px) and (min-height:480px){
   .schirm.breit{display:grid;grid-template-columns:minmax(0,330px) minmax(0,1fr);
-    grid-template-rows:auto 1fr auto;gap:12px 16px;
+    grid-template-rows:auto 1fr auto auto;gap:12px 16px;
     height:calc(100dvh - 200px);min-height:420px}
-  .schirm.breit .betragKarte{grid-area:1/1/4/2;overflow:auto}
+  .schirm.breit .betragKarte{grid-area:1/1/5/2;overflow:auto}
   .schirm.breit .bild{grid-area:1/2/2/3}
   .schirm.breit #video,.schirm.breit #video2{max-height:min(38dvh,380px)}
   .schirm.breit .befund{grid-area:2/2/3/3}
-  .schirm.breit .eingabe{grid-area:3/2/4/3}
+  .schirm.breit .trinkReihe{grid-area:3/2/4/3}
+  .schirm.breit .eingabe{grid-area:4/2/5/3}
 }
 
 /* Schmal: Handy. Drei Schritte, je einer sichtbar. */
@@ -317,11 +327,11 @@ td.n,th.n{text-align:right}
   .nurHandy{display:flex}
   .schirm .sk,.schirm .ak,.schirm .wk{display:none}
   /* 1. Betrag eintippen */
-  .phase-eingabe .bild,.phase-eingabe .befund,.phase-eingabe .eingabe{display:none}
+  .phase-eingabe .bild,.phase-eingabe .befund,.phase-eingabe .eingabe,.phase-eingabe .trinkReihe{display:none}
   .phase-eingabe .sk{display:flex}
   .phase-eingabe .tasten button{height:46px}
   /* 2. Karte scannen — der Betrag steht groß da, der Ziffernblock ist weg */
-  .phase-scan .tasten,.phase-scan .schnell,.phase-scan .kopfReihe .knopf{display:none}
+  .phase-scan .tasten,.phase-scan .schnell,.phase-scan .kopfReihe .knopf,.phase-scan .trinkReihe{display:none}
   .phase-scan .ak{display:flex}
   .phase-scan #aufBetrag,.phase-scan #abBetrag{height:70px;font-size:50px;line-height:66px;
     pointer-events:none}
@@ -558,9 +568,11 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 <section id="reiter-ab" class="schirm breit phase-eingabe hide">
   <div class="karte betragKarte"><div class="inhalt">
     <div class="kopfReihe"><span class="feldTitel">Betrag abbuchen</span>
-      <button class="knopf klein" id="abNull">Leeren</button></div>
+      <span class="kopfKnoepfe"><button class="knopf klein" id="abRunde" aria-pressed="false">Aufrunden</button>
+      <button class="knopf klein" id="abNull">Leeren</button></span></div>
     <div class="anzeige"><input id="abBetrag" inputmode="none" placeholder="0,00" autocomplete="off"
          aria-label="Betrag abbuchen"><span class="eurozeichen">€</span></div>
+    <p class="rundeHinweis hide" id="rundeHinweis"></p>
     <div class="tasten" data-fuer="abBetrag">
       <button data-taste="7">7</button><button data-taste="8">8</button><button data-taste="9">9</button>
       <button data-taste="4">4</button><button data-taste="5">5</button><button data-taste="6">6</button>
@@ -579,6 +591,7 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     <button class="knopf nurHandy ak" data-aendern="ab">Betrag ändern</button>
   </div>
   <div class="befund b-still" id="befund2"></div>
+  <div class="trinkReihe hide" id="trinkReihe"></div>
   <button class="knopf voll gross nurHandy wk" data-weiter="ab" style="background:var(--messing);border-color:var(--messing)">Nächster Gast</button>
   <div class="eingabe">
     <input id="abCode" placeholder="Code eintippen oder scannen" autocomplete="off"
@@ -710,6 +723,21 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         <label class="feld grow"><span>Ton</span>
           <div class="wahl" id="wahlTon"><button data-ton="1">An</button><button data-ton="0">Aus</button></div></label>
       </div>
+      <div class="reihe" style="margin-top:14px">
+        <label class="feld grow"><span>Trinkgeld-Tasten nach dem Abbuchen</span>
+          <div class="wahl" id="wahlTrink"><button data-trink="1">An</button><button data-trink="0">Aus</button></div></label>
+      </div>
+      <div class="reihe" style="margin-top:14px">
+        <label class="feld grow"><span>Aufrunden auf den vollen Euro</span>
+          <div class="wahl" id="wahlRunde"><button data-runde="1">An</button><button data-runde="0">Aus</button></div></label>
+      </div>
+      <div class="reihe" style="margin-top:14px">
+        <label class="feld grow"><span>Trinkgeld-Tasten (Euro, mit Leerzeichen getrennt)</span>
+          <input id="trinkWerte" class="mono" maxlength="30" autocomplete="off" placeholder="0,50 1 2"></label>
+      </div>
+      <p class="muted" style="margin:6px 0 0">Trinkgeld wird von derselben Karte abgebucht, als eigene Buchung,
+        und im Abschluss getrennt ausgewiesen. „Aufrunden“ kann auch am Abbuchen-Schirm je Gast ein- und
+        ausgeschaltet werden.</p>
     </div></div>
 
   <div class="karte"><div class="titel"><h2>Anlass</h2></div>
@@ -1038,7 +1066,7 @@ function qrSvg(text){
 /* Die Nummer steht oben in der Kopfzeile und ist dazu da, zwei Geräte
    nebeneinanderlegen zu können. Bei jeder Änderung, die man merkt,
    weiterdrehen. */
-var VERSION = "0.5.3";
+var VERSION = "0.6.0";
 
 /* ============================== Daten ==============================
 
@@ -1066,6 +1094,9 @@ function leereDaten(){
     rolle:"beide",                 /* beide | auf | ab */
     ton:true,
     licht:"auto",                  /* auto | aus: Blitz beim Scannen */
+    trink:true,                    /* nach dem Abbuchen Trinkgeld-Tasten anbieten */
+    aufrunden:false,               /* beim Abbuchen auf den vollen Euro aufrunden */
+    trinkwerte:"0,50 1 2",         /* die Tasten, in Euro, durch Leerzeichen getrennt */
     anlass:{name:"", verein:"", zusatz:"", ts:0},
     karten:{},                     /* "A0007" → {nr, ts, name?, nts?} */
     geloescht:{},                  /* "A0007" → Zeit; positiv gelöscht, negativ wiederhergestellt */
@@ -1274,13 +1305,14 @@ function buchen(nr, cent, art, ref, stapel, spaeter){
 }
 
 function gesamt(){
-  var auf=0, ab=0, rest=0, s=salden();
+  var auf=0, ab=0, tip=0, rest=0, s=salden();
   db.buchungen.forEach(function(b){
     if(b.art==="auf") auf+=b.cent;
     else if(b.art==="ab") ab+=-b.cent;
+    else if(b.art==="trinkgeld") tip+=-b.cent;
   });
   for(var nr in s) rest+=s[nr];
-  return {auf:auf, ab:ab, rest:rest};
+  return {auf:auf, ab:ab, tip:tip, rest:rest};
 }
 
 /* ======================= Das große Urteil =======================
@@ -1378,6 +1410,7 @@ function scanBeginnen(tab){
 function weiter(tab){
   /* Der Betrag ist nach jeder Buchung leer, in beiden Richtungen: es geht
      wieder mit dem Ziffernblock los. */
+  trinkVerbergen();
   urteilBereit(tab);
   setPhase(tab,"eingabe");
 }
@@ -1397,10 +1430,77 @@ function tasteDruecken(feld, k){
   }
   feld.value=v;
   if(feld.id==="aufBetrag"){ db.aufBetrag=v; sichern(); }
+  if(feld.id==="abBetrag") rundeHinweisZeigen();
   if(navigator.vibrate) navigator.vibrate(12);
 }
 
 /* ========================= Aufbuchen und Abbuchen ========================= */
+/* ============================ Trinkgeld ============================
+   Zwei Wege, ein Ergebnis — eine eigene Buchung der Art "trinkgeld" von
+   derselben Karte:
+     Aufrunden  — der Rest bis zum vollen Euro wird gleich mit abgebucht
+     Tasten     — nach der Buchung, auf dem Ergebnisschirm: 0,50 / 1 / 2 …
+   Das Trinkgeld hängt mit "zu" am Verkauf; abgerechnet wird es getrennt. */
+var letzterVerkauf=null;
+
+function aufrundenTrinkgeld(cent){
+  if(!db.aufrunden) return 0;
+  var rest=cent%100;
+  return rest===0 ? 0 : 100-rest;
+}
+
+function rundeHinweisZeigen(){
+  var h=$("rundeHinweis"), b=$("abRunde");
+  b.setAttribute("aria-pressed", db.aufrunden ? "true":"false");
+  b.textContent=db.aufrunden ? "Aufrunden: an" : "Aufrunden";
+  var cent=centAus($("abBetrag").value), tip=cent>0 ? aufrundenTrinkgeld(cent) : 0;
+  if(tip>0){
+    h.textContent="Aufgerundet auf "+euro(cent+tip)+" · Trinkgeld "+euro(tip);
+    h.classList.remove("hide");
+  } else h.classList.add("hide");
+}
+
+function trinkWerteListe(){
+  var teile=String(db.trinkwerte||"").split(/[\s;]+/), aus=[];
+  teile.forEach(function(t){
+    var c=centAus(t);
+    if(c>0 && c<=100000 && aus.indexOf(c)<0 && aus.length<5) aus.push(c);
+  });
+  return aus;
+}
+
+function trinkVerbergen(){
+  letzterVerkauf=null;
+  $("trinkReihe").classList.add("hide");
+  $("trinkReihe").innerHTML="";
+}
+
+function trinkAnbieten(nr, verkaufId, schonAufgerundet){
+  var reihe=$("trinkReihe");
+  trinkVerbergen();
+  if(db.trink===false || schonAufgerundet) return;
+  var werte=trinkWerteListe(); if(!werte.length) return;
+  letzterVerkauf={nr:nr, id:verkaufId};
+  var rest=saldo(nr);
+  reihe.innerHTML='<span class="trinkTitel">Trinkgeld dazu?</span>'+
+    werte.map(function(c){
+      return '<button data-trinkgeld="'+c+'"'+(c>rest?' disabled':'')+'>+ '+esc(euro(c))+'</button>';
+    }).join("");
+  reihe.classList.remove("hide");
+}
+
+function trinkgeldBuchen(cent){
+  var v=letzterVerkauf; if(!v || !(cent>0)) return;
+  if(saldo(v.nr)<cent){ melden("Dafür reicht das Guthaben nicht"); return; }
+  var t=buchen(v.nr, -cent, "trinkgeld"); t.zu=v.id; sichern();
+  trinkVerbergen();
+  urteil("ab","b-ab","Guthaben "+euro(saldo(v.nr)),
+         "Trinkgeld "+euro(cent)+" abgebucht · Karte "+kartenLabel(v.nr));
+  klingen("ab");
+  zeichneAlles(); wolkeVormerken();
+  if(navigator.vibrate) navigator.vibrate(40);
+}
+
 function buche(tab, roh){
   var nr=kartenNummer(roh);
   if(!nr){
@@ -1413,6 +1513,7 @@ function buche(tab, roh){
     klingen("nein"); return;
   }
   var feldId = tab==="ab" ? "abBetrag" : "aufBetrag";
+  if(tab==="ab") trinkVerbergen();
   var cent=centAus($(feldId).value);
   if(!(cent>0)){
     urteil(tab,"b-nein","Erst den Betrag","Mit dem Ziffernblock eintippen, dann scannen.");
@@ -1447,14 +1548,23 @@ function buche(tab, roh){
              (db.karten[nr]?"":" · hier nicht bekannt, vielleicht fehlt ein Abgleich"));
       klingen("nein"); return;
     }
-    buchen(nr, -cent, "ab");
+    /* Aufrunden: der Rest bis zum vollen Euro ist Trinkgeld, eine eigene
+       Buchung, damit der Abschluss es getrennt zeigt. Reicht das Guthaben
+       nur für den Betrag selbst, wird nicht aufgerundet — der Gast soll
+       nicht an einem Cent scheitern. */
+    var tip=aufrundenTrinkgeld(cent), nichtGereicht=false;
+    if(tip>0 && vorher<cent+tip){ tip=0; nichtGereicht=true; }
+    var verkauf=buchen(nr, -cent, "ab", null, null, tip>0);
+    if(tip>0){ var tb=buchen(nr, -tip, "trinkgeld"); tb.zu=verkauf.id; sichern(); }
     if(istHandy()) setPhase("ab","ergebnis");
     urteil("ab","b-ab","Guthaben "+euro(saldo(nr)),
-           "Abgebucht "+euro(cent)+" · Karte "+kartenLabel(nr));
+           "Abgebucht "+euro(cent)+(tip>0?" + Trinkgeld "+euro(tip):"")+" · Karte "+kartenLabel(nr)+
+           (nichtGereicht?" · zum Aufrunden reichte das Guthaben nicht":""));
     klingen("ab");
+    trinkAnbieten(nr, verkauf.id, tip>0);
     /* Der Betrag wird geleert: der nächste Gast kauft etwas anderes, und ein
        vergessener Betrag würde ihm das Falsche abziehen. */
-    $("abBetrag").value="";
+    $("abBetrag").value=""; rundeHinweisZeigen();
   }
   /* Nach einem Erfolg ruht die Kamera: sonst bucht die nächste Karte, die
      zufällig ins Bild kommt, ungefragt noch einmal. Weiter geht es erst
@@ -1638,14 +1748,14 @@ function zeichneZahlen(){
   $("zZeile").textContent=mehrzahl(nKarten,"Karte","Karten")+" bekannt, "+
     mehrzahl(mitGuthaben,"mit Guthaben","mit Guthaben")+
     (imMinus ? ", "+mehrzahl(imMinus,"Karte im Minus","Karten im Minus")+" (zwei Geräte haben zugleich abgebucht)" : "")+
-    ".";
+    "."+(g.tip>0 ? " Davon als Trinkgeld abgebucht: "+eur(g.tip)+" €." : "");
 }
 
 /* Die Liste und, wenn eine Karte angetippt ist, deren Einzelheiten gleich
    darunter — an der Stelle, wo man hingetippt hat. Ein Kasten weiter unten
    hieße: tippen, rollen, korrigieren, zurückrollen. */
 var detailGezeigt="";
-var NAMEN={auf:"aufgebucht",ab:"abgebucht",storno:"zurückgenommen",auszahlung:"ausgezahlt",korrektur:"korrigiert"};
+var NAMEN={auf:"aufgebucht",ab:"abgebucht",storno:"zurückgenommen",auszahlung:"ausgezahlt",korrektur:"korrigiert",trinkgeld:"Trinkgeld"};
 
 function detailHtml(nr){
   var g=saldo(nr);
@@ -2817,9 +2927,10 @@ function abschlussDrucken(){
   var heute=zeitpunkt(Date.now());
   var proGeraet={};
   db.buchungen.forEach(function(b){
-    var z=proGeraet[b.geraet]||(proGeraet[b.geraet]={auf:0,ab:0,anzahl:0});
+    var z=proGeraet[b.geraet]||(proGeraet[b.geraet]={auf:0,ab:0,tip:0,anzahl:0});
     z.anzahl++;
     if(b.art==="auf") z.auf+=b.cent; else if(b.art==="ab") z.ab+=-b.cent;
+    else if(b.art==="trinkgeld") z.tip+=-b.cent;
   });
   var offen=Object.keys(s).filter(function(n){ return s[n]!==0 && !istGeloescht(n); }).sort();
   $("bogen").className="bericht";
@@ -2830,14 +2941,15 @@ function abschlussDrucken(){
     '<div>Stand '+esc(heute)+'</div>'+
     '<table><tr><th>Aufgebucht</th><th class="n">'+eur(g.auf)+' €</th></tr>'+
     '<tr><td>Abgebucht (verkauft)</td><td class="n">'+eur(g.ab)+' €</td></tr>'+
-    '<tr><td>Ausgezahlt, zurückgenommen oder korrigiert</td><td class="n">'+eur(g.auf-g.ab-g.rest)+' €</td></tr>'+
+    '<tr><td>Abgebucht als Trinkgeld</td><td class="n">'+eur(g.tip)+' €</td></tr>'+
+    '<tr><td>Ausgezahlt, zurückgenommen oder korrigiert</td><td class="n">'+eur(g.auf-g.ab-g.tip-g.rest)+' €</td></tr>'+
     '<tr><td><b>Noch auf Karten</b></td><td class="n"><b>'+eur(g.rest)+' €</b></td></tr></table>'+
     '<div class="titel" style="margin-top:8mm">Je Gerät</div>'+
-    '<table><tr><th>Gerät</th><th class="n">Buchungen</th><th class="n">aufgebucht</th><th class="n">abgebucht</th></tr>'+
+    '<table><tr><th>Gerät</th><th class="n">Buchungen</th><th class="n">aufgebucht</th><th class="n">abgebucht</th><th class="n">Trinkgeld</th></tr>'+
     Object.keys(proGeraet).sort().map(function(k){
       var z=proGeraet[k];
       return '<tr><td>'+esc(k)+'</td><td class="n">'+z.anzahl+'</td><td class="n">'+eur(z.auf)+
-             ' €</td><td class="n">'+eur(z.ab)+' €</td></tr>';
+             ' €</td><td class="n">'+eur(z.ab)+' €</td><td class="n">'+eur(z.tip)+' €</td></tr>';
     }).join("")+'</table>'+
     '<div class="titel" style="margin-top:8mm">Karten mit Restbetrag ('+offen.length+')</div>'+
     (offen.length?'<table><tr><th>Karte</th><th class="n">Guthaben</th></tr>'+
@@ -3142,6 +3254,14 @@ function zeichneEinstellungen(){
   document.querySelectorAll("#wahlLicht button").forEach(function(b){
     b.setAttribute("aria-pressed", b.getAttribute("data-licht")===(db.licht||"auto") ? "true":"false");
   });
+  document.querySelectorAll("#wahlTrink button").forEach(function(b){
+    b.setAttribute("aria-pressed", (b.getAttribute("data-trink")==="1")===(db.trink!==false) ? "true":"false");
+  });
+  document.querySelectorAll("#wahlRunde button").forEach(function(b){
+    b.setAttribute("aria-pressed", (b.getAttribute("data-runde")==="1")===!!db.aufrunden ? "true":"false");
+  });
+  if(document.activeElement!==$("trinkWerte")) $("trinkWerte").value=db.trinkwerte||"";
+  rundeHinweisZeigen();
   document.querySelectorAll("#wahlTon button").forEach(function(b){
     b.setAttribute("aria-pressed", (b.getAttribute("data-ton")==="1")===!!db.ton ? "true":"false");
   });
@@ -3341,6 +3461,7 @@ function start(){
     });
     $(t[4]).addEventListener("click",function(){
       $(t[1]).value=""; if(tab==="auf"){ db.aufBetrag=""; sichern(); }
+      if(tab==="ab") rundeHinweisZeigen();
     });
     $(t[5]).addEventListener("click",function(){ klangWecken(); kameraUmschalten(tab); });
     /* Mit einer richtigen Tastatur geht es auch: Zahl tippen, Enter. */
@@ -3365,6 +3486,7 @@ function start(){
          danebenzutippen. */
       feld.value=eur(Number(c)).replace(/\./g,"");
       if(feld.id==="aufBetrag"){ db.aufBetrag=feld.value; sichern(); }
+      if(feld.id==="abBetrag") rundeHinweisZeigen();
     });
   });
   document.querySelectorAll("[data-scan]").forEach(function(k){
@@ -3505,6 +3627,27 @@ function start(){
   [["btnLicht","auf"],["btnLicht2","ab"]].forEach(function(x){
     $(x[0]).addEventListener("click",function(){ lichtSetzen(!lichtAn); });
   });
+  $("wahlTrink").addEventListener("click",function(e){
+    var t=e.target.getAttribute&&e.target.getAttribute("data-trink");
+    if(t===null||t===undefined) return;
+    db.trink=(t==="1"); sichern(); zeichneEinstellungen();
+  });
+  $("wahlRunde").addEventListener("click",function(e){
+    var t=e.target.getAttribute&&e.target.getAttribute("data-runde");
+    if(t===null||t===undefined) return;
+    db.aufrunden=(t==="1"); sichern(); zeichneEinstellungen();
+  });
+  $("abRunde").addEventListener("click",function(){
+    db.aufrunden=!db.aufrunden; sichern(); zeichneEinstellungen();
+  });
+  $("trinkWerte").addEventListener("change",function(){
+    db.trinkwerte=this.value.trim(); sichern(); zeichneEinstellungen();
+  });
+  $("trinkReihe").addEventListener("click",function(e){
+    var c=e.target.getAttribute&&e.target.getAttribute("data-trinkgeld");
+    if(c) trinkgeldBuchen(Number(c));
+  });
+  $("abBetrag").addEventListener("input",rundeHinweisZeigen);
   $("wahlTon").addEventListener("click",function(e){
     var t=e.target.getAttribute&&e.target.getAttribute("data-ton");
     if(t===null||t===undefined) return;
