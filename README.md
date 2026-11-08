@@ -40,7 +40,11 @@ derselben Karte, getrennt vom Verkauf.
   + 2,00 €" (einstellbar, bis zu fünf). Ein Tipp bucht das Trinkgeld, die Tasten
   verschwinden; was das Guthaben nicht mehr hergibt, ist gesperrt. Nach dem
   Aufrunden gibt es keine Tasten mehr (das Trinkgeld ist schon da).
-- Der **Abschluss** weist das Trinkgeld getrennt aus (gesamt und je Gerät); es
+- **Name der Bedienung** (Einstellungen, freiwillig, z. B. „Anna“): wird bei jeder Buchung
+  mitgespeichert; der Abschluss rechnet „Je Bedienung“ nach Namen ab, auch das Trinkgeld.
+  Ohne Namen steht „Gerät B“. Wer das Gerät übergibt, ändert nur den Namen; alte Buchungen
+  behalten ihren. Das Gerätezeichen (ein Buchstabe) bleibt, es steckt in den Kartennummern.
+- Der **Abschluss** weist das Trinkgeld getrennt aus (gesamt und je Bedienung); es
   zählt nicht zu „Abgebucht (verkauft)". Im Verlauf der Karte steht „Trinkgeld",
   und wie jede Buchung lässt es sich zurücknehmen.
 
@@ -164,7 +168,8 @@ in der `index.html`.
 
 | | |
 | --- | --- |
-| **0.6.0** | Trinkgeld: Aufrunden auf den vollen Euro und Tasten nach der Buchung, als eigene Buchungsart, im Abschluss getrennt |
+| **0.6.1** | Name der Bedienung je Gerät: steht bei jeder Buchung, im Verlauf und im Abschluss („Je Bedienung“, mit Trinkgeld) |
+| 0.6.0 | Trinkgeld: Aufrunden auf den vollen Euro und Tasten nach der Buchung, als eigene Buchungsart, im Abschluss getrennt |
 | 0.5.3 | die Fassungsnummer steht immer im Kopf, unter der Summe, auf jeder Bildschirmgröße |
 | 0.5.2 | Licht: Blitz wird bis zu 5 s lang gesucht (Chrome meldet ihn spät), Zustand wird geprüft statt angenommen, Meldung und Statuszeile sagen, warum es nicht geht |
 | 0.5.1 | der Betrag wird auch beim Aufbuchen nach der Buchung geleert (kein zweites Buchen aus Versehen) |

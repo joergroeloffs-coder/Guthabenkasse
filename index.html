@@ -712,6 +712,13 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
           und bei jeder Buchung — zwei Geräte brauchen zwei verschiedene.</p>
       </div>
       <div class="reihe" style="margin-top:14px">
+        <label class="feld grow"><span>Name der Bedienung (freiwillig)</span>
+          <input id="bedienerName" maxlength="20" autocomplete="off" placeholder="zum Beispiel Anna"></label>
+      </div>
+      <p class="muted" style="margin:6px 0 0">Steht bei jeder Buchung dieses Geräts und im Abschluss statt
+        „Gerät B“ — so rechnet jeder Kellner, auch sein Trinkgeld, mit eigenem Namen ab. Bei der Übergabe
+        an einen anderen einfach den Namen ändern; schon gebuchte Buchungen behalten den alten.</p>
+      <div class="reihe" style="margin-top:14px">
         <label class="feld grow"><span>Licht beim Scannen (Blitz der Kamera)</span>
           <div class="wahl" id="wahlLicht"><button data-licht="auto">Automatisch</button><button data-licht="aus">Aus</button></div></label>
       </div>
@@ -1066,7 +1073,7 @@ function qrSvg(text){
 /* Die Nummer steht oben in der Kopfzeile und ist dazu da, zwei Geräte
    nebeneinanderlegen zu können. Bei jeder Änderung, die man merkt,
    weiterdrehen. */
-var VERSION = "0.6.0";
+var VERSION = "0.6.1";
 
 /* ============================== Daten ==============================
 
@@ -1094,6 +1101,7 @@ function leereDaten(){
     rolle:"beide",                 /* beide | auf | ab */
     ton:true,
     licht:"auto",                  /* auto | aus: Blitz beim Scannen */
+    bediener:"",                   /* Name der Bedienung (Vorname), steht bei jeder Buchung */
     trink:true,                    /* nach dem Abbuchen Trinkgeld-Tasten anbieten */
     aufrunden:false,               /* beim Abbuchen auf den vollen Euro aufrunden */
     trinkwerte:"0,50 1 2",         /* die Tasten, in Euro, durch Leerzeichen getrennt */
@@ -1295,6 +1303,7 @@ function saldo(nr){ return salden()[nr]||0; }
 function buchen(nr, cent, art, ref, stapel, spaeter){
   if(!db.karten[nr]) db.karten[nr]={nr:nr, ts:Date.now()};
   var b={id:neueId(), karte:nr, cent:cent, art:art, zeit:Date.now(), geraet:db.geraet||"?"};
+  if(db.bediener) b.wer=db.bediener;
   if(ref) b.ref=ref;
   if(stapel) b.stapel=stapel;
   db.buchungen.push(b);
@@ -1735,7 +1744,7 @@ function zeichneKopf(){
   var a=db.anlass||{};
   $("kopfAnlass").textContent=a.name||"Guthabenkasse";
   var rolle={beide:"Aufbuchen und Abbuchen",auf:"Nur Aufbuchen",ab:"Nur Abbuchen"}[db.rolle];
-  $("kopfZusatz").textContent="Gerät "+(db.geraet||"?")+" · "+rolle;
+  $("kopfZusatz").textContent=(db.bediener ? db.bediener+" · " : "")+"Gerät "+(db.geraet||"?")+" · "+rolle;
   $("kopfSumme").textContent=eur(gesamt().rest)+" €";
 }
 
@@ -1790,7 +1799,7 @@ function detailHtml(nr){
         ? '<button class="knopf klein" data-zurueck="'+esc(b.id)+'">zurücknehmen</button>' : '';
       return '<div class="zeile"><span class="zeit">'+uhrzeit(b.zeit)+'</span><span>'+
         esc(NAMEN[b.art]||b.art)+(zurueck[b.id]?' <span class="muted">(zurückgenommen)</span>':'')+
-        ' <span class="muted">· Gerät '+esc(b.geraet)+'</span></span>'+
+        ' <span class="muted">· '+(b.wer ? esc(b.wer)+', ' : '')+'Gerät '+esc(b.geraet)+'</span></span>'+
         '<span class="betrag">'+(b.cent>0?"+":"")+euro(b.cent)+'</span>'+knopf+'</div>';
     }).join("") : '<p class="muted" style="margin:0">Noch keine Buchungen.</p>')+'</div></div>';
 }
@@ -2927,7 +2936,10 @@ function abschlussDrucken(){
   var heute=zeitpunkt(Date.now());
   var proGeraet={};
   db.buchungen.forEach(function(b){
-    var z=proGeraet[b.geraet]||(proGeraet[b.geraet]={auf:0,ab:0,tip:0,anzahl:0});
+    /* Nach Namen, wo einer dabeisteht: "Anna" statt "Gerät B". Derselbe Name
+       an zwei Geräten zählt zusammen, ein Gerät mit zwei Namen zählt getrennt. */
+    var wer=b.wer || ("Gerät "+b.geraet);
+    var z=proGeraet[wer]||(proGeraet[wer]={auf:0,ab:0,tip:0,anzahl:0});
     z.anzahl++;
     if(b.art==="auf") z.auf+=b.cent; else if(b.art==="ab") z.ab+=-b.cent;
     else if(b.art==="trinkgeld") z.tip+=-b.cent;
@@ -2944,8 +2956,8 @@ function abschlussDrucken(){
     '<tr><td>Abgebucht als Trinkgeld</td><td class="n">'+eur(g.tip)+' €</td></tr>'+
     '<tr><td>Ausgezahlt, zurückgenommen oder korrigiert</td><td class="n">'+eur(g.auf-g.ab-g.tip-g.rest)+' €</td></tr>'+
     '<tr><td><b>Noch auf Karten</b></td><td class="n"><b>'+eur(g.rest)+' €</b></td></tr></table>'+
-    '<div class="titel" style="margin-top:8mm">Je Gerät</div>'+
-    '<table><tr><th>Gerät</th><th class="n">Buchungen</th><th class="n">aufgebucht</th><th class="n">abgebucht</th><th class="n">Trinkgeld</th></tr>'+
+    '<div class="titel" style="margin-top:8mm">Je Bedienung</div>'+
+    '<table><tr><th>Name / Gerät</th><th class="n">Buchungen</th><th class="n">aufgebucht</th><th class="n">abgebucht</th><th class="n">Trinkgeld</th></tr>'+
     Object.keys(proGeraet).sort().map(function(k){
       var z=proGeraet[k];
       return '<tr><td>'+esc(k)+'</td><td class="n">'+z.anzahl+'</td><td class="n">'+eur(z.auf)+
@@ -3266,6 +3278,7 @@ function zeichneEinstellungen(){
     b.setAttribute("aria-pressed", (b.getAttribute("data-ton")==="1")===!!db.ton ? "true":"false");
   });
   if(document.activeElement!==$("geraet")) $("geraet").value=db.geraet||"";
+  if(document.activeElement!==$("bedienerName")) $("bedienerName").value=db.bediener||"";
   if(document.activeElement!==$("anlassName")) $("anlassName").value=db.anlass.name||"";
   if(document.activeElement!==$("vereinName")) $("vereinName").value=db.anlass.verein||"";
   if(document.activeElement!==$("vereinZusatz")) $("vereinZusatz").value=db.anlass.zusatz||"";
@@ -3652,6 +3665,12 @@ function start(){
     var t=e.target.getAttribute&&e.target.getAttribute("data-ton");
     if(t===null||t===undefined) return;
     db.ton=(t==="1"); sichern(); zeichneEinstellungen(); klingen("auf");
+  });
+  $("bedienerName").addEventListener("input",function(){
+    db.bediener=this.value.replace(/\s+/g," ").replace(/^\s/,"").slice(0,20); sichern(); zeichneKopf();
+  });
+  $("bedienerName").addEventListener("change",function(){
+    db.bediener=this.value.replace(/\s+/g," ").trim(); this.value=db.bediener; sichern(); zeichneKopf();
   });
   $("geraet").addEventListener("input",function(){
     var z=this.value.toUpperCase().replace(/[^A-Z]/g,"").slice(0,1);
