@@ -9,7 +9,7 @@ und Bausteine wie die Ticketkasse des Vereins.
 > Geräterolle ist umstellbar, die Ablage schützt nur ein Zugangswort.
 
 **Für den ersten Abend:** [`Bedienungsanleitung.pdf`](Bedienungsanleitung.pdf)
-(7 Seiten, mit Bildern; als [`HTML`](Bedienungsanleitung.html) zum Nachlesen im Browser).
+(8 Seiten, mit Bildern; als [`HTML`](Bedienungsanleitung.html) zum Nachlesen im Browser).
 
 ## Gedanke
 
@@ -25,7 +25,7 @@ Rücknahme oder Korrektur ist eine Gegenbuchung, keine Löschung.
 | --- | --- |
 | **Aufbuchen** | Betrag mit dem Ziffernblock tippen (oder eine der Tasten 5/10/20/50 €), dann die Karte scannen. Das Urteil zeigt groß das **neue Guthaben**, klein was aufgebucht wurde. Der Betrag bleibt stehen, es geht mit der nächsten Karte weiter. |
 | **Abbuchen** | Betrag mit dem Ziffernblock tippen, groß auf dem Schirm, dann die Karte scannen. Das Urteil zeigt groß das **Guthaben, das noch auf der Karte ist**. Der Betrag wird nach jeder Buchung geleert. Reicht das Guthaben nicht: rot, nichts wird gebucht, „es fehlen 3,50 €". |
-| **Karten** | Neue Karten drucken (8 je A4, 85 × 54 mm), wahlweise **mit Namen** (ein Name je Zeile, jede Zeile eine Karte). **Karten vorab aufladen** (Von/Bis/Betrag, etwa Karten 1–20 je 50 €). **Karten löschen** (Von/Bis, alle unbenutzten, oder einzeln). Liste aller Karten mit Suche nach Nummer und Name. Nummer antippen klappt die Karte auf: Guthaben direkt auf einen Betrag setzen, Namen ändern, Verlauf, einzelne Buchungen zurücknehmen, Restguthaben auszahlen, Karte nochmal drucken oder löschen. Abschluss drucken. |
+| **Karten** | Neue Karten drucken (8 je A4, 85 × 54 mm), wahlweise **mit Namen** (ein Name je Zeile) oder aus einer **Gästeliste** (Excel/CSV in den Kasten ziehen, Spalten ankreuzen). **Karten vorab aufladen** (Von/Bis/Betrag, etwa Karten 1–20 je 50 €). **Karten löschen** (Von/Bis, alle unbenutzten, oder einzeln). Liste aller Karten mit Suche nach Nummer und Name. Nummer antippen klappt die Karte auf: Guthaben direkt auf einen Betrag setzen, Namen ändern, Verlauf, einzelne Buchungen zurücknehmen, Restguthaben auszahlen, Karte nochmal drucken oder löschen. Abschluss drucken. |
 | **Einstellungen** | Rolle des Geräts (beides / nur Aufbuchen / nur Abbuchen), Gerätezeichen, Anlass, Ablage, Sicherung. |
 
 Auf dem **Handy** geht es in drei Schritten, jeder mit dem ganzen Schirm:
@@ -43,6 +43,37 @@ bekommt die Karte einen Vermerk mit der Zeit, statt entfernt zu werden;
 sonst brächte der nächste Abgleich sie vom anderen Gerät zurück. Beim
 Abgleich gilt der neuere Vermerk, ob gelöscht oder wiederhergestellt. Eine
 gelöschte Karte wird an Aufbuchen und Abbuchen abgewiesen.
+
+**Gästeliste:** Eine Datei aus Excel (`.xlsx`), CSV (Semikolon, Komma oder
+Tabulator; UTF-8 oder Windows-1252) oder Text wird in den Kasten *Neue Karten
+drucken* gezogen. Jede Zeile wird eine Karte. Über jeder Spalte steht ein
+Häkchen: was angekreuzt ist, steht auf der Karte. Spalten, deren Überschrift
+„name" oder „gast" enthält (Vorname, Nachname), ergeben den Namen, die übrigen
+angekreuzten stehen klein darunter (*Tisch 5 · vegetarisch*). Gelesen wird ohne
+Bibliothek: ZIP und XML einer `.xlsx` öffnet die Kasse selbst, Datumszellen
+kommen als Datum heraus, nicht als Zahl. Das alte `.xls` liest sie nicht
+(in Excel als `.xlsx` oder CSV speichern). Name und Angaben lassen sich später
+in der Kartenliste ändern; beim Abgleich gilt der neuere Stand.
+
+**Kamera und Licht:** Beim Scannen nimmt das Kamerabild auf dem Handy den
+größten Teil des Schirms ein; „Licht" und „Betrag ändern" liegen über dem
+Bild. Wo der Browser den Blitz freigibt (Chrome auf Android), geht das Licht
+an, solange die Kamera sucht, und aus, sobald gebucht ist. Einstellung unter
+*Dieses Gerät*: *Automatisch* oder *Aus*. Auf dem iPhone gibt es das nicht.
+
+**Betrieb auf Null setzen** (*Einstellungen → Sicherung und Neubeginn*): löscht
+alle Karten, Buchungen und Summen, **auf allen Geräten und in der Ablage**.
+Bleiben: Gerätezeichen, Rolle, Anlass, Adresse und Zugangswort der Ablage.
+Die Kasse fragt zweimal (mit den Zahlen, dann muss `NULL` getippt werden) und
+speichert vorher selbst eine Sicherung. Technisch trägt der Neubeginn eine Zeit
+(„Epoche"); beim Abgleich übernimmt das Gerät mit der früheren Zeit den
+Neubeginn und wirft sein Altes weg, und Daten aus der Zeit davor werden nicht
+mehr angenommen. Was ein Gerät nach dem Neubeginn eines anderen noch ohne Netz
+bucht, geht deshalb beim nächsten Abgleich verloren: vorher auf allen Geräten
+abgleichen. Die Kartennummern zählen danach weiter, damit eine alte Karte nicht
+zufällig wieder gilt; mit dem Häkchen *Kartennummern wieder bei 1 beginnen*
+fangen sie neu an. Eine Sicherungsdatei lässt sich trotzdem einspielen; so
+lässt sich ein Neubeginn zurücknehmen.
 
 **Namen** stehen auf der gedruckten Karte (je länger, desto kleiner die
 Schrift, bis 40 Zeichen), in der Liste und im Urteil nach dem Scannen. Beim
@@ -84,7 +115,8 @@ in der `index.html`.
 
 | | |
 | --- | --- |
-| **0.3.1** | Bedienungsanleitung als PDF; Vorschau und Rollenwahl auf schmalen Handys besser lesbar |
+| **0.4** | Gästeliste aus Excel/CSV mit Spaltenauswahl; Betrieb auf Null setzen (auch über den Abgleich); großes Kamerabild; Licht beim Scannen |
+| 0.3.1 | Bedienungsanleitung als PDF; Vorschau und Rollenwahl auf schmalen Handys besser lesbar |
 | 0.3 | Karten löschen (einzeln, nach Bereich, alle unbenutzten, wiederherstellbar), Karten mit Namen |
 | 0.2 | Ziffernblock für den Betrag, Betrag und neues Guthaben groß; auf dem Handy in drei Schritten |
 | 0.1 | Aufbuchen, Abbuchen, Karten drucken, Stapel vorab aufladen, Korrektur je Karte, Abgleich über Ablage |

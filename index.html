@@ -250,6 +250,9 @@ td.n,th.n{text-align:right}
 
 #video,#video2{width:100%;max-height:22dvh;border-radius:var(--radius);background:#000;
        display:block;object-fit:cover}
+.kamerareihe{display:flex;gap:8px}
+.kamerareihe .knopf{flex:1}
+.knopf[aria-pressed="true"]{background:#F2C94C;border-color:#B08D3C;color:#10251A}
 .bild{display:flex;flex-direction:column;gap:8px}
 .bild .knopf{width:100%}
 
@@ -290,14 +293,21 @@ td.n,th.n{text-align:right}
     height:calc(100dvh - 200px);min-height:420px}
   .schirm.breit .betragKarte{grid-area:1/1/4/2;overflow:auto}
   .schirm.breit .bild{grid-area:1/2/2/3}
-  .schirm.breit #video,.schirm.breit #video2{max-height:200px}
+  .schirm.breit #video,.schirm.breit #video2{max-height:min(38dvh,380px)}
   .schirm.breit .befund{grid-area:2/2/3/3}
   .schirm.breit .eingabe{grid-area:3/2/4/3}
 }
 
 /* Schmal: Handy. Drei Schritte, je einer sichtbar. */
 @media not all and (min-width:760px) and (min-height:480px){
+  /* Auf dem Handy ist die Seite genau so hoch wie das Fenster; was länger ist
+     (die Kartenliste), rollt innerhalb von `main`. Nur so kann das Kamerabild
+     "den Rest" einnehmen, statt je nach Seitenverhältnis des Kamerastroms die
+     Seite zu dehnen. */
+  body{height:100vh;height:100dvh}
+  main{flex:1 1 0;min-height:0;overflow-y:auto;overflow-x:hidden}
   main>.schirm{flex:1 1 auto}
+  main>.schirm.phase-scan{flex:1 1 0;min-height:0}
   .nurHandy{display:flex}
   .schirm .sk,.schirm .ak,.schirm .wk{display:none}
   /* 1. Betrag eintippen */
@@ -307,12 +317,33 @@ td.n,th.n{text-align:right}
   /* 2. Karte scannen — der Betrag steht groß da, der Ziffernblock ist weg */
   .phase-scan .tasten,.phase-scan .schnell,.phase-scan .kopfReihe .knopf{display:none}
   .phase-scan .ak{display:flex}
-  .phase-scan #aufBetrag,.phase-scan #abBetrag{height:92px;font-size:64px;line-height:88px;
+  .phase-scan #aufBetrag,.phase-scan #abBetrag{height:70px;font-size:50px;line-height:66px;
     pointer-events:none}
-  .phase-scan .anzeige .eurozeichen{font-size:46px}
-  .phase-scan .befund{min-height:90px}
+  .phase-scan .anzeige .eurozeichen{font-size:36px}
   .phase-scan #btnKamera,.phase-scan #btnKamera2{display:none}
-  .phase-scan #video,.phase-scan #video2{max-height:30dvh}
+  /* Im Schritt "scan" nimmt das Kamerabild den Rest des Schirms: im Halbdunkel
+     eines Saals und mit ausgestrecktem Arm braucht man Platz, um die Karte
+     ins Bild zu bekommen. Das Urteil schrumpft auf einen schmalen Streifen,
+     solange die Kamera läuft. */
+  .phase-scan .bild{flex:0 0 auto}
+  .phase-scan .bild:has(video:not(.hide)){flex:1 1 auto;min-height:0}
+  .phase-scan .bild:has(video:not(.hide)) #video,.phase-scan .bild:has(video:not(.hide)) #video2{
+    flex:1 1 0;min-height:0;max-height:none}
+  .phase-scan .befund{flex:1 1 auto;min-height:70px}
+  .phase-scan .bild:has(video:not(.hide)) ~ .befund{flex:0 0 auto;min-height:64px}
+  .phase-scan .eingabe{flex:0 0 auto}
+  /* Die beiden Knöpfe liegen über dem Kamerabild, statt Platz darunter zu
+     brauchen; und das ruhige "Bereit" verschwindet, solange die Kamera sucht —
+     das Bild selbst sagt, was zu tun ist. Ein Fehler oder ein Ergebnis kommt
+     sofort wieder zum Vorschein. */
+  .phase-scan .bild{position:relative}
+  .phase-scan .bild:has(video:not(.hide)) .kamerareihe{position:absolute;top:8px;right:8px;z-index:2;width:auto}
+  .phase-scan .bild:has(video:not(.hide)) .kamerareihe .knopf{min-width:0;padding:0 14px;
+    background:rgba(250,248,241,.92)}
+  .phase-scan .bild:has(video:not(.hide)) .kamerareihe .knopf[aria-pressed="true"]{background:#F2C94C}
+  .phase-scan .bild:has(video:not(.hide)) .ak{position:absolute;left:8px;bottom:8px;z-index:2;
+    width:auto;background:rgba(250,248,241,.92)}
+  .phase-scan .bild:has(video:not(.hide)) ~ .befund.b-still{display:none}
   /* 3. Ergebnis — nur das Urteil, so groß wie möglich */
   .phase-ergebnis .betragKarte,.phase-ergebnis .bild,.phase-ergebnis .eingabe{display:none}
   .phase-ergebnis .befund{min-height:240px}
@@ -329,6 +360,26 @@ td.n,th.n{text-align:right}
 .kartenzeile .guthaben{font-family:'Newsreader',Georgia,serif;font-size:20px;
                        font-variant-numeric:tabular-nums}
 .kartenzeile .guthaben.null{color:var(--tinteWeich)}
+.zone{border:2px dashed var(--linie);border-radius:var(--radius);padding:14px;text-align:center;
+  background:var(--papier);display:flex;flex-direction:column;gap:6px;align-items:center;margin-bottom:12px}
+#kartenDrucken.zieht{outline:3px dashed var(--watt);outline-offset:-3px;background:var(--wattHell)}
+#kartenDrucken.zieht .zone{border-color:var(--watt);background:var(--wattHell)}
+.haken{display:flex;gap:8px;align-items:center;font-size:14px;margin-top:8px}
+.haken input{width:auto;height:auto}
+.tabellenrahmen{overflow-x:auto;border:1px solid var(--linieFein);border-radius:var(--radius);margin-top:4px}
+.tabellenrahmen table{min-width:100%;width:max-content;font-size:13px}
+.tabellenrahmen th{padding:6px 10px;text-align:left;background:var(--papier);font-size:13px;
+  text-transform:none;letter-spacing:0;color:var(--tinte);white-space:nowrap}
+.tabellenrahmen th label{display:flex;gap:6px;align-items:center;cursor:pointer;font-weight:600}
+.tabellenrahmen th input{width:auto;height:auto}
+.tabellenrahmen td{padding:4px 10px;border-top:1px solid var(--linieFein);white-space:nowrap;
+  max-width:200px;overflow:hidden;text-overflow:ellipsis}
+.tabellenrahmen td.an,.tabellenrahmen th.an{background:var(--wattHell)}
+.tabellenrahmen td.aus{color:#9aa59d}
+.gaesteVorschau{margin-top:8px;font-size:14px}
+.gaesteVorschau .karte1{display:inline-block;background:var(--papier);border:1px solid var(--linie);
+  border-radius:var(--radius);padding:4px 10px;margin:2px 6px 2px 0;font-family:'Newsreader',Georgia,serif}
+.gaesteVorschau .karte1 small{display:block;font-family:'Inter',system-ui,sans-serif;font-size:11px;color:var(--tinteWeich)}
 .kartenzeile.offen{background:var(--papier);margin:0 -16px;padding-left:16px;padding-right:16px;
   border-bottom:0}
 .aufgeklappt{background:var(--papier);margin:0 -16px;padding:4px 16px 14px;
@@ -366,6 +417,12 @@ td.n,th.n{text-align:right}
 .wertkarte .kname.g2{font-size:10.5pt}
 .wertkarte .kname.g3{font-size:9pt}
 .wertkarte .kname.g4{font-size:8pt}
+.wertkarte .kzus{font-size:7pt;line-height:1.25;margin-top:.6mm;max-height:2.55em;overflow:hidden;
+  overflow-wrap:anywhere;color:#222}
+/* Steht eine Zusatzangabe da, entfällt die Zeile "Guthabenkarte": der Platz
+   gehört dann dem Namen und der Angabe, und die Nummer bleibt unten. */
+.wertkarte.mitzus .art{display:none}
+.wertkarte.mitzus .anlass{font-size:10pt}
 .wertkarte .nummer{font-family:'IBM Plex Mono',monospace;font-size:13pt;font-weight:600;
   border-top:0.6pt solid #000;padding-top:1.5mm;letter-spacing:.02em}
 
@@ -409,7 +466,7 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .schnell{margin-top:6px}
   .schnell button{height:32px}
   .knopf.gross{height:44px}
-  .phase-scan #aufBetrag,.phase-scan #abBetrag{height:76px;font-size:54px;line-height:72px}
+  .phase-scan #aufBetrag,.phase-scan #abBetrag{height:60px;font-size:44px;line-height:56px}
 }
 @media(max-width:520px){
   .seitenBreite{padding-left:12px;padding-right:12px}
@@ -474,7 +531,8 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   <div class="bild">
     <video id="video" class="hide" playsinline muted></video>
     <div class="hinweis hide" id="kameraHinweis"></div>
-    <button class="knopf" id="btnKamera">Kamera</button>
+    <div class="kamerareihe"><button class="knopf" id="btnKamera">Kamera</button>
+      <button class="knopf hide" id="btnLicht" aria-pressed="false">Licht</button></div>
     <button class="knopf nurHandy ak" data-aendern="auf">Betrag ändern</button>
   </div>
   <div class="befund b-still" id="befund"></div>
@@ -506,7 +564,8 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   <div class="bild">
     <video id="video2" class="hide" playsinline muted></video>
     <div class="hinweis hide" id="kameraHinweis2"></div>
-    <button class="knopf" id="btnKamera2">Kamera</button>
+    <div class="kamerareihe"><button class="knopf" id="btnKamera2">Kamera</button>
+      <button class="knopf hide" id="btnLicht2" aria-pressed="false">Licht</button></div>
     <button class="knopf nurHandy ak" data-aendern="ab">Betrag ändern</button>
   </div>
   <div class="befund b-still" id="befund2"></div>
@@ -531,15 +590,34 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       <p class="muted" style="margin:10px 0 0" id="zZeile"></p>
     </div></div>
 
-  <div class="karte"><div class="titel"><h2>Neue Karten drucken</h2></div>
+  <div class="karte" id="kartenDrucken"><div class="titel"><h2>Neue Karten drucken</h2></div>
     <div class="inhalt">
-      <div class="reihe umbruch" style="align-items:flex-end">
+      <div class="zone" id="gaesteZone">
+        <b>Gästeliste hierher ziehen</b>
+        <span class="muted">Excel (.xlsx), CSV oder Text — jede Zeile wird eine Karte.</span>
+        <button class="knopf klein" id="btnGaeste" type="button">Datei wählen</button>
+        <input type="file" id="gaesteDatei" accept=".xlsx,.xlsm,.csv,.tsv,.txt,text/csv,text/plain" class="hide">
+      </div>
+      <div class="hinweis hide" id="gaesteFehler"></div>
+
+      <div class="hide" id="gaesteBox">
+        <div class="reihe umbruch" style="justify-content:space-between">
+          <span class="feldTitel" id="gaesteTitel" style="margin:0"></span>
+          <button class="knopf klein" id="btnGaesteWeg" type="button">Liste entfernen</button>
+        </div>
+        <label class="haken"><input type="checkbox" id="gKopf" checked> Erste Zeile ist die Überschrift</label>
+        <div class="feldTitel" style="margin-top:8px">Was soll auf der Karte stehen? Häkchen setzen:</div>
+        <div class="tabellenrahmen"><table id="gaesteTabelle"></table></div>
+        <div class="gaesteVorschau" id="gaesteVorschau"></div>
+      </div>
+
+      <div class="reihe umbruch" style="align-items:flex-end;margin-top:12px">
         <label class="feld" style="width:120px"><span>Anzahl</span>
           <input id="kAnzahl" inputmode="numeric" value="20" style="text-align:right"></label>
         <button class="knopf voll" id="btnKartenDrucken">Karten drucken</button>
       </div>
       <p class="muted" style="margin:10px 0 0" id="kVorschau"></p>
-      <label class="feld" style="margin-top:10px"><span>Namen — freiwillig, ein Name je Zeile</span>
+      <label class="feld" id="kNamenFeld" style="margin-top:10px"><span>Oder Namen eintippen — ein Name je Zeile</span>
         <textarea id="kNamen" rows="3" placeholder="Anna Müller&#10;Tisch 5&#10;Familie Petersen"></textarea></label>
       <p class="muted" style="margin:10px 0 0">
         Die Karten tragen nur eine Nummer, keinen Betrag — das Guthaben steht
@@ -609,6 +687,13 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
           und bei jeder Buchung — zwei Geräte brauchen zwei verschiedene.</p>
       </div>
       <div class="reihe" style="margin-top:14px">
+        <label class="feld grow"><span>Licht beim Scannen (Blitz der Kamera)</span>
+          <div class="wahl" id="wahlLicht"><button data-licht="auto">Automatisch</button><button data-licht="aus">Aus</button></div></label>
+      </div>
+      <p class="muted" style="margin:6px 0 0">Geht an, solange die Kamera sucht, und aus, sobald gebucht
+        ist. Das gibt es nur, wo der Browser den Blitz freigibt (Chrome auf Android); auf dem iPhone
+        nicht.</p>
+      <div class="reihe" style="margin-top:14px">
         <label class="feld grow"><span>Ton</span>
           <div class="wahl" id="wahlTon"><button data-ton="1">An</button><button data-ton="0">Aus</button></div></label>
       </div>
@@ -657,11 +742,18 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         <button class="knopf" id="btnExport">Sicherung speichern</button>
         <label class="knopf" style="cursor:pointer">Sicherung einspielen
           <input type="file" id="btnImport" accept=".json,application/json" class="hide"></label>
-        <button class="knopf warn" id="btnLeer">Alles löschen</button>
       </div>
-      <p class="muted" style="margin:10px 0 0">Löschen betrifft nur dieses Gerät. Steht die Ablage
-        noch, holt der nächste Abgleich alles zurück — auch die Ablage selbst ist erst leer, wenn
-        ihre Datei im Drive gelöscht ist.</p>
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--linieFein)">
+        <div class="feldTitel">Betrieb auf Null setzen</div>
+        <p class="muted" style="margin:0 0 10px">Für ein neues Fest: alle Karten, alle Buchungen, alle
+          Summen werden gelöscht — <b>auf allen Geräten</b>, auch in der Ablage. Es bleiben das Gerät
+          (Zeichen, Rolle), der Anlass und der Zugang zur Ablage. Vorher wird automatisch eine
+          Sicherung gespeichert.</p>
+        <label style="display:flex;gap:8px;align-items:center;margin-bottom:10px;font-size:14px">
+          <input type="checkbox" id="nummernNeu" style="width:auto;height:auto">
+          Kartennummern wieder bei 1 beginnen</label>
+        <button class="knopf warn" id="btnLeer">Betrieb auf Null setzen</button>
+      </div>
       <div class="hinweis hide" id="speicherHinweis"></div>
     </div></div>
 </section>
@@ -921,7 +1013,7 @@ function qrSvg(text){
 /* Die Nummer steht oben in der Kopfzeile und ist dazu da, zwei Geräte
    nebeneinanderlegen zu können. Bei jeder Änderung, die man merkt,
    weiterdrehen. */
-var VERSION = "0.3.1";
+var VERSION = "0.4";
 
 /* ============================== Daten ==============================
 
@@ -948,9 +1040,13 @@ function leereDaten(){
     geraet:zufallsBuchstabe(),
     rolle:"beide",                 /* beide | auf | ab */
     ton:true,
+    licht:"auto",                  /* auto | aus: Blitz beim Scannen */
     anlass:{name:"", verein:"", zusatz:"", ts:0},
     karten:{},                     /* "A0007" → {nr, ts, name?, nts?} */
     geloescht:{},                  /* "A0007" → Zeit; positiv gelöscht, negativ wiederhergestellt */
+    epoche:0,                      /* Zeit des letzten Neubeginns; der spätere gewinnt beim Abgleich */
+    nummernNeu:false,              /* beginnt die Nummerierung nach dem Neubeginn wieder bei 1? */
+    hoechste:{},                   /* nur dieses Gerät: höchste je vergebene Nummer je Buchstabe */
     buchungen:[],                  /* {id, karte, cent, art, zeit, geraet, ref?} */
     ablage:{adresse:"", wort:"", intervall:0},
     aufBetrag:""
@@ -1105,10 +1201,15 @@ function aktiveKarten(){
   return Object.keys(db.karten).filter(function(n){ return !istGeloescht(n); }).sort();
 }
 function kartenName(nr){ var k=db.karten[nr]; return (k&&k.name)||""; }
+function kartenZusatz(nr){ var k=db.karten[nr]; return (k&&k.zusatz)||""; }
 function kartenLabel(nr){ var n=kartenName(nr); return nr+(n?" · "+n:""); }
 
 function naechsteKartenNummer(){
-  var buchstabe=(db.geraet||"A"), hoechste=0;
+  /* Nach einem Neubeginn gibt es keine Karten mehr, aber die alten liegen noch
+     laminiert in Schubladen. Damit eine davon nicht zufällig wieder zu einer
+     gültigen neuen Karte wird, merkt sich das Gerät die höchste Nummer, die es
+     je vergeben hat — außer, es wurde ausdrücklich ein Neubeginn bei 1 gewählt. */
+  var buchstabe=(db.geraet||"A"), hoechste=(db.hoechste&&db.hoechste[buchstabe])||0;
   for(var nr in db.karten){
     if(nr.charAt(0)!==buchstabe) continue;
     var n=parseInt(nr.slice(1),10); if(n>hoechste) hoechste=n;
@@ -1366,6 +1467,7 @@ function kameraUmschalten(tab){
     var lauf=v.play(); if(lauf&&lauf.catch) lauf.catch(function(){});
     leser = ("BarcodeDetector" in window) ? new window.BarcodeDetector({formats:["qr_code"]}) : null;
     liest=true; $(id.knopf).textContent="Kamera aus";
+    lichtNachStart();
     takt();
   }).catch(function(e){
     hin.textContent="Die Kamera ist nicht freigegeben ("+e.name+"). Den Code bitte eintippen.";
@@ -1373,13 +1475,51 @@ function kameraUmschalten(tab){
   });
 }
 
+/* ============================== Licht ==============================
+   Der Blitz der Handykamera als Taschenlampe: in einem dunklen Saal liest die
+   Kamera eine Karte sonst gar nicht oder nur langsam. Der Browser nennt das
+   "torch" und gibt es nur frei, wo das Gerät es kann (Chrome auf Android);
+   auf dem iPhone fehlt es, dann erscheint auch kein Knopf. */
+var lichtAn=false;
+function lichtSpur(){ return strom && strom.getVideoTracks && strom.getVideoTracks()[0]; }
+function lichtMoeglich(){
+  var t=lichtSpur();
+  try{ return !!(t && t.getCapabilities && t.getCapabilities().torch); }catch(e){ return false; }
+}
+function zeichneLicht(){
+  [["auf","btnLicht"],["ab","btnLicht2"]].forEach(function(x){
+    var k=$(x[1]), da=liest && kameraTab===x[0] && lichtMoeglich();
+    k.classList.toggle("hide",!da);
+    k.setAttribute("aria-pressed",lichtAn?"true":"false");
+    k.textContent=lichtAn?"Licht an":"Licht";
+  });
+}
+function lichtSetzen(an){
+  var t=lichtSpur();
+  if(!t || !lichtMoeglich()){ lichtAn=false; zeichneLicht(); return Promise.resolve(false); }
+  return t.applyConstraints({advanced:[{torch:!!an}]}).then(function(){
+    lichtAn=!!an; zeichneLicht(); return true;
+  }).catch(function(){ lichtAn=false; zeichneLicht(); return false; });
+}
+/* Nach dem Start der Kamera nachsehen — manche Geräte melden die Fähigkeit
+   erst einen Augenblick später — und das Licht bei Bedarf einschalten. */
+function lichtNachStart(){
+  function pruefen(){
+    zeichneLicht();
+    if(lichtMoeglich() && !lichtAn && db.licht!=="aus") lichtSetzen(true);
+  }
+  pruefen(); setTimeout(function(){ if(liest) pruefen(); },400);
+}
+
 function kameraAus(){
+  lichtAn=false;
   liest=false; leser=null; letzterCode="";
   if(strom){ strom.getTracks().forEach(function(t){t.stop();}); strom=null; }
   ["auf","ab"].forEach(function(t){
     var id=kameraIds(t);
     $(id.video).classList.add("hide"); $(id.knopf).textContent="Kamera";
   });
+  zeichneLicht();
 }
 
 /* Solange dieselbe Karte vor der Linse liegt, wird sie nicht noch einmal
@@ -1471,6 +1611,9 @@ function detailHtml(nr){
     '<label class="feld" style="margin-bottom:12px"><span>Name auf der Karte (freiwillig)</span>'+
       '<input id="kartenName" maxlength="40" value="'+esc(kartenName(nr))+'" autocomplete="off" '+
       'placeholder="zum Beispiel Anna Müller"></label>'+
+    '<label class="feld" style="margin-bottom:12px"><span>Weitere Angaben auf der Karte (freiwillig)</span>'+
+      '<input id="kartenZusatz" maxlength="60" value="'+esc(kartenZusatz(nr))+'" autocomplete="off" '+
+      'placeholder="zum Beispiel Tisch 5 · vegetarisch"></label>'+
     '<div class="reihe umbruch">'+
       '<button class="knopf" data-tat="drucken">Karte nochmal drucken</button>'+
       '<button class="knopf" data-tat="auszahlen"'+(g>0?'':' disabled')+'>Restguthaben auszahlen</button>'+
@@ -1504,11 +1647,12 @@ function zeichneKartenListeEigentlich(){
      halb getippter Betrag nicht verschwinden. Er gehört aber zu der Karte,
      für die er getippt wurde: wechselt die Anzeige auf eine andere, fängt
      das Feld leer an. Sonst bucht ein Tipp auf "Setzen" auf die falsche Karte. */
-  var alt=$("korrBetrag"), altN=$("kartenName");
+  var alt=$("korrBetrag"), altN=$("kartenName"), altZ=$("kartenZusatz");
+  var altZusatz=altZ?altZ.value:"", zusatzFokus=!!altZ && document.activeElement===altZ;
   var altWert=alt?alt.value:"", hatFokus=!!alt && document.activeElement===alt;
   var altName=altN?altN.value:"", nameFokus=!!altN && document.activeElement===altN;
   var neuGeoeffnet=(detailGezeigt!==offeneKarte);
-  if(neuGeoeffnet){ altWert=""; hatFokus=false; altName=null; nameFokus=false; }
+  if(neuGeoeffnet){ altWert=""; hatFokus=false; altName=null; nameFokus=false; altZusatz=null; zusatzFokus=false; }
 
   var s=salden(), suche=$("suche").value.trim().toUpperCase();
   var nrs=aktiveKarten();
@@ -1544,6 +1688,8 @@ function zeichneKartenListeEigentlich(){
      Abgleich die Liste neu zeichnet. */
   if(altName!==null && altName!==kartenName(offeneKarte)) $("kartenName").value=altName;
   if(nameFokus) $("kartenName").focus();
+  if(altZusatz!==null && altZusatz!==kartenZusatz(offeneKarte)) $("kartenZusatz").value=altZusatz;
+  if(zusatzFokus) $("kartenZusatz").focus();
   if(neuGeoeffnet){
     /* Frisch aufgeklappt: gleich ins Feld, damit nach dem Antippen nur noch
        der Betrag zu tippen ist. */
@@ -1705,6 +1851,306 @@ function stapelZurueck(id){
   zeichneAlles(); wolkeVormerken(); melden("Stapel zurückgenommen");
 }
 
+/* ============================== Gästeliste ==============================
+
+   Eine Liste aus Excel oder einer CSV-Datei wird in den Kasten "Neue Karten
+   drucken" gezogen; jede Zeile wird eine Karte. Welche Spalten auf der Karte
+   erscheinen, wählt man mit Häkchen.
+
+   Gelesen wird ohne fremde Bibliothek, wie alles in dieser Datei:
+
+     CSV   — Trennzeichen Semikolon, Komma oder Tabulator werden erkannt (ein
+             deutsches Excel speichert mit Semikolon), Anführungszeichen und
+             Zeilenumbrüche in Feldern ebenfalls; UTF-8 und, falls das nicht
+             passt, Windows-1252.
+     XLSX  — eine ZIP-Datei mit XML darin. Das ZIP wird von Hand geöffnet und
+             mit dem Entpacker des Browsers ("DecompressionStream") ausgepackt,
+             das XML mit dem Parser des Browsers gelesen. Die erste Tabelle
+             zählt; Datumszellen werden als Datum ausgegeben, nicht als Zahl.
+     XLS   — das alte Binärformat, nicht lesbar; die Kasse sagt, was zu tun ist.
+
+   Auf der Karte steht in der ersten Zeile der Name, darunter klein die übrigen
+   angekreuzten Angaben. Als Name gelten die Spalten, deren Überschrift "name"
+   oder "gast" enthält (Vorname und Nachname ergeben so "Anna Müller"); gibt es
+   keine, ist es die erste angekreuzte. */
+var gaeste=null;   /* {datei, zeilen:[[…]], kopf:bool, wahl:[bool…]} */
+
+/* ---------------- CSV ---------------- */
+function csvZeilen(text){
+  text=String(text).replace(/^﻿/,"");
+  var erste=text.split(/\r?\n/)[0]||"";
+  var trenner=";", beste=-1;
+  [";","\t",","].forEach(function(d){
+    var n=0, q=false;
+    for(var i=0;i<erste.length;i++){
+      var c=erste.charAt(i);
+      if(c==='"') q=!q; else if(!q && c===d) n++;
+    }
+    if(n>beste){ beste=n; trenner=d; }
+  });
+  var zeilen=[], zeile=[], feld="", q=false;
+  for(var i=0;i<text.length;i++){
+    var c=text.charAt(i);
+    if(q){
+      if(c==='"'){ if(text.charAt(i+1)==='"'){ feld+='"'; i++; } else q=false; }
+      else feld+=c;
+    } else if(c==='"') q=true;
+    else if(c===trenner){ zeile.push(feld); feld=""; }
+    else if(c==="\n" || c==="\r"){
+      if(c==="\r" && text.charAt(i+1)==="\n") i++;
+      zeile.push(feld); feld=""; zeilen.push(zeile); zeile=[];
+    } else feld+=c;
+  }
+  if(feld!=="" || zeile.length){ zeile.push(feld); zeilen.push(zeile); }
+  return zeilenAufraeumen(zeilen);
+}
+
+/* Zellen kürzen, ganz leere Zeilen weglassen. */
+function zeilenAufraeumen(zeilen){
+  return zeilen.map(function(z){ return z.map(function(x){ return String(x===null||x===undefined?"":x).replace(/\s+/g," ").trim(); }); })
+    .filter(function(z){ return z.some(function(x){ return x!==""; }); });
+}
+
+/* ---------------- XLSX ---------------- */
+function zipEintraege(buf){
+  var dv=new DataView(buf), u8=new Uint8Array(buf), i=u8.length-22;
+  for(; i>=0 && i>=u8.length-65557; i--) if(dv.getUint32(i,true)===0x06054b50) break;
+  if(i<0 || dv.getUint32(i,true)!==0x06054b50) throw new Error("Das ist keine gültige ZIP-/Excel-Datei.");
+  var anzahl=dv.getUint16(i+10,true), off=dv.getUint32(i+16,true), aus={}, dek=new TextDecoder();
+  for(var k=0;k<anzahl;k++){
+    if(dv.getUint32(off,true)!==0x02014b50) break;
+    var nl=dv.getUint16(off+28,true), el=dv.getUint16(off+30,true), cl=dv.getUint16(off+32,true);
+    aus[dek.decode(u8.subarray(off+46,off+46+nl))]={
+      meth:dv.getUint16(off+10,true), csize:dv.getUint32(off+20,true), lo:dv.getUint32(off+42,true)};
+    off+=46+nl+el+cl;
+  }
+  return aus;
+}
+
+async function zipText(buf, eintraege, name){
+  var e=eintraege[name]; if(!e) return null;
+  var dv=new DataView(buf), u8=new Uint8Array(buf);
+  var start=e.lo+30+dv.getUint16(e.lo+26,true)+dv.getUint16(e.lo+28,true);
+  var daten=u8.subarray(start,start+e.csize);
+  if(e.meth===0) return new TextDecoder().decode(daten);
+  if(e.meth!==8) throw new Error("Die Excel-Datei ist auf eine Art gepackt, die hier nicht gelesen wird.");
+  if(typeof DecompressionStream==="undefined")
+    throw new Error("Dieser Browser kann Excel-Dateien nicht entpacken. Bitte als CSV speichern oder einen neueren Browser nehmen.");
+  var strom=new Blob([daten]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+  return await new Response(strom).text();
+}
+
+function xmlDoc(text){ return new DOMParser().parseFromString(text,"application/xml"); }
+function xmlAlle(wurzel,name){ return Array.prototype.slice.call(wurzel.getElementsByTagNameNS("*",name)); }
+
+function spaltenIndex(ref){
+  var m=/^([A-Z]+)/i.exec(ref||""), n=0;
+  if(!m) return 0;
+  for(var i=0;i<m[1].length;i++) n=n*26+(m[1].toUpperCase().charCodeAt(i)-64);
+  return n-1;
+}
+
+/* Excel zählt Tage ab dem 30.12.1899. */
+function excelDatum(zahl){
+  var tage=Math.floor(zahl), bruch=zahl-tage;
+  var d=new Date(Math.round((tage-25569)*86400000));
+  function zz(n){ return (n<10?"0":"")+n; }
+  var t=zz(d.getUTCDate())+"."+zz(d.getUTCMonth()+1)+"."+d.getUTCFullYear();
+  if(tage<1) t="";
+  if(bruch>0.00001){
+    var min=Math.round(bruch*1440);
+    var zeit=zz(Math.floor(min/60)%24)+":"+zz(min%60);
+    t=t?t+" "+zeit:zeit;
+  }
+  return t;
+}
+
+function istDatumsFormat(id, codes){
+  id=Number(id);
+  if((id>=14 && id<=22) || (id>=27 && id<=36) || (id>=45 && id<=47) || (id>=50 && id<=58)) return true;
+  var c=codes[id]; if(!c) return false;
+  c=c.replace(/"[^"]*"/g,"").replace(/\[[^\]]*\]/g,"").replace(/\\./g,"");
+  return /[dmyhs]/i.test(c) && !/^[0#?.,%\s€$E+\-_()*]+$/i.test(c);
+}
+
+async function xlsxZeilen(buf){
+  var ein=zipEintraege(buf);
+  var arbeitsmappe=await zipText(buf,ein,"xl/workbook.xml");
+  if(!arbeitsmappe) throw new Error("Das ist keine Excel-Arbeitsmappe (.xlsx). Bitte als .xlsx oder CSV speichern.");
+
+  /* Welche Datei ist die erste Tabelle? */
+  var blatt="xl/worksheets/sheet1.xml";
+  try{
+    var wb=xmlDoc(arbeitsmappe), erstes=xmlAlle(wb,"sheet")[0];
+    var rid=erstes && (erstes.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships","id")||erstes.getAttribute("r:id"));
+    var rels=await zipText(buf,ein,"xl/_rels/workbook.xml.rels");
+    if(rid && rels){
+      xmlAlle(xmlDoc(rels),"Relationship").forEach(function(r){
+        if(r.getAttribute("Id")===rid){
+          var z=r.getAttribute("Target")||"";
+          blatt = z.charAt(0)==="/" ? z.slice(1) : "xl/"+z;
+        }
+      });
+    }
+  }catch(e){}
+  if(!ein[blatt]){
+    var rest=Object.keys(ein).filter(function(n){ return /^xl\/worksheets\/sheet\d+\.xml$/.test(n); }).sort();
+    if(!rest.length) throw new Error("In der Excel-Datei wurde keine Tabelle gefunden.");
+    blatt=rest[0];
+  }
+
+  var geteilt=[], gt=await zipText(buf,ein,"xl/sharedStrings.xml");
+  if(gt){
+    xmlAlle(xmlDoc(gt),"si").forEach(function(si){
+      /* Text steht in <t>, bei formatiertem Text in mehreren <r><t>; die
+         Lautschrift (<rPh>) gehört nicht dazu. */
+      var t="";
+      Array.prototype.forEach.call(si.childNodes,function(k){
+        if(k.localName==="t") t+=k.textContent;
+        else if(k.localName==="r") xmlAlle(k,"t").forEach(function(x){ t+=x.textContent; });
+      });
+      geteilt.push(t);
+    });
+  }
+
+  /* Welche Zellformate sind Datumsformate? */
+  var datumXf={}, st=await zipText(buf,ein,"xl/styles.xml");
+  if(st){
+    var sd=xmlDoc(st), codes={};
+    xmlAlle(sd,"numFmt").forEach(function(n){ codes[n.getAttribute("numFmtId")]=n.getAttribute("formatCode"); });
+    var xfs=xmlAlle(sd,"cellXfs")[0];
+    if(xfs) Array.prototype.filter.call(xfs.childNodes,function(k){ return k.localName==="xf"; }).forEach(function(x,i){
+      if(istDatumsFormat(x.getAttribute("numFmtId"),codes)) datumXf[i]=true;
+    });
+  }
+
+  var tabelle=xmlDoc(await zipText(buf,ein,blatt)), zeilen=[];
+  xmlAlle(tabelle,"row").forEach(function(r){
+    var zeile=[];
+    Array.prototype.filter.call(r.childNodes,function(k){ return k.localName==="c"; }).forEach(function(c,pos){
+      var sp=c.getAttribute("r") ? spaltenIndex(c.getAttribute("r")) : pos;
+      var typ=c.getAttribute("t"), v=xmlAlle(c,"v")[0], wert=v?v.textContent:"";
+      if(typ==="s") wert=geteilt[Number(wert)]||"";
+      else if(typ==="inlineStr") wert=xmlAlle(c,"t").map(function(x){ return x.textContent; }).join("");
+      else if(typ==="b") wert=wert==="1"?"ja":"nein";
+      else if(typ==="e") wert="";
+      else if(typ!=="str" && wert!=="" && isFinite(Number(wert))){
+        if(datumXf[Number(c.getAttribute("s")||0)]) wert=excelDatum(Number(wert));
+        else if(/^-?\d+\.\d+$/.test(wert)) wert=String(Number(wert)).replace(".",",");
+      }
+      while(zeile.length<sp) zeile.push("");
+      zeile[sp]=wert;
+    });
+    zeilen.push(zeile);
+  });
+  return zeilenAufraeumen(zeilen);
+}
+
+/* ---------------- Datei → Liste ---------------- */
+async function gaesteDateiLesen(datei){
+  var buf=await datei.arrayBuffer(), u8=new Uint8Array(buf), zeilen;
+  if(u8[0]===0x50 && u8[1]===0x4B) zeilen=await xlsxZeilen(buf);              /* "PK": ZIP, also xlsx */
+  else if(u8[0]===0xD0 && u8[1]===0xCF)
+    throw new Error("Das ist das alte Excel-Format (.xls). In Excel „Speichern unter“ und dann .xlsx oder CSV wählen.");
+  else {
+    var text;
+    try{ text=new TextDecoder("utf-8",{fatal:true}).decode(buf); }
+    catch(e){ text=new TextDecoder("windows-1252").decode(buf); }
+    zeilen=csvZeilen(text);
+  }
+  if(!zeilen.length) throw new Error("In der Datei steht nichts.");
+  return zeilen;
+}
+
+function gaesteFehler(text){
+  var k=$("gaesteFehler");
+  if(!text){ k.classList.add("hide"); return; }
+  k.textContent=text; k.classList.remove("hide");
+}
+
+function gaesteLaden(datei){
+  gaesteFehler("");
+  if(!datei) return Promise.resolve();
+  return gaesteDateiLesen(datei).then(function(zeilen){
+    gaeste={datei:datei.name||"Liste", zeilen:zeilen, kopf:true, wahl:[]};
+    $("gKopf").checked=true;
+    gaeste.wahl=gaesteStandardWahl();
+    $("kNamen").value="";
+    zeichneGaeste();
+  }).catch(function(f){
+    gaeste=null; zeichneGaeste();
+    gaesteFehler("Die Datei konnte nicht gelesen werden: "+(f&&f.message?f.message:f));
+  });
+}
+
+/* ---------------- Auswahl ---------------- */
+function gaesteBreite(){
+  var n=0; gaeste.zeilen.forEach(function(r){ if(r.length>n) n=r.length; }); return n;
+}
+function spaltenBuchstabe(i){ return String.fromCharCode(65+(i%26)); }
+function gaesteKopfText(i){
+  var k=gaeste.kopf ? (gaeste.zeilen[0][i]||"") : "";
+  return k || ("Spalte "+spaltenBuchstabe(i));
+}
+function istNamensSpalte(i){ return gaeste.kopf && /name|gast/i.test(gaeste.zeilen[0][i]||""); }
+
+/* Was von selbst angekreuzt ist: die Namensspalten, sonst die erste. */
+function gaesteStandardWahl(){
+  var n=gaesteBreite(), w=[], gefunden=false;
+  for(var i=0;i<n;i++){ var ja=istNamensSpalte(i); w.push(ja); if(ja) gefunden=true; }
+  if(!gefunden && n) w[0]=true;
+  return w;
+}
+
+/* Aus den angekreuzten Spalten wird je Zeile Name und Zusatz. */
+function gaesteDaten(){
+  if(!gaeste) return [];
+  var zeilen=gaeste.kopf ? gaeste.zeilen.slice(1) : gaeste.zeilen, n=gaesteBreite(), gew=[];
+  for(var i=0;i<n;i++) if(gaeste.wahl[i]) gew.push(i);
+  var namen=gew.filter(istNamensSpalte);
+  if(!namen.length && gew.length) namen=[gew[0]];
+  var rest=gew.filter(function(i){ return namen.indexOf(i)<0; });
+  return zeilen.map(function(z){
+    function teil(i){ return String(z[i]||"").trim(); }
+    return {name:namen.map(teil).filter(Boolean).join(" ").slice(0,40),
+            zusatz:rest.map(teil).filter(Boolean).join(" · ").slice(0,60)};
+  }).filter(function(x){ return x.name || x.zusatz; });
+}
+
+function zeichneGaeste(){
+  var da=!!gaeste;
+  $("gaesteBox").classList.toggle("hide",!da);
+  $("kNamenFeld").classList.toggle("hide",da);
+  if(da){
+    var n=gaesteBreite(), zeilen=gaeste.zeilen, daten=gaesteDaten();
+    $("gaesteTitel").textContent=gaeste.datei+" · "+mehrzahl(daten.length,"Gast","Gäste");
+    var kopf="<tr>", i;
+    for(i=0;i<n;i++)
+      kopf+='<th class="'+(gaeste.wahl[i]?"an":"")+'"><label><input type="checkbox" data-spalte="'+i+'"'+
+            (gaeste.wahl[i]?" checked":"")+'> '+esc(gaesteKopfText(i))+'</label></th>';
+    kopf+="</tr>";
+    var koerper="", von=gaeste.kopf?1:0;
+    zeilen.slice(von,von+5).forEach(function(z){
+      koerper+="<tr>";
+      for(var j=0;j<n;j++) koerper+='<td class="'+(gaeste.wahl[j]?"an":"aus")+'">'+esc(z[j]||"")+"</td>";
+      koerper+="</tr>";
+    });
+    $("gaesteTabelle").innerHTML=kopf+koerper;
+    $("gaesteVorschau").innerHTML = daten.length
+      ? '<div class="feldTitel" style="margin-top:8px">So steht es auf den ersten Karten</div>'+
+        daten.slice(0,3).map(function(d){
+          return '<span class="karte1">'+esc(d.name||"—")+(d.zusatz?"<small>"+esc(d.zusatz)+"</small>":"")+"</span>";
+        }).join("")
+      : '<span class="muted">Noch nichts angekreuzt — ohne Häkchen gibt es nichts zu drucken.</span>';
+  }
+  zeichneKartenVorschau();
+}
+
+function gaesteEntfernen(){
+  gaeste=null; gaesteFehler(""); $("gaesteDatei").value="";
+  zeichneGaeste();
+}
+
 /* ============================ Namen ============================ */
 function nameSetzen(nr, text){
   var name=String(text||"").replace(/\s+/g," ").trim().slice(0,40);
@@ -1712,6 +2158,14 @@ function nameSetzen(nr, text){
   k.name=name; k.nts=Date.now();
   sichern(); zeichneAlles(); wolkeVormerken();
   melden(name ? "Name gespeichert" : "Name entfernt");
+}
+
+function zusatzSetzen(nr, text){
+  var z=String(text||"").replace(/\s+/g," ").trim().slice(0,60);
+  var k=db.karten[nr]; if(!k || (k.zusatz||"")===z) return;
+  k.zusatz=z; k.nts=Date.now();
+  sichern(); zeichneAlles(); wolkeVormerken();
+  melden(z ? "Angaben gespeichert" : "Angaben entfernt");
 }
 
 /* ============================ Löschen ============================ */
@@ -1845,12 +2299,13 @@ function kartenBlatt(nrs){
   var a=db.anlass||{};
   var kopf=(a.verein||"")+(a.zusatz?'<br>'+esc(a.zusatz):"");
   function karte(nr){
-    return '<div class="wertkarte"><div class="qr">'+qrSvg(kartenCode(nr))+'</div>'+
+    return '<div class="wertkarte'+(kartenZusatz(nr)?' mitzus':'')+'"><div class="qr">'+qrSvg(kartenCode(nr))+'</div>'+
       '<div class="daten"><div class="verein">'+(a.verein?esc(a.verein):"&nbsp;")+
       (a.zusatz?'<br>'+esc(a.zusatz):"")+'</div>'+
       '<div><div class="anlass">'+esc(a.name||"Guthabenkarte")+'</div>'+
       '<div class="art">Guthabenkarte</div>'+
       (kartenName(nr)?'<div class="kname '+nameGroesse(kartenName(nr))+'">'+esc(kartenName(nr))+'</div>':'')+
+      (kartenZusatz(nr)?'<div class="kzus">'+esc(kartenZusatz(nr))+'</div>':'')+
       '</div>'+
       '<div class="nummer">'+esc(kartenCode(nr))+'</div></div></div>';
   }
@@ -1876,30 +2331,42 @@ function namenZeilen(){
     .filter(function(z){ return z; });
 }
 
-function zeichneKartenVorschau(){
+/* Woher kommen die Namen: aus der Liste, aus dem Textfeld, oder gar nicht? */
+function kartenEintraege(){
+  if(gaeste) return gaesteDaten();
   var namen=namenZeilen();
-  /* Mit Namen bestimmt die Zahl der Zeilen die Zahl der Karten. */
-  $("kAnzahl").disabled=namen.length>0;
-  var n=namen.length || parseInt($("kAnzahl").value,10);
+  return namen.length ? namen.map(function(n){ return {name:n, zusatz:""}; }) : null;
+}
+
+function zeichneKartenVorschau(){
+  var eintraege=kartenEintraege();
+  /* Mit Namen oder Liste bestimmt die Zahl der Zeilen die Zahl der Karten. */
+  $("kAnzahl").disabled=!!eintraege;
+  var n=eintraege ? eintraege.length : parseInt($("kAnzahl").value,10);
   if(!(n>0)){ $("kVorschau").textContent=""; return; }
   var von=nummerSchreiben(naechsteKartenNummer()), bis=nummerSchreiben(naechsteKartenNummer()+n-1);
   $("kVorschau").textContent=(n===1 ? kartenCode(von) : kartenCode(von)+" bis "+kartenCode(bis))+
-    (namen.length?" · "+mehrzahl(n,"Karte mit Namen","Karten mit Namen"):"");
+    (eintraege?" · "+mehrzahl(n,"Karte mit Namen","Karten mit Namen"):"");
 }
 
 function kartenDrucken(){
-  var namen=namenZeilen();
-  var n=namen.length || parseInt($("kAnzahl").value,10);
-  if(!(n>0 && n<=400)){ melden("Anzahl zwischen 1 und 400"); return; }
+  var eintraege=kartenEintraege();
+  if(gaeste && !eintraege.length){ melden("Nichts angekreuzt oder die Liste ist leer"); return; }
+  var n=eintraege ? eintraege.length : parseInt($("kAnzahl").value,10);
+  if(!(n>0 && n<=1000)){ melden("Anzahl zwischen 1 und 1000"); return; }
   if(!/^[A-Z]$/.test(db.geraet||"")){ melden("Erst ein Gerätezeichen eintragen"); return; }
   var start=naechsteKartenNummer(), nrs=[], jetzt=Date.now();
   for(var i=0;i<n;i++){
-    var nr=nummerSchreiben(start+i);
+    var nr=nummerSchreiben(start+i), e=eintraege && eintraege[i];
     db.karten[nr]={nr:nr, ts:jetzt};
-    if(namen[i]){ db.karten[nr].name=namen[i]; db.karten[nr].nts=jetzt; }
+    if(e){
+      if(e.name) db.karten[nr].name=e.name;
+      if(e.zusatz) db.karten[nr].zusatz=e.zusatz;
+      db.karten[nr].nts=jetzt;
+    }
     nrs.push(nr);
   }
-  $("kNamen").value="";
+  $("kNamen").value=""; gaeste=null; $("gaesteDatei").value=""; zeichneGaeste();
   sichern(); zeichneAlles(); wolkeVormerken();
   drucken(kartenBlatt(nrs));
 }
@@ -1951,10 +2418,28 @@ function abschlussDrucken(){
 
    Nur der Anlass (Name, Verein) ist ein einzelner Wert: da gilt der
    neuere. */
-function zusammenfuehren(roh){
+function zusammenfuehren(roh, ausDatei){
   if(!roh || typeof roh!=="object" || !Array.isArray(roh.buchungen) || typeof roh.karten!=="object")
     return {fehler:"Die Ablage enthält etwas, das keine Guthabenkasse ist."};
-  var b={kartenNeu:0, buchungenNeu:0, anlassUebernommen:false, namenNeu:0, vermerkeNeu:0};
+  var b={kartenNeu:0, buchungenNeu:0, anlassUebernommen:false, namenNeu:0, vermerkeNeu:0,
+         neubeginn:false, veraltet:false};
+  /* Der Neubeginn ist eine Zeit. Hat ein anderes Gerät später auf Null gesetzt
+     als dieses, wird hier alles Alte verworfen und das Neue übernommen; liegt
+     sein Neubeginn früher, ist das, was es mitbringt, von gestern und wird
+     nicht angefasst. Nur eine Sicherungsdatei, die ein Mensch bewusst
+     einspielt, wird unabhängig davon zusammengelegt — so lässt sich ein
+     Neubeginn auch zurücknehmen. */
+  var fremdeEpoche=Number(roh.epoche)||0, eigeneEpoche=db.epoche||0;
+  if(!ausDatei){
+    if(fremdeEpoche>eigeneEpoche){
+      merkeNummern();
+      db.karten={}; db.buchungen=[]; db.geloescht={}; db.epoche=fremdeEpoche;
+      db.nummernNeu=!!roh.nummernNeu; if(db.nummernNeu) db.hoechste={};
+      b.neubeginn=true;
+    } else if(fremdeEpoche<eigeneEpoche){
+      b.veraltet=true; return b;
+    }
+  }
   var schonDa={};
   db.buchungen.forEach(function(x){ schonDa[x.id]=true; });
   roh.buchungen.forEach(function(x){
@@ -1967,7 +2452,8 @@ function zusammenfuehren(roh){
     if(!db.karten[nr]){ db.karten[nr]=fremd; b.kartenNeu++; }
     /* Der Name ist ein einzelner Wert: da gilt der neuere. */
     else if((fremd.nts||0)>(db.karten[nr].nts||0)){
-      db.karten[nr].name=fremd.name||""; db.karten[nr].nts=fremd.nts; b.namenNeu++;
+      db.karten[nr].name=fremd.name||""; db.karten[nr].zusatz=fremd.zusatz||"";
+      db.karten[nr].nts=fremd.nts; b.namenNeu++;
     }
   }
   /* Gelöscht-Vermerke: der mit dem größeren Betrag, also dem späteren
@@ -2118,7 +2604,8 @@ function wolkePruefen(){
 /* Was hochgeht, ist der eigene Stand ohne die Zugangsdaten und ohne das,
    was nur dieses Gerät betrifft: Gerätezeichen, Rolle und Ton bleiben hier. */
 function wolkePaket(){
-  return {karten:db.karten, buchungen:db.buchungen, anlass:db.anlass, geloescht:db.geloescht};
+  return {karten:db.karten, buchungen:db.buchungen, anlass:db.anlass, geloescht:db.geloescht,
+          epoche:db.epoche||0, nummernNeu:!!db.nummernNeu};
 }
 
 function wolkeAbgleichen(versuch){
@@ -2134,7 +2621,7 @@ function wolkeAbgleichen(versuch){
       if(a.daten){
         bericht=zusammenfuehren(a.daten);
         if(bericht.fehler) throw new Error(bericht.fehler);
-        if(bericht.kartenNeu||bericht.buchungenNeu||bericht.anlassUebernommen||bericht.namenNeu||bericht.vermerkeNeu) sichern();
+        if(bericht.kartenNeu||bericht.buchungenNeu||bericht.anlassUebernommen||bericht.namenNeu||bericht.vermerkeNeu||bericht.neubeginn) sichern();
       }
       if(standZaehler===hochgeladenBei)
         return {ablegen:{ok:true, unveraendert:true}, bericht:bericht};
@@ -2153,10 +2640,17 @@ function wolkeAbgleichen(versuch){
         throw new Error("Die Ablage war mehrfach in Benutzung. Nächster Versuch später.");
       }
       if(e.ablegen.fehler) throw new Error(e.ablegen.fehler);
-      zeichneAlles(); zeichneEinstellungen();
       var b=e.bericht;
-      var dazu = b && (b.kartenNeu||b.buchungenNeu||b.namenNeu||b.vermerkeNeu)
-        ? " · "+[mehrzahl(b.buchungenNeu,"Buchung","Buchungen"),
+      if(b && b.neubeginn){
+        offeneKarte=""; db.aufBetrag="";
+        $("aufBetrag").value=""; $("abBetrag").value="";
+        urteilBereit("auf"); urteilBereit("ab");
+        melden("Neubeginn von einem anderen Gerät übernommen");
+      }
+      zeichneAlles(); zeichneEinstellungen();
+      var dazu = b && (b.kartenNeu||b.buchungenNeu||b.namenNeu||b.vermerkeNeu||b.neubeginn)
+        ? " · "+[b.neubeginn?"Neubeginn von einem anderen Gerät":"",
+                 mehrzahl(b.buchungenNeu,"Buchung","Buchungen"),
                  mehrzahl(b.kartenNeu,"Karte","Karten"),
                  mehrzahl(b.namenNeu,"Name","Namen"),
                  mehrzahl(b.vermerkeNeu,"Löschvermerk","Löschvermerke")].filter(Boolean).join(", ")+" übernommen"
@@ -2203,6 +2697,9 @@ function zeichneEinstellungen(){
   document.querySelectorAll("#wahlRolle button").forEach(function(b){
     b.setAttribute("aria-pressed", b.getAttribute("data-rolle")===db.rolle ? "true":"false");
   });
+  document.querySelectorAll("#wahlLicht button").forEach(function(b){
+    b.setAttribute("aria-pressed", b.getAttribute("data-licht")===(db.licht||"auto") ? "true":"false");
+  });
   document.querySelectorAll("#wahlTon button").forEach(function(b){
     b.setAttribute("aria-pressed", (b.getAttribute("data-ton")==="1")===!!db.ton ? "true":"false");
   });
@@ -2242,7 +2739,7 @@ function sicherungEinspielen(datei){
   leser.onload=function(){
     var roh=null;
     try{ roh=JSON.parse(leser.result); }catch(e){}
-    var b=zusammenfuehren(roh);
+    var b=zusammenfuehren(roh,true);
     if(b.fehler){ melden("Das ist keine Sicherung der Guthabenkasse"); return; }
     sichern(); zeichneAlles(); zeichneEinstellungen(); wolkeVormerken();
     melden(mehrzahl(b.buchungenNeu,"Buchung","Buchungen")+" übernommen");
@@ -2250,18 +2747,58 @@ function sicherungEinspielen(datei){
   leser.readAsText(datei);
 }
 
-function alleLoeschen(){
-  var n=db.buchungen.length, k=Object.keys(db.karten).length;
-  if(!confirm("Alle "+mehrzahl(k,"Karte","Karten")+" und "+mehrzahl(n,"Buchung","Buchungen")+
-              " auf DIESEM Gerät löschen?\n\nBleiben: Gerätezeichen, Ablage-Adresse, Zugangswort.\n"+
-              "Nicht angefasst: die Datei in der Ablage. Solange die steht, holt der nächste "+
-              "Abgleich alles zurück."))
-    return;
+/* ============================ Neubeginn ============================
+
+   Setzt den Betrieb auf Null: keine Karten, keine Buchungen, keine Summen.
+   Geräteeinstellungen, Anlass und Zugang zur Ablage bleiben.
+
+   Das muss auf allen Geräten wirken, nicht nur auf diesem. Würde nur hier
+   gelöscht, brächte der nächste Abgleich alles vom anderen Gerät oder aus der
+   Ablage zurück. Deshalb trägt der Neubeginn eine Zeit (die "Epoche"), und
+   beim Abgleich gilt: wer die spätere hat, hat recht. Das andere Gerät wirft
+   dann sein Altes weg und übernimmt das Leere. */
+function merkeNummern(){
+  var buchstabe=db.geraet||"A", h=(db.hoechste&&db.hoechste[buchstabe])||0;
+  for(var nr in db.karten){
+    if(nr.charAt(0)!==buchstabe) continue;
+    var n=parseInt(nr.slice(1),10); if(n>h) h=n;
+  }
+  if(!db.hoechste) db.hoechste={};
+  db.hoechste[buchstabe]=h;
+}
+
+/* Die Arbeit, ohne Rückfragen. */
+function nullen(nummernNeu){
+  merkeNummern();
+  if(nummernNeu) db.hoechste={};
+  db.nummernNeu=!!nummernNeu;
   db.karten={}; db.geloescht={}; db.buchungen=[]; db.aufBetrag="";
+  /* Eine Zeit, die sicher später ist als jeder frühere Neubeginn — auch wenn die
+     Uhr eines Geräts etwas vorgeht. */
+  db.epoche=Math.max(Date.now(),(db.epoche||0)+1);
   $("aufBetrag").value=""; $("abBetrag").value="";
   hochgeladenBei=-1; offeneKarte="";
   sichern(); zeichneAlles(); urteilBereit("auf"); urteilBereit("ab");
-  melden("Gelöscht");
+}
+
+function betriebAufNull(){
+  var n=db.buchungen.length, k=aktiveKarten().length, rest=gesamt().rest;
+  var bei1=$("nummernNeu").checked;
+  if(!confirm("Betrieb auf Null setzen?\n\n"+
+              "Gelöscht werden — auf ALLEN Geräten — "+mehrzahl(k,"Karte","Karten")+" und "+
+              mehrzahl(n,"Buchung","Buchungen")+", dazu alle Summen. Noch auf den Karten liegen "+
+              euro(rest)+".\n\n"+
+              "Bleiben: Gerätezeichen, Rolle, Anlass, Adresse und Zugangswort der Ablage.\n\n"+
+              (bei1?"Die Kartennummern fangen wieder bei 1 an.":"Die Kartennummern zählen weiter, damit eine alte Karte nicht zufällig wieder gilt.")+
+              "\n\nVorher sollten alle Geräte einmal abgeglichen sein: was ein Gerät später ohne Netz "+
+              "bucht, geht beim nächsten Abgleich verloren. Eine Sicherung wird vorher automatisch gespeichert."))
+    return;
+  var wort=prompt("Zur Bestätigung das Wort NULL eintippen:");
+  if(wort===null || String(wort).trim().toUpperCase()!=="NULL"){ melden("Nicht zurückgesetzt"); return; }
+  try{ sicherungSpeichern(); }catch(e){}
+  nullen(bei1);
+  melden("Auf Null gesetzt");
+  if(wolkeBereit()) wolkeAbgleichen();
 }
 
 /* ============================ Verdrahtung ============================ */
@@ -2367,6 +2904,42 @@ function start(){
     if(nr) wiederherstellen(nr);
   });
   $("kNamen").addEventListener("input",zeichneKartenVorschau);
+
+  /* ---- Gästeliste: Datei wählen oder in den Kasten ziehen ---- */
+  $("btnGaeste").addEventListener("click",function(){ $("gaesteDatei").click(); });
+  $("gaesteDatei").addEventListener("change",function(){
+    if(this.files && this.files[0]) gaesteLaden(this.files[0]);
+    this.value="";
+  });
+  $("btnGaesteWeg").addEventListener("click",gaesteEntfernen);
+  $("gKopf").addEventListener("change",function(){
+    if(!gaeste) return;
+    gaeste.kopf=this.checked; gaeste.wahl=gaesteStandardWahl(); zeichneGaeste();
+  });
+  $("gaesteTabelle").addEventListener("change",function(e){
+    var i=e.target.getAttribute&&e.target.getAttribute("data-spalte");
+    if(i===null||i===undefined||!gaeste) return;
+    gaeste.wahl[Number(i)]=e.target.checked; zeichneGaeste();
+  });
+  var ziel=$("kartenDrucken"), zieht=0;
+  function hatDatei(e){
+    var t=e.dataTransfer && e.dataTransfer.types;
+    return !!t && Array.prototype.indexOf.call(t,"Files")>=0;
+  }
+  ziel.addEventListener("dragenter",function(e){ if(!hatDatei(e)) return; e.preventDefault(); zieht++; ziel.classList.add("zieht"); });
+  ziel.addEventListener("dragover",function(e){ if(!hatDatei(e)) return; e.preventDefault(); });
+  ziel.addEventListener("dragleave",function(){ zieht=Math.max(0,zieht-1); if(!zieht) ziel.classList.remove("zieht"); });
+  ziel.addEventListener("drop",function(e){
+    if(!hatDatei(e)) return;
+    e.preventDefault(); zieht=0; ziel.classList.remove("zieht");
+    var f=e.dataTransfer.files && e.dataTransfer.files[0];
+    if(f) gaesteLaden(f);
+  });
+  /* Daneben fallen gelassen, würde der Browser die Datei öffnen und die Kasse
+     verlassen. Das wird verhindert; nur der Kasten nimmt Dateien an. */
+  ["dragover","drop"].forEach(function(n){
+    window.addEventListener(n,function(e){ if(hatDatei(e)) e.preventDefault(); });
+  });
   $("stapelListe").addEventListener("click",function(e){
     var id=e.target.getAttribute&&e.target.getAttribute("data-stapel");
     if(id) stapelZurueck(id);
@@ -2402,9 +2975,10 @@ function start(){
      wird — kein eigener Knopf nötig. */
   $("kartenListe").addEventListener("change",function(e){
     if(e.target.id==="kartenName" && !listeZeichnet) nameSetzen(offeneKarte, e.target.value);
+    if(e.target.id==="kartenZusatz" && !listeZeichnet) zusatzSetzen(offeneKarte, e.target.value);
   });
   $("kartenListe").addEventListener("keydown",function(e){
-    if(e.target.id==="kartenName" && e.key==="Enter"){ e.target.blur(); return; }
+    if((e.target.id==="kartenName"||e.target.id==="kartenZusatz") && e.key==="Enter"){ e.target.blur(); return; }
     if(e.target.id!=="korrBetrag") return;
     if(e.key==="Enter") korrigieren(offeneKarte);
     else if(e.key==="Escape"){ offeneKarte=""; zeichneKartenListe(); }
@@ -2415,6 +2989,15 @@ function start(){
     var r=e.target.getAttribute&&e.target.getAttribute("data-rolle");
     if(!r) return;
     db.rolle=r; sichern(); zeichneKopf(); zeichneEinstellungen(); rolleAnwenden();
+  });
+  $("wahlLicht").addEventListener("click",function(e){
+    var l=e.target.getAttribute&&e.target.getAttribute("data-licht");
+    if(!l) return;
+    db.licht=l; sichern(); zeichneEinstellungen();
+    if(liest){ if(l==="aus") lichtSetzen(false); else lichtSetzen(true); }
+  });
+  [["btnLicht","auf"],["btnLicht2","ab"]].forEach(function(x){
+    $(x[0]).addEventListener("click",function(){ lichtSetzen(!lichtAn); });
   });
   $("wahlTon").addEventListener("click",function(e){
     var t=e.target.getAttribute&&e.target.getAttribute("data-ton");
@@ -2450,7 +3033,7 @@ function start(){
     if(this.files&&this.files[0]) sicherungEinspielen(this.files[0]);
     this.value="";
   });
-  $("btnLeer").addEventListener("click",alleLoeschen);
+  $("btnLeer").addEventListener("click",betriebAufNull);
 
   /* Ein Tablet wird gedreht, ein Fenster wird kleiner gezogen. Das Maß des
      Urteils muss dann neu gerechnet werden. */
