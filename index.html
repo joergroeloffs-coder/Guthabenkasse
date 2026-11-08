@@ -165,7 +165,7 @@ label.feld>span,.feldTitel{display:block;font-size:11px;text-transform:uppercase
 
 .wahl{display:flex;gap:0}
 .wahl button{
-  flex:1;height:var(--hoehe);font:inherit;font-size:13px;cursor:pointer;
+  flex:1;min-height:var(--hoehe);padding:3px 6px;font:inherit;font-size:13px;line-height:1.2;cursor:pointer;
   background:var(--papier);color:var(--tinte);border:1px solid var(--linie);
 }
 .wahl button:first-child{border-radius:var(--radius) 0 0 var(--radius)}
@@ -533,12 +533,12 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
   <div class="karte"><div class="titel"><h2>Neue Karten drucken</h2></div>
     <div class="inhalt">
-      <div class="reihe umbruch">
+      <div class="reihe umbruch" style="align-items:flex-end">
         <label class="feld" style="width:120px"><span>Anzahl</span>
           <input id="kAnzahl" inputmode="numeric" value="20" style="text-align:right"></label>
-        <div class="grow muted" id="kVorschau"></div>
         <button class="knopf voll" id="btnKartenDrucken">Karten drucken</button>
       </div>
+      <p class="muted" style="margin:10px 0 0" id="kVorschau"></p>
       <label class="feld" style="margin-top:10px"><span>Namen — freiwillig, ein Name je Zeile</span>
         <textarea id="kNamen" rows="3" placeholder="Anna Müller&#10;Tisch 5&#10;Familie Petersen"></textarea></label>
       <p class="muted" style="margin:10px 0 0">
@@ -921,7 +921,7 @@ function qrSvg(text){
 /* Die Nummer steht oben in der Kopfzeile und ist dazu da, zwei Geräte
    nebeneinanderlegen zu können. Bei jeder Änderung, die man merkt,
    weiterdrehen. */
-var VERSION = "0.3";
+var VERSION = "0.3.1";
 
 /* ============================== Daten ==============================
 

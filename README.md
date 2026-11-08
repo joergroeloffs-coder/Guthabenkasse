@@ -8,6 +8,9 @@ und Bausteine wie die Ticketkasse des Vereins.
 > Vorläufig ohne jede Sicherheit: Karten tragen keine Unterschrift, die
 > Geräterolle ist umstellbar, die Ablage schützt nur ein Zugangswort.
 
+**Für den ersten Abend:** [`Bedienungsanleitung.pdf`](Bedienungsanleitung.pdf)
+(7 Seiten, mit Bildern; als [`HTML`](Bedienungsanleitung.html) zum Nachlesen im Browser).
+
 ## Gedanke
 
 Auf der Karte steht kein Betrag, nur `GK-A0007`. Das Guthaben ist die Summe
@@ -70,6 +73,7 @@ geöffneten Datei; Eintippen und Drucken gehen auch so.
 | Datei | |
 | --- | --- |
 | `index.html` | die ganze Anwendung |
+| `Bedienungsanleitung.pdf`, `.html` | die Anleitung für den ersten Abend |
 | `ablage.gs` | Apps Script für den Abgleich (nicht auf den Webserver, sondern zu Google) |
 | `manifest.webmanifest`, `favicon.svg`, `*.png` | Symbole, damit sie sich als Programm einrichten lässt |
 
@@ -80,6 +84,7 @@ in der `index.html`.
 
 | | |
 | --- | --- |
-| **0.3** | Karten löschen (einzeln, nach Bereich, alle unbenutzten, wiederherstellbar), Karten mit Namen |
+| **0.3.1** | Bedienungsanleitung als PDF; Vorschau und Rollenwahl auf schmalen Handys besser lesbar |
+| 0.3 | Karten löschen (einzeln, nach Bereich, alle unbenutzten, wiederherstellbar), Karten mit Namen |
 | 0.2 | Ziffernblock für den Betrag, Betrag und neues Guthaben groß; auf dem Handy in drei Schritten |
 | 0.1 | Aufbuchen, Abbuchen, Karten drucken, Stapel vorab aufladen, Korrektur je Karte, Abgleich über Ablage |
