@@ -247,9 +247,21 @@ td.n,th.n{text-align:right}
 .kopfKnoepfe{display:flex;gap:6px}
 .kopfKnoepfe .knopf[aria-pressed="true"]{background:var(--messing);border-color:var(--messing);color:#fff}
 .rundeHinweis{margin:6px 0 0;font-size:14px;color:var(--messing);font-weight:600;text-align:right}
+.befund.b-zwei{padding:0;gap:0;justify-content:stretch;align-items:stretch;border:0}
+.b-zwei .hz{flex:1 1 0;min-height:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;padding:6px 10px;overflow:hidden}
+.b-zwei .hz-ab{background:#F5D9D2;color:#8A2C1C}
+.b-zwei .hz-rest{background:#D6EADB;color:#1B5A3A}
+.b-zwei .hz-t{font-family:'Inter',system-ui,sans-serif;font-size:calc(var(--zmass,40px)*.34);
+  font-weight:600;letter-spacing:.04em;text-transform:uppercase;opacity:.85;line-height:1.2}
+.b-zwei .hz-b{font-size:var(--zmass,40px);line-height:1.05;font-variant-numeric:tabular-nums;white-space:nowrap}
+.b-zwei .hz-s{font-family:'Inter',system-ui,sans-serif;font-size:calc(var(--zmass,40px)*.3);
+  line-height:1.2;opacity:.85;min-height:1.2em}
+.trinkReihe button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.trinkReihe button span{font-size:14px;font-weight:500}
 .trinkReihe{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 0}
 .trinkReihe .trinkTitel{font-size:13px;color:var(--tinteWeich);width:100%}
-.trinkReihe button{flex:1 1 0;min-width:70px;height:52px;font-size:18px;font-weight:600;
+.trinkReihe button{flex:1 1 0;min-width:70px;height:60px;font-size:18px;font-weight:600;
   border:1px solid var(--messingRand);background:var(--messingHell);color:var(--messing);
   border-radius:var(--radius);cursor:pointer}
 .trinkReihe button:active{transform:translateY(1px)}
@@ -739,7 +751,18 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
           <div class="wahl" id="wahlRunde"><button data-runde="1">An</button><button data-runde="0">Aus</button></div></label>
       </div>
       <div class="reihe" style="margin-top:14px">
-        <label class="feld grow"><span>Trinkgeld-Tasten (Euro, mit Leerzeichen getrennt)</span>
+        <label class="feld grow"><span>Trinkgeld-Tasten rechnen in</span>
+          <div class="wahl" id="wahlTrinkArt"><button data-trinkart="prozent">Prozent</button><button data-trinkart="euro">Euro</button></div></label>
+      </div>
+      <div class="reihe" style="margin-top:14px">
+        <label class="feld grow"><span>Prozent vom Verkauf (mit Leerzeichen getrennt)</span>
+          <input id="trinkProzent" class="mono" maxlength="30" autocomplete="off" placeholder="5 7,5 10"></label>
+      </div>
+      <p class="muted" style="margin:6px 0 0">Verkauf plus Trinkgeld wird auf 0,50 € genau gerundet, der Gast
+        zahlt also am Ende …,00 oder …,50. Bei 4,70 € und 10 %: 5,17 € → 5,00 €, Trinkgeld 0,30 €.
+        Tasten, die auf 0 runden, entfallen.</p>
+      <div class="reihe" style="margin-top:14px">
+        <label class="feld grow"><span>Feste Euro-Tasten (Euro, mit Leerzeichen getrennt)</span>
           <input id="trinkWerte" class="mono" maxlength="30" autocomplete="off" placeholder="0,50 1 2"></label>
       </div>
       <p class="muted" style="margin:6px 0 0">Trinkgeld wird von derselben Karte abgebucht, als eigene Buchung,
@@ -1073,7 +1096,7 @@ function qrSvg(text){
 /* Die Nummer steht oben in der Kopfzeile und ist dazu da, zwei Geräte
    nebeneinanderlegen zu können. Bei jeder Änderung, die man merkt,
    weiterdrehen. */
-var VERSION = "0.6.1";
+var VERSION = "0.7.0";
 
 /* ============================== Daten ==============================
 
@@ -1104,6 +1127,8 @@ function leereDaten(){
     bediener:"",                   /* Name der Bedienung (Vorname), steht bei jeder Buchung */
     trink:true,                    /* nach dem Abbuchen Trinkgeld-Tasten anbieten */
     aufrunden:false,               /* beim Abbuchen auf den vollen Euro aufrunden */
+    trinkart:"prozent",            /* prozent | euro: wie die Tasten rechnen */
+    trinkprozent:"5 7,5 10",       /* Prozent vom Verkauf, durch Leerzeichen getrennt */
     trinkwerte:"0,50 1 2",         /* die Tasten, in Euro, durch Leerzeichen getrennt */
     anlass:{name:"", verein:"", zusatz:"", ts:0},
     karten:{},                     /* "A0007" → {nr, ts, name?, nts?} */
@@ -1338,6 +1363,7 @@ function zeilenbreite(el){
 
 function urteilAnpassen(feld){
   if(!feld || feld.classList.contains("b-still")) return;
+  if(feld.classList.contains("b-zwei")){ zweiAnpassen(feld); return; }
   var block=feld.querySelector(".urteilblock"); if(!block) return;
   var wort=block.querySelector(".wort"), dazu=block.querySelector(".dazu");
   var stil=getComputedStyle(feld);
@@ -1350,6 +1376,39 @@ function urteilAnpassen(feld){
     if(block.getBoundingClientRect().height<=hoch &&
        zeilenbreite(wort)<=breit && zeilenbreite(dazu)<=breit) return;
   }
+}
+
+/* Das zweiteilige Ergebnis beim Abbuchen: oben rötlich, was abgebucht wurde,
+   unten grünlich, was noch auf der Karte ist — beide gleich groß, beide mit
+   derselben Schrift. Die Größe wird gerechnet, bis der breitere Betrag in
+   seine Hälfte passt. */
+function zweiAnpassen(feld){
+  var hz=feld.querySelectorAll(".hz"); if(!hz.length) return;
+  var breit=feld.clientWidth*0.92, hoch=hz[0].clientHeight-12;
+  if(!(breit>0 && hoch>0)) return;
+  for(var mass=96; mass>=18; mass-=2){
+    feld.style.setProperty("--zmass", mass+"px");
+    var ok=true;
+    for(var i=0;i<hz.length;i++){
+      var b=hz[i].querySelector(".hz-b");
+      if(zeilenbreite(b)>breit || hz[i].scrollHeight>hz[i].clientHeight+1) ok=false;
+    }
+    if(ok) return;
+  }
+}
+
+function urteilZwei(tab, abCent, abSub, restCent, restSub){
+  var feld=$(tab==="ab"?"befund2":"befund");
+  feld.className="befund b-zwei";
+  feld.style.removeProperty("--urteilmass");
+  feld.innerHTML=
+    '<div class="hz hz-ab"><div class="hz-t">Abgebucht</div><div class="hz-b">'+esc(euro(abCent))+
+      '</div><div class="hz-s">'+esc(abSub||"")+'</div></div>'+
+    '<div class="hz hz-rest"><div class="hz-t">Noch auf der Karte</div><div class="hz-b">'+esc(euro(restCent))+
+      '</div><div class="hz-s">'+esc(restSub||"")+'</div></div>';
+  zweiAnpassen(feld);
+  feld.classList.remove("leuchtet"); void feld.offsetWidth;
+  feld.classList.add("leuchtet");
 }
 
 function urteil(tab, art, titel, dazu){
@@ -1478,22 +1537,66 @@ function trinkWerteListe(){
   return aus;
 }
 
+/* Prozentwerte: "7,5" ist 7,5 Prozent. centAus liest "7,5" als 750, also
+   durch hundert. */
+function trinkProzentListe(){
+  var teile=String(db.trinkprozent||"").split(/[\s;%]+/), aus=[];
+  teile.forEach(function(t){
+    var p=centAus(t)/100;
+    if(p>0 && p<=100 && aus.indexOf(p)<0 && aus.length<5) aus.push(p);
+  });
+  return aus;
+}
+
+/* Trinkgeld so, dass Verkauf plus Trinkgeld auf 0,50 € genau aufgeht: der
+   Gast zahlt am Ende einen runden Betrag (…,00 oder …,50). Gerundet wird
+   zur nächsten Marke. */
+function trinkNachProzent(cent, prozent){
+  var summe=cent+cent*prozent/100;
+  return Math.round(summe/50)*50-cent;
+}
+
+/* Was die Tasten anbieten: [{c: Trinkgeld in Cent, kopf, zeile}] */
+function trinkOptionen(cent){
+  var aus=[], gesehen={};
+  if(db.trinkart==="euro"){
+    trinkWerteListe().forEach(function(c){ aus.push({c:c, kopf:"+ "+euro(c), zeile:""}); });
+    return aus;
+  }
+  trinkProzentListe().forEach(function(p){
+    var c=trinkNachProzent(cent,p);
+    if(c<=0 || gesehen[c]) return;
+    gesehen[c]=true;
+    aus.push({c:c, kopf:String(p).replace(".",",")+" %", zeile:"+ "+euro(c)});
+  });
+  return aus;
+}
+
 function trinkVerbergen(){
   letzterVerkauf=null;
   $("trinkReihe").classList.add("hide");
   $("trinkReihe").innerHTML="";
 }
 
-function trinkAnbieten(nr, verkaufId, schonAufgerundet){
+/* Das zweiteilige Ergebnis beim Abbuchen. Oben steht alles, was abgebucht
+   wurde, Trinkgeld eingeschlossen; unten, was noch auf der Karte ist. */
+function ergebnisAb(nr, cent, tip, notiz){
+  var sub=tip>0 ? "davon Trinkgeld "+euro(tip) : "";
+  if(notiz) sub+=(sub?" · ":"")+notiz;
+  urteilZwei("ab", cent+tip, sub, saldo(nr), "Karte "+kartenLabel(nr));
+}
+
+function trinkAnbieten(nr, verkaufId, schonAufgerundet, cent){
   var reihe=$("trinkReihe");
   trinkVerbergen();
   if(db.trink===false || schonAufgerundet) return;
-  var werte=trinkWerteListe(); if(!werte.length) return;
-  letzterVerkauf={nr:nr, id:verkaufId};
+  var opt=trinkOptionen(cent); if(!opt.length) return;
+  letzterVerkauf={nr:nr, id:verkaufId, cent:cent};
   var rest=saldo(nr);
   reihe.innerHTML='<span class="trinkTitel">Trinkgeld dazu?</span>'+
-    werte.map(function(c){
-      return '<button data-trinkgeld="'+c+'"'+(c>rest?' disabled':'')+'>+ '+esc(euro(c))+'</button>';
+    opt.map(function(o){
+      return '<button data-trinkgeld="'+o.c+'"'+(o.c>rest?' disabled':'')+'><b>'+esc(o.kopf)+'</b>'+
+        (o.zeile?'<span>'+esc(o.zeile)+'</span>':'')+'</button>';
     }).join("");
   reihe.classList.remove("hide");
 }
@@ -1503,8 +1606,7 @@ function trinkgeldBuchen(cent){
   if(saldo(v.nr)<cent){ melden("Dafür reicht das Guthaben nicht"); return; }
   var t=buchen(v.nr, -cent, "trinkgeld"); t.zu=v.id; sichern();
   trinkVerbergen();
-  urteil("ab","b-ab","Guthaben "+euro(saldo(v.nr)),
-         "Trinkgeld "+euro(cent)+" abgebucht · Karte "+kartenLabel(v.nr));
+  ergebnisAb(v.nr, v.cent, cent, "");
   klingen("ab");
   zeichneAlles(); wolkeVormerken();
   if(navigator.vibrate) navigator.vibrate(40);
@@ -1566,11 +1668,11 @@ function buche(tab, roh){
     var verkauf=buchen(nr, -cent, "ab", null, null, tip>0);
     if(tip>0){ var tb=buchen(nr, -tip, "trinkgeld"); tb.zu=verkauf.id; sichern(); }
     if(istHandy()) setPhase("ab","ergebnis");
-    urteil("ab","b-ab","Guthaben "+euro(saldo(nr)),
-           "Abgebucht "+euro(cent)+(tip>0?" + Trinkgeld "+euro(tip):"")+" · Karte "+kartenLabel(nr)+
-           (nichtGereicht?" · zum Aufrunden reichte das Guthaben nicht":""));
+    /* Erst die Tasten, dann das Ergebnis: die Tasten nehmen Platz weg, und die
+       Schrift des Ergebnisses wird für den Rest gerechnet. */
+    trinkAnbieten(nr, verkauf.id, tip>0, cent);
+    ergebnisAb(nr, cent, tip, nichtGereicht?"zum Aufrunden reichte das Guthaben nicht":"");
     klingen("ab");
-    trinkAnbieten(nr, verkauf.id, tip>0);
     /* Der Betrag wird geleert: der nächste Gast kauft etwas anderes, und ein
        vergessener Betrag würde ihm das Falsche abziehen. */
     $("abBetrag").value=""; rundeHinweisZeigen();
@@ -3272,6 +3374,10 @@ function zeichneEinstellungen(){
   document.querySelectorAll("#wahlRunde button").forEach(function(b){
     b.setAttribute("aria-pressed", (b.getAttribute("data-runde")==="1")===!!db.aufrunden ? "true":"false");
   });
+  document.querySelectorAll("#wahlTrinkArt button").forEach(function(b){
+    b.setAttribute("aria-pressed", b.getAttribute("data-trinkart")===(db.trinkart||"prozent") ? "true":"false");
+  });
+  if(document.activeElement!==$("trinkProzent")) $("trinkProzent").value=db.trinkprozent||"";
   if(document.activeElement!==$("trinkWerte")) $("trinkWerte").value=db.trinkwerte||"";
   rundeHinweisZeigen();
   document.querySelectorAll("#wahlTon button").forEach(function(b){
@@ -3653,12 +3759,20 @@ function start(){
   $("abRunde").addEventListener("click",function(){
     db.aufrunden=!db.aufrunden; sichern(); zeichneEinstellungen();
   });
+  $("wahlTrinkArt").addEventListener("click",function(e){
+    var t=e.target.getAttribute&&e.target.getAttribute("data-trinkart");
+    if(!t) return;
+    db.trinkart=t; sichern(); zeichneEinstellungen();
+  });
+  $("trinkProzent").addEventListener("change",function(){
+    db.trinkprozent=this.value.trim(); sichern(); zeichneEinstellungen();
+  });
   $("trinkWerte").addEventListener("change",function(){
     db.trinkwerte=this.value.trim(); sichern(); zeichneEinstellungen();
   });
   $("trinkReihe").addEventListener("click",function(e){
-    var c=e.target.getAttribute&&e.target.getAttribute("data-trinkgeld");
-    if(c) trinkgeldBuchen(Number(c));
+    var k=e.target.closest&&e.target.closest("[data-trinkgeld]");
+    if(k && !k.disabled) trinkgeldBuchen(Number(k.getAttribute("data-trinkgeld")));
   });
   $("abBetrag").addEventListener("input",rundeHinweisZeigen);
   $("wahlTon").addEventListener("click",function(e){
