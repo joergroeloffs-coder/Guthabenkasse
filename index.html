@@ -101,6 +101,8 @@ header{background:var(--kopf);color:var(--papier);border-bottom:2px solid var(--
 .kopfZahl{text-align:right}
 .kopfZahl b{display:block;font-family:'Newsreader',Georgia,serif;font-size:24px;font-weight:400}
 .kopfZahl span{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--kopfWeich)}
+.kopfZahl .fassung,.kopfZahl .fassung span{text-transform:none;letter-spacing:.02em}
+.kopfZahl .fassung{opacity:.85}
 
 nav{display:flex;gap:4px;flex-wrap:wrap;padding-bottom:6px}
 nav button{
@@ -503,7 +505,7 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       <div class="anlassName" id="kopfAnlass">Guthabenkasse</div>
       <div class="anlassZusatz" id="kopfZusatz"></div>
     </div>
-    <div class="kopfZahl"><b id="kopfSumme">0,00 €</b><span>auf allen Karten</span></div>
+    <div class="kopfZahl"><b id="kopfSumme">0,00 €</b><span>auf allen Karten<span class="fassung"> · <span id="kopfFassung"></span></span></span></div>
   </div>
   <nav class="seitenBreite" id="reiterLeiste">
     <button data-reiter="auf" aria-current="true">Aufbuchen</button>
@@ -1036,7 +1038,7 @@ function qrSvg(text){
 /* Die Nummer steht oben in der Kopfzeile und ist dazu da, zwei Geräte
    nebeneinanderlegen zu können. Bei jeder Änderung, die man merkt,
    weiterdrehen. */
-var VERSION = "0.5.2";
+var VERSION = "0.5.3";
 
 /* ============================== Daten ==============================
 
@@ -3306,6 +3308,9 @@ function start(){
   laden();
   if(nurImSpeicher) speicherWarnung();
   $("version").textContent=VERSION;
+  /* Die Fassung steht immer im Kopf, auch auf dem Handy, wo die obere Zeile fehlt:
+     wer zwei Geräte vergleicht, sieht sofort, ob beide dieselbe haben. */
+  $("kopfFassung").textContent="v"+VERSION;
   $("aufBetrag").value=db.aufBetrag||"";
   urteilBereit("auf"); urteilBereit("ab");
   zeichneAlles(); zeichneEinstellungen(); rolleAnwenden();

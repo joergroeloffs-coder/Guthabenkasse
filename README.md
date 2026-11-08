@@ -148,7 +148,8 @@ in der `index.html`.
 
 | | |
 | --- | --- |
-| **0.5.2** | Licht: Blitz wird bis zu 5 s lang gesucht (Chrome meldet ihn spät), Zustand wird geprüft statt angenommen, Meldung und Statuszeile sagen, warum es nicht geht |
+| **0.5.3** | die Fassungsnummer steht immer im Kopf, unter der Summe, auf jeder Bildschirmgröße |
+| 0.5.2 | Licht: Blitz wird bis zu 5 s lang gesucht (Chrome meldet ihn spät), Zustand wird geprüft statt angenommen, Meldung und Statuszeile sagen, warum es nicht geht |
 | 0.5.1 | der Betrag wird auch beim Aufbuchen nach der Buchung geleert (kein zweites Buchen aus Versehen) |
 | 0.5 | Gästelisten in allen gängigen Formaten (.xls, .xlsx, .ods, Excel-2003-XML, HTML, CSV/UTF-16, Zwischenablage), Blattauswahl; gelöschte Karten verschwinden vollständig aus der Anzeige |
 | 0.4.1 | erkennt eine neuere Fassung selbst und meldet es (Verknüpfung auf dem Startbildschirm) |
