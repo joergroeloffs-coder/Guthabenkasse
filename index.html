@@ -1035,7 +1035,7 @@ function qrSvg(text){
 /* Die Nummer steht oben in der Kopfzeile und ist dazu da, zwei Geräte
    nebeneinanderlegen zu können. Bei jeder Änderung, die man merkt,
    weiterdrehen. */
-var VERSION = "0.5";
+var VERSION = "0.5.1";
 
 /* ============================== Daten ==============================
 
@@ -1373,15 +1373,10 @@ function scanBeginnen(tab){
 }
 
 function weiter(tab){
+  /* Der Betrag ist nach jeder Buchung leer, in beiden Richtungen: es geht
+     wieder mit dem Ziffernblock los. */
   urteilBereit(tab);
-  if(tab==="auf"){
-    /* Beim Aufbuchen bleibt der Betrag stehen: es geht gleich mit der
-       nächsten Karte weiter. */
-    setPhase("auf","scan"); urteilBereit("auf","Karte vor die Kamera halten.");
-    kameraAn("auf");
-  } else {
-    setPhase("ab","eingabe");
-  }
+  setPhase(tab,"eingabe");
 }
 
 /* ============================ Ziffernblock ============================
@@ -1435,7 +1430,12 @@ function buche(tab, roh){
     urteil("auf","b-auf","Guthaben "+euro(saldo(nr)),
            "Aufgebucht "+euro(cent)+" · Karte "+kartenLabel(nr)+(neu?" · neu angelegt":""));
     klingen("auf");
-    db.aufBetrag=$("aufBetrag").value; sichern();
+    /* Wie beim Abbuchen: der Betrag verschwindet nach der Buchung. Bliebe er
+       stehen, buchte ein zweites Lesen derselben oder der nächsten Karte
+       ungefragt noch einmal — bei Geld, das hinzukommt, so ärgerlich wie
+       beim Abziehen. Ein Zehner für die nächste Karte ist mit einer Taste
+       (10 €) schnell wieder da. */
+    $("aufBetrag").value=""; db.aufBetrag=""; sichern();
   } else {
     var vorher=saldo(nr);
     if(vorher<cent){
@@ -1449,10 +1449,8 @@ function buche(tab, roh){
     urteil("ab","b-ab","Guthaben "+euro(saldo(nr)),
            "Abgebucht "+euro(cent)+" · Karte "+kartenLabel(nr));
     klingen("ab");
-    /* Beim Abbuchen wird der Betrag nach jeder Buchung geleert: der nächste
-       Gast kauft etwas anderes, und ein vergessener Betrag würde ihm das
-       Falsche abziehen. Beim Aufbuchen bleibt er stehen — dort kommt oft
-       eine Reihe Gäste mit demselben Zehner. */
+    /* Der Betrag wird geleert: der nächste Gast kauft etwas anderes, und ein
+       vergessener Betrag würde ihm das Falsche abziehen. */
     $("abBetrag").value="";
   }
   /* Nach einem Erfolg ruht die Kamera: sonst bucht die nächste Karte, die
