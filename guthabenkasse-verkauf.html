@@ -4892,6 +4892,18 @@ function meineHolen() {
   }).catch(function (f) { var e = document.getElementById("meineServer"); if (e) e.textContent = "Keine Verbindung"; });
 }
 
+/* Verbindung prüfen: eine kleine Anfrage an die Ablage, mit Rolle und Folgenummer */
+wolkePruefen = function () {
+  var k = $("wolkeProbe");
+  k.className = "hinweis"; k.classList.remove("hide"); k.textContent = "Frage die Ablage …";
+  if (!wolkeBereit()) { k.textContent = "Erst Adresse und Zugangswort eintragen."; return; }
+  var t0 = Date.now();
+  Promise.race([wolkeRufen({ aktion: "pruefen", wort: db.ablage.wort, geraet: geraetInfo(), ids: [] }), nachZeit(15000)]).then(function (a) {
+    if (a.ok) k.innerHTML = "<b>Die Ablage antwortet richtig.</b> Rolle: " + esc(a.rolle || "?") + " · Folgenummer " + a.seq + " · " + (Date.now() - t0) + " ms";
+    else k.innerHTML = "<b>Die Ablage lehnt ab:</b> " + esc(a.fehler || "?");
+  }).catch(function (f) { k.innerHTML = "<b>Keine Antwort:</b> " + esc(f.message) + "<div style=\"margin-top:8px\">Kein Netz, falsche Adresse oder der Browser lässt den Aufruf nicht zu.</div>"; });
+};
+
 /* ======================= Terminal: Verwaltung ======================= */
 var verwaltungStand = { bericht: null, sicherungen: null, meldung: "" };
 function adminWort(grund) {
@@ -5021,7 +5033,7 @@ function v2Verwaltung(e) {
   switch (id) {
     case "vJetzt": vMeld("Gleicht ab …"); ab(syncJetzt(15000).then(function (a) { vMeld(a && a.ok ? "Abgeglichen" : "Nicht abgeglichen: " + (a && a.fehler)); zeichneVerwaltung(); })); break;
     case "btnWolkeJetzt": ab(syncJetzt(15000).then(function () { zeichneWolke(); })); break;
-    case "vPruefen": case "btnWolkePruefen": ab(rufeAblage({ aktion: "pruefen", ids: [] }).then(function (a) { vMeld(a.ok ? "Die Ablage antwortet richtig (Folgenummer " + a.seq + ")" : "Ablage: " + (a.fehler || "?")); })); break;
+    case "vPruefen": ab(rufeAblage({ aktion: "pruefen", ids: [] }).then(function (a) { vMeld(a.ok ? "Die Ablage antwortet richtig (Folgenummer " + a.seq + ")" : "Ablage: " + (a.fehler || "?")); })); break;
     case "vAuswerten": ab(berichtHolen(false)); break;
     case "vAbschlussMail": ab(berichtHolen(true)); break;
     case "vAbschlussDruck": if (verwaltungStand.bericht) berichtDruckenV2(verwaltungStand.bericht); else vMeld("Erst auswerten"); break;
