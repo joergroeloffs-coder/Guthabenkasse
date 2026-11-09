@@ -4,7 +4,7 @@ import { writeFileSync } from 'node:fs';
 const aus = new URL('./bild/', import.meta.url).pathname;
 const w = (p, ms = 500) => p.waitForTimeout(ms);
 const NAMEN = { T0001: 'Anna Müller', T0002: 'Familie Petersen', T0003: 'Tisch 5', T0004: 'Heinrich Jessen' };
-for (const lang of ['de', 'tr']) {
+for (const lang of ['de', 'tr', 'en']) {
   const A = await start({ schnell: true, start: Date.now(), viewport: { width: 390, height: 780 } });
   const T = await A.seite('terminal', 'T', 'ka', 'Anna'); const V = await A.seite('verkauf', 'V', 'vk', 'Ben');
   for (const p of [T, V]) { await p.addStyleTag({ content: '#meldung{display:none !important}' }); await p.evaluate(l => { window.print = () => {}; navigator.mediaDevices.getUserMedia = () => Promise.reject({ name: 'NotAllowedError' }); db.kompakt = false; db.anlass = { name: 'Sommerfest', verein: 'Fering Ferian e.V.', zusatz: 'Heimatpflege auf Föhr', ts: Date.now() }; sichern(); spracheSetzen(l); }, lang); }

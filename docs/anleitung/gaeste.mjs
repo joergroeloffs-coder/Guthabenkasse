@@ -46,6 +46,25 @@ const T = {
   ],
   fuss: 'Bitte halten Sie den QR-Code sauber und ungeknickt, damit er gelesen werden kann.',
  },
+ en: {
+  titel: 'Your Balance Card', unter: 'How it works – and how you get your remaining balance back',
+  gross: 'Whatever you don\'t spend is paid back to you at the end of the evening.', gross2: 'Just bring your card to the till at the bar: the remaining balance will be paid out to you.',
+  ort: 'Refund', ortStandard: 'At the till at the bar', zeit: 'Time',
+  schritte: [
+   ['Get your card and top up', 'Pay any amount you like at the till. It is credited to your card and you see your balance straight away. You can top up again at any time.'],
+   ['Pay with your card', 'Order as usual and hold your card up at the bar. The staff scan the QR code; the screen shows at the top what was charged and at the bottom what is left on the card.'],
+   ['Check your balance', 'Ask at the bar for your balance at any time. Scanning alone costs nothing; nothing is charged.'],
+   ['Tip – optional', 'After paying, the staff can deduct a tip from your card if you like (for example 5 % or 10 %, rounded to 0.50 €).'],
+   ['Money back', 'At the end of the evening hand in your card at the till at the bar. Whatever is still on it is paid out to you.'],
+  ],
+  bildunterschrift: 'This is what it looks like at the bar: charged at the top, still on the card at the bottom.',
+  gut: [
+   ['Keep it safe', 'The card is like cash: whoever has it can use it. Please do not hand it over, and do not photograph the QR code.'],
+   ['Lost it?', 'Tell us at the till straight away. We block the card; the team will work out with you what can be done about the balance.'],
+   ['Something wrong?', 'Wrong charge? Tell us at once – bookings can be reversed. If the balance is not enough, simply top up.'],
+  ],
+  fuss: 'Please keep the QR code clean and unfolded so that it can be read.',
+ },
  tr: {
   titel: 'Bakiye Kartınız', unter: 'Nasıl çalışır – ve kalan paranızı nasıl geri alırsınız',
   gross: 'Harcamadığınız para akşamın sonunda size iade edilir.', gross2: 'Bunun için kartınızı tezgâhtaki kasaya getirin: Kartta kalan bakiye size ödenir.',
@@ -81,7 +100,7 @@ function seite(l) {
 }
 const browser = await chromium.launch();
 const teile = {};
-for (const l of ['de', 'tr']) {
+for (const l of ['de', 'en', 'tr']) {
   const html = `<!doctype html><html lang="${l}"><head><meta charset="utf-8"><title>${T[l].titel}</title><style>${stil}</style></head><body>${seite(l)}</body></html>`;
   teile[l] = seite(l);
   const f = HIER + `Gaeste-Info-${l}`; writeFileSync(f + '.html', html);
@@ -91,10 +110,10 @@ for (const l of ['de', 'tr']) {
   await p.pdf({ path: f + '.pdf', format: 'A4', printBackground: true, margin: { top: '12mm', bottom: '12mm', left: '14mm', right: '14mm' } });
   console.log(l, h + ' mm (Fläche 273 mm)', h <= 273 ? 'passt' : 'ZU LANG'); await p.close();
 }
-// beide Sprachen auf zwei Seiten
-const both = `<!doctype html><html><head><meta charset="utf-8"><style>${stil}</style></head><body>${teile.de}${teile.tr}</body></html>`;
-writeFileSync(HIER + 'Gaeste-Info-de-tr.html', both);
+// Deutsch und Englisch auf zwei Seiten (für die Gäste)
+const both = `<!doctype html><html><head><meta charset="utf-8"><style>${stil}</style></head><body>${teile.de}${teile.en}</body></html>`;
+writeFileSync(HIER + 'Gaeste-Info-de-en.html', both);
 const p = await browser.newPage({ viewport: { width: 700, height: 1050 } });
-await p.goto('file://' + HIER + 'Gaeste-Info-de-tr.html', { waitUntil: 'networkidle' }); await p.emulateMedia({ media: 'print' });
-await p.pdf({ path: HIER + 'Gaeste-Info-de-tr.pdf', format: 'A4', printBackground: true, margin: { top: '12mm', bottom: '12mm', left: '14mm', right: '14mm' } });
+await p.goto('file://' + HIER + 'Gaeste-Info-de-en.html', { waitUntil: 'networkidle' }); await p.emulateMedia({ media: 'print' });
+await p.pdf({ path: HIER + 'Gaeste-Info-de-en.pdf', format: 'A4', printBackground: true, margin: { top: '12mm', bottom: '12mm', left: '14mm', right: '14mm' } });
 await browser.close();

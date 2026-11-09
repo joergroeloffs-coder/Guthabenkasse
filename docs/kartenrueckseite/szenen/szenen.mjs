@@ -10,9 +10,9 @@ const vogel = (x, y, s = 1, f = NAVY) => `<path d="M${x - 2.2 * s} ${y + .6 * s}
 const ornament = (y, f) => `<g stroke="${f}" stroke-width=".25" fill="${f}"><path d="M27 ${y}H41M47 ${y}H61"/><path d="M44 ${y - 1.2}L45.2 ${y}L44 ${y + 1.2}L42.8 ${y}Z"/><circle cx="41.9" cy="${y}" r=".35"/><circle cx="46.1" cy="${y}" r=".35"/></g>`;
 const fuss = (f1, f2) => `<rect x="0" y="45.2" width="88" height="11.8" fill="${NAVY}" opacity=".82"/>
   <g font-family="Liberation Sans, Arial, sans-serif" text-anchor="middle" fill="${f1}">
-    <text x="44" y="48.6" font-size="2.05" font-weight="700" letter-spacing=".25">GUTHABENKARTE · BAKİYE KARTI</text>
+    <text x="44" y="48.6" font-size="2.05" font-weight="700" letter-spacing=".25">GUTHABENKARTE · GIFT CARD</text>
     <text x="44" y="51.1" font-size="1.75" fill="${f2}">Restguthaben wird am Ende des Abends an der Kasse zurückgezahlt.</text>
-    <text x="44" y="53.2" font-size="1.75" fill="${f2}">Kalan bakiye akşamın sonunda kasada iade edilir.</text>
+    <text x="44" y="53.2" font-size="1.75" fill="${f2}">Any remaining balance is refunded at the till at the end of the evening.</text>
   </g>`;
 
 // Das kleine „OLDSUM / FÖHR“ im Original ist zu klein aufgelöst; es wird sauber nachgesetzt.
