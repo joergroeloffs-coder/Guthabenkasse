@@ -4503,7 +4503,65 @@ kartenBlatt = function (nrs) {
   sichern(); opsSenden();
   return _kartenBlatt(nrs);
 };
-var _kartenDrucken = kartenDrucken;
+/* Neue Karten: erst ansehen, dann anlegen und/oder drucken. Vorher wird nichts angelegt. */
+var kartenPlanMerker = null;
+function kartenPlan() {
+  var eintraege = kartenEintraege();
+  if (gaeste && !eintraege.length) { melden(_t("Nichts angekreuzt oder die Liste ist leer")); return null; }
+  var n = eintraege ? eintraege.length : parseInt($("kAnzahl").value, 10);
+  if (!(n > 0 && n <= 1000)) { melden(_t("Anzahl zwischen 1 und 1000")); return null; }
+  if (!/^[A-Z]$/.test(db.geraet || "")) { melden(_t("Erst ein Gerätezeichen eintragen")); return null; }
+  var start = naechsteKartenNummer(), nrs = [], codes = {};
+  for (var i = 0; i < n; i++) { var nr = nummerSchreiben(start + i); nrs.push(nr); codes[nr] = pruefCodeNeu(); }
+  return { n: n, eintraege: eintraege, nrs: nrs, codes: codes };
+}
+/* Die Karten so zeichnen, wie sie gedruckt würden – ohne etwas zu speichern */
+function kartenVorschauHtml(plan, anzahl) {
+  var zeigen = plan.nrs.slice(0, anzahl), gesichert = {}, jetzt = Date.now();
+  zeigen.forEach(function (nr, i) {
+    gesichert[nr] = db.karten[nr];
+    var e = plan.eintraege && plan.eintraege[i], k = { nr: nr, ts: jetzt, code: plan.codes[nr] };
+    if (e && e.name) k.name = e.name; if (e && e.zusatz) k.zusatz = e.zusatz;
+    db.karten[nr] = k;
+  });
+  try { return _kartenBlatt(zeigen); }
+  finally { zeigen.forEach(function (nr) { if (gesichert[nr]) db.karten[nr] = gesichert[nr]; else delete db.karten[nr]; }); }
+}
+function kartenModalZu() { var m = document.getElementById("kartenModal"); if (m) m.remove(); kartenPlanMerker = null; }
+function kartenModalZeigen(plan) {
+  kartenModalZu(); kartenPlanMerker = plan;
+  var m = document.createElement("div"); m.id = "kartenModal";
+  m.style.cssText = "position:fixed;inset:0;z-index:50;background:rgba(10,20,14,.82);display:flex;align-items:center;justify-content:center;padding:10px";
+  var von = plan.nrs[0], bis = plan.nrs[plan.nrs.length - 1];
+  var namen = plan.eintraege ? plan.eintraege.length + " mit Namen" : "ohne Namen";
+  m.innerHTML = '<div style="background:#FAF8F1;color:#10251A;border-radius:12px;max-width:760px;width:100%;max-height:96vh;display:flex;flex-direction:column;overflow:hidden">' +
+    '<div style="padding:14px 16px 6px"><b style="font-size:18px">Vorschau: ' + plan.n + (plan.n === 1 ? ' neue Karte' : ' neue Karten') + '</b>' +
+    '<div class="muted" style="font-size:13px;margin-top:2px">' + esc(kartenCode(von)) + (plan.n > 1 ? ' bis ' + esc(kartenCode(bis)) : '') + ' · ' + namen + (plan.n > 8 ? ' · gezeigt sind die ersten 8' : '') + '</div></div>' +
+    '<div id="kartenModalBlatt" style="overflow:auto;padding:8px 10px;background:#E9EDE7;flex:1 1 auto"><div style="transform-origin:top left;width:178mm" id="kartenModalInnen">' + kartenVorschauHtml(plan, 8).replace(/break-after:page;page-break-after:always;?/g, '') + '</div></div>' +
+    '<div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;background:#FAF8F1">' +
+    '<button class="knopf voll" id="kmAnlegenDrucken">Anlegen und drucken</button><button class="knopf" id="kmAnlegen">Nur anlegen</button><button class="knopf" id="kmZu">Zurück</button></div>' +
+    '<div class="muted" style="font-size:12px;padding:0 14px 12px">„Anlegen“ trägt die Karten in die Kartenliste und die Ablage ein. Gedruckt werden kann auch später über „Bestehende Karten nochmal drucken“. Wer „Zurück“ wählt, hat nichts angelegt.</div></div>';
+  document.body.appendChild(m);
+  /* an die Bildschirmbreite anpassen */
+  var innen = document.getElementById("kartenModalInnen"), breit = document.getElementById("kartenModalBlatt").clientWidth - 20;
+  var natuerlich = innen.getBoundingClientRect().width;
+  if (natuerlich > breit && breit > 0) { var f = breit / natuerlich; innen.style.transform = "scale(" + f + ")"; innen.style.marginBottom = (-(innen.getBoundingClientRect().height * (1 - f))) + "px"; }
+}
+function kartenAnlegen(plan, mitDruck) {
+  var jetzt = Date.now(), ein = [];
+  plan.nrs.forEach(function (nr, i) {
+    var e = plan.eintraege && plan.eintraege[i];
+    var k = db.karten[nr] = { nr: nr, ts: jetzt, code: plan.codes[nr], status: "aktiv" };
+    if (e) { if (e.name) k.name = e.name; if (e.zusatz) k.zusatz = e.zusatz; k.nts = jetzt; }
+    var op = { nr: nr, code: k.code }; if (k.name) { op.name = k.name; op.zusatz = k.zusatz || ""; } ein.push(op);
+  });
+  db.ops.push({ was: "anlegen", karten: ein });
+  $("kNamen").value = ""; gaeste = null; $("gaesteDatei").value = ""; zeichneGaeste();
+  sichern(); zeichneAlles(); opsSenden(); wolkeVormerken();
+  kartenModalZu();
+  if (mitDruck) { nurWiederdruck = true; try { drucken(_kartenBlatt(plan.nrs)); } finally { nurWiederdruck = false; } }
+  else melden(plan.n + (plan.n === 1 ? " Karte angelegt" : " Karten angelegt") + " – drucken über „Bestehende Karten nochmal drucken“");
+}
 kartenDrucken = function () {
   /* Ein Gerät, das noch nie mit der Ablage gesprochen hat, kennt die vergebenen Nummern nicht und
      würde sie noch einmal vergeben. */
@@ -4511,7 +4569,8 @@ kartenDrucken = function () {
     melden("Erst muss das Gerät sich mit der Ablage abgleichen" + (sync.serverFehler ? " (" + sync.serverFehler + ")" : "") + " – sonst werden Kartennummern doppelt vergeben.");
     return;
   }
-  _kartenDrucken();
+  var plan = kartenPlan(); if (!plan) return;
+  kartenModalZeigen(plan);
 };
 var _namen = nameSetzen;
 nameSetzen = function (nr, text) {
@@ -5078,6 +5137,9 @@ function v2Verwaltung(e) {
     case "pinBtn": var p = document.getElementById("pinNeu").value.trim(); db.pin = p ? kettenHash("pin|" + p) : ""; sichern(); vMeld(p ? "PIN gesetzt" : "PIN entfernt"); break;
     case "eSpeichern": einstSpeichern(); break;
     case "bDruck": bestehendeDrucken(); break;
+    case "kmAnlegenDrucken": if (kartenPlanMerker) kartenAnlegen(kartenPlanMerker, true); break;
+    case "kmAnlegen": if (kartenPlanMerker) kartenAnlegen(kartenPlanMerker, false); break;
+    case "kmZu": kartenModalZu(); break;
     case "rDruck": rueckDrucken(false); break;
     case "rProbe": rueckDrucken(true); break;
     case "rWeg": rueck.bild = ""; rueckSichern(); rueckZeichnen(); break;

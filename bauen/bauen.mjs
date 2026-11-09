@@ -29,6 +29,7 @@ function bau(modus) {
   ersetze('href="manifest.webmanifest"', 'href="manifest-' + modus + '.webmanifest"');
   ersetze('content="Guthabenkasse"', 'content="' + (modus === 'terminal' ? 'GK Terminal' : 'GK Verkauf') + '"');
   ersetze('qrSvg(kartenCode(nr))', 'qrSvg(qrText(nr))');
+  ersetze('id="btnKartenDrucken">Karten drucken</button>', 'id="btnKartenDrucken">Vorschau der Karten</button>');
   ersetze('</style>\n</head>', css + '</style>\n</head>');
   // Statusanzeige in Kopf und schmaler Leiste
   ersetze('<span class="schmalFassung" id="schmalFassung"></span>', '<span class="schmalFassung" id="schmalFassung"></span><span class="syncChip" id="syncChip2"></span>');
