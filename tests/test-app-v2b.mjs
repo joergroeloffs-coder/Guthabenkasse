@@ -63,4 +63,13 @@ t('Verkauf ohne Aufbuchen-Reiter', await V.evaluate(() => !document.getElementBy
 // Direktes Aufbuchen an der Ablage mit Verkaufswort (Manipulation der App)
 const manip = A.srv.post('vk', { aktion: 'sync', geraet: { id: 'V', schluessel: await V.evaluate(() => db.schluessel) }, cursor: 0, kv: 0, neu: [{ id: 'hack1', karte: 'A0100', cent: 99900, art: 'auf', zeit: Date.now(), geraet: 'V', n: 999, k: 'x' }] });
 t('Manipulation: Aufbuchen mit Verkaufswort abgelehnt', manip.ergebnisse.hack1.st === 'abgelehnt' && saldo('A0100') === 1600);
+// Langsame Ablage (Antwort nach 9 s, länger als die Wartezeit): die Buchung wird trotzdem sauber bestätigt
+const nVor = holen().buchungen.length;
+A.steuer.verzoegerung = 9000;
+await V.evaluate(([n, c]) => { $("abBetrag").value = "0,50"; letzteBuchung = { roh: '', zeit: 0, cent: 0, tab: '' }; buche("ab", "GK-" + n + "-" + c); }, [neu, cN]); await w(V, 22000);
+A.steuer.verzoegerung = 0;
+const e = await erg(V);
+t('Langsame Ablage: genau eine Buchung', holen().buchungen.length === nVor + 1, String(holen().buchungen.length - nVor));
+t('Langsame Ablage: kein "Unklar" am Ende', !e.includes('Unklar'), e);
+t('Langsame Ablage: nichts bleibt offen', await V.evaluate(() => ausstehende().length) === 0);
 console.log('Seitenfehler:', A.steuer.log.length ? A.steuer.log : 'keine'); console.log(ok + ' ok, ' + bad + ' Fehler'); await A.ende();

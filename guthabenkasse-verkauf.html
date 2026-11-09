@@ -4321,7 +4321,9 @@ function syncEinmal(ms) {
   var kz = (db.kette && db.kette[db.geraet]) || { n: 0, k: "" };
   var req = { aktion: "sync", wort: db.ablage.wort, geraet: geraetInfo(), neu: neu, cursor: db.cursor || 0, kv: db.kv || 0, meldung: { n: kz.n, k: kz.k } };
   sync.laeuft = true; zeichneStatus();
-  return Promise.race([wolkeRufen(req), nachZeit(ms || 15000)]).then(function (a) {
+  /* Die Verarbeitung hängt an der Anfrage selbst, nicht am Warten: kommt die Antwort nach der
+     Wartezeit doch noch, wird sie trotzdem verbucht (die Kennungen machen das gefahrlos). */
+  var arbeit = wolkeRufen(req).then(function (a) {
     sync.laeuft = false; sync.online = true;
     if (a.fehler) {
       sync.serverFehler = a.fehler; zeichneStatus();
@@ -4342,6 +4344,14 @@ function syncEinmal(ms) {
     zeichneStatus();
     return { netz: true, fehler: sync.fehler, ergebnisse: {} };
   });
+  var frist = new Promise(function (resolve) {
+    setTimeout(function () {
+      if (!sync.laeuft) return;
+      sync.online = false; sync.fehler = "Zeitüberschreitung"; zeichneStatus();
+      resolve({ netz: true, fehler: "Zeitüberschreitung", ergebnisse: {} });
+    }, ms || 15000);
+  });
+  return Promise.race([arbeit, frist]);
 }
 
 function verarbeiteSync(a, gesendet) {
@@ -4655,7 +4665,7 @@ function abbuchenAusfuehren(nr, cent) {
       if (ohneAblage()) { zeigen(""); return true; }
       urteil("ab", "b-offen", _t("Bucht …"), euro(cent) + " · Karte " + kartenLabel(nr));
       if (istHandy()) setPhase("ab", "ergebnis");
-      return bestaetigen(verkauf.id, 8000).then(function (st) {
+      return bestaetigen(verkauf.id, 12000).then(function (st) {
         if (st.st === "ok" || st.st === "doppelt") { zeigen(st.ueber ? "Offline-Buchung überzieht die Karte" : ""); return true; }
         if (st.st === "abgelehnt") {
           var gr = st.code === "guthaben" ? "Zu wenig Guthaben" : st.grund;
@@ -4694,7 +4704,7 @@ function bestaetigen(id, ms) {
   return syncJetzt(ms).then(function (a) {
     var r = pruefe(a); if (r) return r;
     if (a && a.server) return { st: "unklar", grund: a.fehler };
-    return syncJetzt(4000).then(function (a2) { return pruefe(a2) || { st: "unklar" }; });
+    return syncJetzt(8000).then(function (a2) { return pruefe(a2) || { st: "unklar" }; });
   });
 }
 
@@ -4715,7 +4725,7 @@ function aufbuchenAusfuehren(nr, cent) {
     if (ohneAblage()) { zeigen(""); return true; }
     urteil("auf", "b-offen", _t("Bucht …"), euro(cent) + " · Karte " + kartenLabel(nr));
     if (istHandy()) setPhase("auf", "ergebnis");
-    return bestaetigen(b.id, 8000).then(function (st) {
+    return bestaetigen(b.id, 12000).then(function (st) {
       if (st.st === "ok" || st.st === "doppelt") { zeigen(""); return true; }
       if (st.st === "abgelehnt") {
         urteil("auf", "b-nein", "Nicht gebucht", st.grund + " · Karte " + kartenLabel(nr)); klingen("nein");
@@ -4774,7 +4784,7 @@ nehmeZurueck = function (id) {
     if (!ok) { db.buchungen = db.buchungen.filter(function (x) { return x !== s; }); delete stornoLaeuft[id]; melden("Nicht gespeichert"); return; }
     zeichneAlles();
     if (ohneAblage()) { delete stornoLaeuft[id]; melden(_t("Zurückgenommen")); return; }
-    bestaetigen(s.id, 8000).then(function (st) {
+    bestaetigen(s.id, 12000).then(function (st) {
       delete stornoLaeuft[id];
       if (st.st === "ok" || st.st === "doppelt") melden(_t("Zurückgenommen"));
       else if (st.st === "abgelehnt") melden("Nicht zurückgenommen: " + st.grund);
