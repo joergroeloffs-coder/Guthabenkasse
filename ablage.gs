@@ -975,7 +975,7 @@ function bericht(inhalt, ctx, a) {
   var mail = { gesendet: false, an: "" };
   if (a.mailen && BERICHT_AN) {
     try {
-      MailApp.sendEmail({ to: BERICHT_AN, subject: "Guthabenkasse – " + (b.endgueltig ? "Abschluss" : "VORLÄUFIGE Auswertung") + " " + (b.anlass || "") + " – Umsatz " + euroText(b.umsatz.netto),
+      MailApp.sendEmail({ to: BERICHT_AN, subject: "Guthabenkasse – Abrechnung " + (b.anlass || "") + " – Umsatz " + euroText(b.umsatz.netto),
                           body: berichtText(b), htmlBody: berichtHtml(b) });
       mail = { gesendet: true, an: BERICHT_AN };
     } catch (f) { mail = { gesendet: false, an: BERICHT_AN, fehler: String(f) }; }
@@ -1044,8 +1044,8 @@ function befundZeilen(b) {
 
 function berichtText(b) {
   var t = [];
-  t.push("Guthabenkasse – " + (b.endgueltig ? "Abschluss" : "VORLÄUFIGE Auswertung") + (b.anlass ? " · " + b.anlass : ""));
-  t.push("Stand der Ablage: " + b.stand + " · " + b.zeit); t.push("");
+  t.push("Guthabenkasse – Abrechnung" + (b.anlass ? " · " + b.anlass : ""));
+  t.push("Stand: " + b.zeit); t.push("");
   t.push("UMSATZ (Abbuchungen, ohne Trinkgeld): " + euroText(b.umsatz.netto));
   t.push("  abgebucht gesamt:        " + euroText(b.umsatz.brutto));
   t.push("  davon zurückgenommen:    " + euroText(b.umsatz.zurueckgenommen) + "  (" + b.stornos.anzahl + " Rücknahmen)");
@@ -1057,8 +1057,7 @@ function berichtText(b) {
   t.push("Noch auf Karten (netto):   " + euroText(b.nochAufKarten));
   t.push(""); t.push("Je Bedienung:");
   b.proBedienung.forEach(function (z) { t.push("  " + z.name + ": " + euroText(z.abgebucht) + ", Trinkgeld " + euroText(z.trinkgeld)); });
-  t.push(""); t.push("PRÜFUNG: " + statusText(b));
-  befundZeilen(b).forEach(function (z) { t.push("  - " + z); });
+  if (b.ausstehend) { t.push(""); t.push("Hinweis: " + b.ausstehend + " Buchung(en) waren auf Geräten noch nicht übertragen."); }
   return t.join("\n");
 }
 
@@ -1066,8 +1065,8 @@ function htmlSicher(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "
 
 function berichtHtml(b) {
   return "<div style=\"font-family:Georgia,serif;max-width:560px\">" +
-    "<h2 style=\"margin:0 0 4px\">Guthabenkasse – " + (b.endgueltig ? "Abschluss" : "VORLÄUFIGE Auswertung") + (b.anlass ? " · " + htmlSicher(b.anlass) : "") + "</h2>" +
-    "<div style=\"color:#57685C;font-size:12px\">Stand der Ablage " + b.stand + " · " + htmlSicher(b.zeit) + "</div>" +
+    "<h2 style=\"margin:0 0 4px\">Guthabenkasse – Abrechnung" + (b.anlass ? " · " + htmlSicher(b.anlass) : "") + "</h2>" +
+    "<div style=\"color:#57685C;font-size:12px\">Stand " + htmlSicher(b.zeit) + "</div>" +
     "<p style=\"font-size:20px;margin:14px 0 2px\"><b>Umsatz " + euroText(b.umsatz.netto) + "</b></p>" +
     "<div style=\"font-size:13px\">Abbuchungen ohne Trinkgeld, abzüglich " + b.stornos.anzahl + " Rücknahmen (" + euroText(b.umsatz.zurueckgenommen) + "). Auszahlungen von Restbeträgen ändern ihn nicht.</div>" +
     (b.gebuehr.prozent > 0 ? "<p style=\"margin:8px 0\">Gebühr " + b.gebuehr.prozent + " %: <b>" + euroText(b.gebuehr.betrag) + "</b></p>" : "") +
@@ -1076,8 +1075,7 @@ function berichtHtml(b) {
     "<tr><td>Aufgebucht</td><td style=\"text-align:right;padding-left:18px\">" + euroText(b.aufgebucht) + "</td></tr>" +
     "<tr><td>Ausgezahlt (Restbeträge)</td><td style=\"text-align:right;padding-left:18px\">" + euroText(b.ausgezahlt) + "</td></tr>" +
     "<tr><td>Noch auf Karten</td><td style=\"text-align:right;padding-left:18px\">" + euroText(b.nochAufKarten) + "</td></tr></table>" +
-    "<div style=\"background:" + (b.endgueltig ? "#D6EADB" : "#F6E3B8") + ";padding:8px 10px;border-radius:6px;font-size:13px\"><b>Prüfung:</b> " + htmlSicher(statusText(b)) + "</div>" +
-    "<ul style=\"font-size:12px;margin-top:8px\">" + befundZeilen(b).map(function (z) { return "<li>" + htmlSicher(z) + "</li>"; }).join("") + "</ul></div>";
+    (b.ausstehend ? "<p style=\"font-size:12px\">Hinweis: " + b.ausstehend + " Buchung(en) waren auf Geräten noch nicht übertragen.</p>" : "") + "</div>";
 }
 
 

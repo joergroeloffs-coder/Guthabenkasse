@@ -63,9 +63,8 @@ Die Historie wird nie verändert: Eine Rücknahme ist eine Gegenbuchung mit fest
 Am Terminal: Karten → Karte antippen → „Karte ersetzen“ (neue Nummer + Prüfnummer, Guthaben wird übertragen, alte Karte gesperrt, neue wird gedruckt) oder „Sperren“. Gesperrte Karten lehnt die Ablage bei jedem Gerät ab. Das Ersetzen braucht Verbindung.
 
 ## Abrechnung
-* **Terminal → Verwaltung → Auswerten:** Aufladungen, Abbuchungen, Rücknahmen, Trinkgeld, Restguthaben, Rückzahlungen, Korrekturen, je Gerät und Bediener, noch nicht übertragene Buchungen, Überziehungen. Ist etwas ungeklärt (Buchungen warten, ein Gerät hat nicht gemeldet, Überziehung nicht quittiert), steht **VORLÄUFIG** dabei; „Abschluss festhalten“ als endgültig geht nur ohne Offenes.
-* **Kassensturz:** Anfangsbestand, Einzahlungen, Auszahlungen, gezählter Betrag → Soll und Differenz. Geldbewegungen der Kasse sind getrennt von Korrekturen am Kartenguthaben.
-* **Verkauf → Abrechnung:** Anzahl, Betrag, Rücknahmen, Trinkgeld des eigenen Geräts, Verbindungsstatus, drucken.
+Bewusst einfach: **Terminal → Verwaltung → Auswerten** zeigt die aktuellen Zahlen aus der Ablage (Umsatz netto, Trinkgeld, noch auf Karten, aufgebucht, abgebucht, zurückgenommen, Auszahlungen, Korrekturen, je Gerät und je Bediener) und, falls Geräte noch Buchungen nicht übertragen haben, einen Hinweis. Dazu **Drucken** und **Per Mail senden**. Es gibt keinen Abschluss mit Freigabe, keinen Kassensturz und keine Quittierungen; was in der Kasse liegt, wird nicht gegengerechnet. (Die Ablage kann das technisch noch – Kassenbuch, Geräte-Meldungen, Prüfung –, die Oberfläche bietet es nicht mehr an.)
+**Verkauf → Abrechnung:** Anzahl, Betrag, Rücknahmen, Trinkgeld des eigenen Geräts, Verbindungsstatus, drucken.
 
 ## Rollen
 Die Rolle ergibt sich aus dem Zugangswort und wird **in der Ablage** geprüft, nicht nur in den Menüs: Verkauf darf abbuchen/abfragen/eigene letzte Buchung zurücknehmen; Kasse zusätzlich aufbuchen, Karten verwalten, Kassenbuch, Abschluss, Sicherung; Administrator zusätzlich Geräte, Einstellungen (Anschreiben, Offline-Limit), Wiederherstellen, neues Fest.

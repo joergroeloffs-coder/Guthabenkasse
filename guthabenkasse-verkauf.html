@@ -4962,7 +4962,7 @@ function geraeteTabelle() {
 function zeichneVerwaltung() {
   var e = document.getElementById("verwaltungInhalt"); if (!e) return;
   var b = verwaltungStand.bericht;
-  var geh = b ? berichtHtmlV2(b) : '<p class="muted">Noch nicht geladen. „Auswerten“ holt den Stand der Ablage.</p>';
+  var geh = b ? berichtHtmlV2(b) : '<p class="muted">„Auswerten“ holt die aktuellen Zahlen aus der Ablage.</p>';
   var abg = db.abgelehnt.filter(function (x) { return !x.gesehen; });
   e.innerHTML =
     '<div class="karte"><div class="titel"><h2>Abgleich und Geräte</h2></div><div class="inhalt">' +
@@ -4972,17 +4972,9 @@ function zeichneVerwaltung() {
       '<div class="reihe umbruch" style="margin-top:10px"><button class="knopf voll" id="vJetzt">Jetzt abgleichen</button><button class="knopf" id="vPruefen">Verbindung prüfen</button></div>' +
       '<div id="vMeldung" class="muted" style="margin-top:8px">' + esc(verwaltungStand.meldung) + '</div></div></div>' +
 
-    '<div class="karte"><div class="titel"><h2>Abschluss und Kassensturz</h2></div><div class="inhalt">' +
-      '<div class="reihe umbruch"><button class="knopf voll" id="vAuswerten">Auswerten</button><button class="knopf" id="vAbschlussFest">Abschluss festhalten</button><button class="knopf" id="vAbschlussDruck">Drucken</button><button class="knopf" id="vAbschlussMail">Per Mail senden</button></div>' +
-      '<div id="vBericht" style="margin-top:12px">' + geh + '</div>' +
-      '<div class="feldTitel" style="margin-top:16px">Kassensturz (Bargeld in der Kasse)</div>' +
-      '<div class="reihe umbruch" style="align-items:flex-end">' +
-        '<label class="feld" style="width:130px"><span>Anfangsbestand €</span><input id="kbAnfang" inputmode="decimal" class="mono"></label>' +
-        '<button class="knopf" id="kbAnfangBtn">Eintragen</button>' +
-        '<label class="feld" style="width:130px"><span>Einzahlung €</span><input id="kbEin" inputmode="decimal" class="mono"></label><button class="knopf" id="kbEinBtn">Eintragen</button>' +
-        '<label class="feld" style="width:130px"><span>Auszahlung €</span><input id="kbAus" inputmode="decimal" class="mono"></label><button class="knopf" id="kbAusBtn">Eintragen</button>' +
-        '<label class="feld" style="width:130px"><span>Gezählt €</span><input id="kbZaehl" inputmode="decimal" class="mono"></label><button class="knopf voll" id="kbZaehlBtn">Zählung eintragen</button>' +
-      '</div><p class="muted">Das sind Geldbewegungen der Kasse. Korrekturen am Guthaben einer Karte stehen nicht hier, sondern in deren Verlauf.</p></div></div>' +
+    '<div class="karte"><div class="titel"><h2>Abrechnung</h2></div><div class="inhalt">' +
+      '<div class="reihe umbruch"><button class="knopf voll" id="vAuswerten">Auswerten</button><button class="knopf" id="vAbschlussDruck">Drucken</button><button class="knopf" id="vAbschlussMail">Per Mail senden</button></div>' +
+      '<div id="vBericht" style="margin-top:12px">' + geh + '</div></div></div>' +
 
     '<div class="karte"><div class="titel"><h2>Sicherungen</h2></div><div class="inhalt">' +
       '<div class="reihe umbruch"><button class="knopf voll" id="sNeu">Sicherung der Ablage jetzt</button><button class="knopf" id="sListe">Liste laden</button><button class="knopf" id="sLokal">Datei auf dieses Gerät speichern</button></div>' +
@@ -5008,25 +5000,13 @@ function zeichneVerwaltung() {
 function geldFeld(id) { var c = centAus(document.getElementById(id).value); return isNaN(c) ? null : c; }
 
 function berichtHtmlV2(b) {
-  var k = b.kasse || {};
   return '<div class="zahlen"><div><b>' + eur(b.umsatz.netto) + '</b><span>Umsatz (netto)</span></div><div><b>' + eur(b.trinkgeld) + '</b><span>Trinkgeld</span></div><div><b>' + eur(b.nochAufKarten) + '</b><span>noch auf Karten</span></div></div>' +
-    '<p style="margin:10px 0" class="' + (b.endgueltig ? "s-ok" : "s-warte") + '"><b>' + (b.endgueltig ? "Endgültig möglich" : "Vorläufig") + '</b>' + (b.gruende.length ? ' – ' + esc(b.gruende.join("; ")) : '') + '</p>' +
-    '<table class="tab"><tr><td>Aufgebucht</td><td class="n">' + eur(b.aufgebucht) + '</td></tr><tr><td>Abgebucht gesamt</td><td class="n">' + eur(b.umsatz.brutto) + '</td></tr><tr><td>Zurückgenommen (' + b.stornos.anzahl + ')</td><td class="n">' + eur(b.umsatz.zurueckgenommen) + '</td></tr>' +
+    (b.ausstehend ? '<p class="muted" style="margin:8px 0">Hinweis: ' + b.ausstehend + ' Buchung(en) sind auf Geräten noch nicht übertragen und fehlen hier noch.</p>' : '') +
+    '<table class="tab" style="margin-top:10px"><tr><td>Aufgebucht</td><td class="n">' + eur(b.aufgebucht) + '</td></tr><tr><td>Abgebucht gesamt</td><td class="n">' + eur(b.umsatz.brutto) + '</td></tr><tr><td>Zurückgenommen (' + b.stornos.anzahl + ')</td><td class="n">' + eur(b.umsatz.zurueckgenommen) + '</td></tr>' +
     '<tr><td>Ausgezahlte Restbeträge</td><td class="n">' + eur(b.ausgezahlt) + '</td></tr><tr><td>Korrekturen am Guthaben</td><td class="n">' + eur(b.korrekturen) + '</td></tr><tr><td>Auf Karten im Minus</td><td class="n">' + eur(b.minus) + '</td></tr></table>' +
-    '<div class="feldTitel" style="margin-top:10px">Meldung der Geräte</div><div class="rolle"><table class="tab"><tr><th>Gerät</th><th>letzte Nr.</th><th>Meldung</th><th></th></tr>' +
-      ((b.pruefung && b.pruefung.geraete) || []).map(function (g) {
-        var ok = g.passt, t = ok ? "stimmt" : (g.gemeldet ? "stimmt nicht (meldet " + g.gemeldetN + ")" : "fehlt");
-        return '<tr><td><b>' + esc(g.geraet) + '</b></td><td>' + g.letzte + '</td><td class="' + (ok ? "s-ok" : "s-fehler") + '">' + (ok ? "● " : "○ ") + t + '</td><td>' +
-          (ok ? '' : '<button class="knopf klein" data-gabschl="' + esc(g.geraet) + '">als abgeschlossen übernehmen</button>') + '</td></tr>';
-      }).join("") + '</table></div>' +
-      '<p class="muted" style="margin:4px 0 0">Ein Gerät meldet sich von selbst, solange es online ist (Programm geöffnet, alle 15 Sekunden). Ein Gerät, das nicht mehr erreichbar ist, kann hier mit seinem Stand in der Ablage abgeschlossen werden.</p>' +
     '<div class="feldTitel" style="margin-top:10px">Je Gerät</div><table class="tab">' + b.proGeraet.map(function (g) { return '<tr><td>' + esc(g.geraet + " " + g.name) + '</td><td class="n">' + eur(g.abgebucht) + '</td><td class="n">TG ' + eur(g.trinkgeld) + '</td></tr>'; }).join("") + '</table>' +
     '<div class="feldTitel" style="margin-top:10px">Je Bediener</div><table class="tab">' + b.proBedienung.map(function (g) { return '<tr><td>' + esc(g.name) + '</td><td class="n">' + eur(g.abgebucht) + '</td><td class="n">TG ' + eur(g.trinkgeld) + '</td></tr>'; }).join("") + '</table>' +
-    '<div class="feldTitel" style="margin-top:10px">Kassensturz</div><table class="tab"><tr><td>Anfangsbestand</td><td class="n">' + eur(k.anfang) + '</td></tr><tr><td>Aufladungen (bar)</td><td class="n">' + eur(k.aufladungen) + '</td></tr><tr><td>Rückzahlungen Restguthaben</td><td class="n">-' + eur(k.auszahlungenRest) + '</td></tr><tr><td>Einzahlungen / Auszahlungen</td><td class="n">' + eur(k.einzahlungen) + ' / -' + eur(k.auszahlungen) + '</td></tr><tr><td><b>Soll</b></td><td class="n"><b>' + eur(k.soll) + '</b></td></tr><tr><td>Gezählt</td><td class="n">' + (k.gezaehlt === null ? "–" : eur(k.gezaehlt)) + '</td></tr><tr><td><b>Differenz</b></td><td class="n"><b>' + (k.differenz === null ? "–" : eur(k.differenz)) + '</b></td></tr></table>' +
-    (b.ueberziehungen.length ? '<div class="hinweis" style="margin-top:10px">Überziehungen durch Offline-Buchungen:<br>' + b.ueberziehungen.map(function (u) { return esc(u.karte + " " + euro(u.cent) + " · Gerät " + u.geraet + (u.quittiert ? " · quittiert" : " · OFFEN")); }).join("<br>") + (b.ueberziehungen.some(function (u) { return !u.quittiert; }) ? '<br><button class="knopf klein" id="vQuittieren">Alle quittieren</button>' : '') + '</div>' : '') +
-    (b.verworfen && b.verworfen.length ? '<div class="hinweis" style="margin-top:10px">Von der Ablage abgelehnte Buchungen: ' + b.verworfen.length + '</div>' : '') +
-    (b.pruefung && !b.pruefung.unveraendert ? '<div class="hinweis" style="margin-top:10px"><b>Prüfung' + (b.pruefung.befundOffen ? ' – nicht quittiert' : ' – quittiert' + (b.pruefung.quittiertText ? ': ' + esc(b.pruefung.quittiertText) : '')) + ':</b><br>' + b.pruefung.luecken.map(function (l) { return "Gerät " + esc(l.geraet) + ": Nummern " + l.von + "–" + l.bis + " fehlen"; }).join("<br>") + b.pruefung.kette.map(function (l) { return "Gerät " + esc(l.geraet) + ": Prüfsumme bei " + l.n + " passt nicht"; }).join("<br>") + (b.vermerke || []).slice(-8).map(function (v) { return "<br>" + esc(v.zeit.slice(0, 16).replace("T", " ") + " · " + v.text); }).join("") + (b.pruefung.befundOffen ? '<br><button class="knopf klein" id="vBefund">Auffälligkeiten quittieren (Administrator)</button>' : '') + '</div>' : '') +
-    '<p class="muted">Stand ' + esc(String(b.stand)) + ' · ' + esc(zeitpunkt(Date.parse(b.zeit))) + '</p>';
+    '<p class="muted">Stand ' + esc(zeitpunkt(Date.parse(b.zeit))) + '</p>';
 }
 function sicherungsListeHtml() {
   var l = verwaltungStand.sicherungen;
@@ -5038,11 +5018,9 @@ function sicherungsListeHtml() {
 }
 
 function berichtDruckenV2(b) {
-  var k = b.kasse || {};
   $("bogen").className = "";
-  $("bogen").innerHTML = '<div style="font-family:Georgia,serif;padding:16mm;font-size:13px"><h1 style="margin:0">' + (b.endgueltig ? "Abschluss" : "VORLÄUFIGE Auswertung") + '</h1><p>' + esc(b.anlass || "") + ' · ' + esc(zeitpunkt(Date.parse(b.zeit))) + ' · Stand ' + b.stand + '</p>' +
-    '<p><b>Umsatz ' + euro(b.umsatz.netto) + '</b> · Trinkgeld ' + euro(b.trinkgeld) + ' · noch auf Karten ' + euro(b.nochAufKarten) + '</p>' +
-    '<p>' + (b.endgueltig ? "Alles übertragen, nichts offen." : "VORLÄUFIG: " + esc(b.gruende.join("; "))) + '</p>' + berichtHtmlV2(b).replace(/<button[^>]*>.*?<\/button>/g, "") + '</div>';
+  $("bogen").innerHTML = '<div style="font-family:Georgia,serif;padding:16mm;font-size:13px"><h1 style="margin:0">Abrechnung</h1><p>' + esc(b.anlass || "") + ' · ' + esc(zeitpunkt(Date.parse(b.zeit))) + '</p>' +
+    '<p><b>Umsatz ' + euro(b.umsatz.netto) + '</b> · Trinkgeld ' + euro(b.trinkgeld) + ' · noch auf Karten ' + euro(b.nochAufKarten) + '</p>' + berichtHtmlV2(b) + '</div>';
   setTimeout(function () { window.print(); }, 80);
 }
 function berichtHolen(mailen) {
@@ -5064,12 +5042,6 @@ function v2Verwaltung(e) {
   if (knopf.getAttribute("data-gesehen")) { db.abgelehnt.forEach(function (x) { x.gesehen = true; }); sichern(); zeichneVerwaltung(); zeichneMeine(); zeichneStatus(); return; }
   if (knopf.getAttribute("data-modus")) { db.modus = knopf.getAttribute("data-modus"); sichern(); zeichneEinstellungen(); return; }
   if (knopf.getAttribute("data-tm")) { trinkModusSetzen(knopf.getAttribute("data-tm")); return; }
-  if (knopf.getAttribute("data-gabschl")) {
-    var gid = knopf.getAttribute("data-gabschl");
-    if (!confirm("Gerät " + gid + " mit dem Stand übernehmen, den die Ablage von ihm hat?\n\nBuchungen, die dieses Gerät noch nicht übertragen hat, würden danach nicht mehr erscheinen. Nur wählen, wenn das Gerät wirklich nicht mehr gebraucht wird.")) return;
-    rufeAblage({ aktion: "quittieren", was: "geraet", id: gid }).then(function (a) { vMeld(a.ok ? "Gerät " + gid + " abgeschlossen übernommen" : (a.fehler || "?")); return berichtHolen(false); }).then(null, function (f) { vMeld("Keine Verbindung: " + f.message); });
-    return;
-  }
   if (knopf.getAttribute("data-gentf")) { geraetEntfernen(knopf.getAttribute("data-gentf")); return; }
   if (knopf.getAttribute("data-wiederher")) { wiederherstellen(knopf.getAttribute("data-wiederher")); return; }
   if (!id) return;
@@ -5081,19 +5053,6 @@ function v2Verwaltung(e) {
     case "vAuswerten": ab(berichtHolen(false)); break;
     case "vAbschlussMail": ab(berichtHolen(true)); break;
     case "vAbschlussDruck": if (verwaltungStand.bericht) berichtDruckenV2(verwaltungStand.bericht); else vMeld("Erst auswerten"); break;
-    case "vAbschlussFest": ab(rufeAblage({ aktion: "abschluss" }).then(function (a) {
-      if (a.ok) { verwaltungStand.bericht = a.bericht; vMeld("Abschluss " + a.nr + (a.endgueltig ? " endgültig festgehalten" : " vorläufig festgehalten")); zeichneVerwaltung(); }
-      else { if (a.bericht) { verwaltungStand.bericht = a.bericht; zeichneVerwaltung(); } vMeld((a.fehler || "Nicht möglich") + (a.gruende ? " – " + a.gruende.join("; ") : "")); }
-    })); break;
-    case "vQuittieren": ab(rufeAblage({ aktion: "quittieren", was: "ueberziehung" }).then(function () { return berichtHolen(false); })); break;
-    case "vBefund":
-      var bt = prompt("Auffälligkeiten als geprüft quittieren – kurze Begründung (z. B. „Testbuchungen, alte Geräte“):"); if (bt === null) break;
-      var aw = adminWort("Auffälligkeiten quittieren"); if (!aw) break;
-      ab(rufeAblage({ aktion: "quittieren", was: "befund", text: bt }, aw).then(function (a) { vMeld(a.ok ? "Quittiert" : (a.fehler || "?")); return berichtHolen(false); })); break;
-    case "kbAnfangBtn": kassenEintrag("anfang", "kbAnfang"); break;
-    case "kbEinBtn": kassenEintrag("einzahlung", "kbEin"); break;
-    case "kbAusBtn": kassenEintrag("auszahlung", "kbAus"); break;
-    case "kbZaehlBtn": kassenEintrag("zaehlung", "kbZaehl"); break;
     case "sNeu": ab(rufeAblage({ aktion: "sicherung", was: "erstellen" }).then(function (a) { vMeld(a.ok ? "Gesichert: " + a.name : (a.fehler || "?")); return sicherungenLaden(); })); break;
     case "sListe": ab(sicherungenLaden()); break;
     case "sLokal": sicherungSpeichern(); break;
@@ -5105,13 +5064,6 @@ function v2Verwaltung(e) {
       db.ops = []; db.opsFehler = ""; db.karten = {}; db.geloescht = {}; db.cursor = 0; db.kv = 0; sichern();
       vMeld("Lädt neu …"); ab(syncJetzt(15000).then(function (a) { vMeld(a && a.ok ? "Neu geladen: " + Object.keys(db.karten).length + " Karten" : "Nicht möglich: " + (a && a.fehler)); zeichneAlles(); zeichneVerwaltung(); })); break;
   }
-}
-function kassenEintrag(art, feld) {
-  var c = geldFeld(feld);
-  if (c === null || c < 0) { vMeld("Betrag fehlt oder ist ungültig"); return; }
-  var e = { id: "kb-" + neueId(), art: art, cent: c, wer: db.bediener || "" };
-  rufeAblage({ aktion: "kassenbuch", eintrag: e }).then(function (a) { if (a.ok) { document.getElementById(feld).value = ""; vMeld("Eingetragen"); berichtHolen(false); } else vMeld(a.fehler || "?"); })
-    .then(null, function (f) { vMeld("Keine Verbindung: " + f.message); });
 }
 function sicherungenLaden() {
   return rufeAblage({ aktion: "sicherung", was: "liste" }).then(function (a) { if (a.ok) { verwaltungStand.sicherungen = a.liste; var k = document.getElementById("sListeKasten"); if (k) k.innerHTML = sicherungsListeHtml(); } else vMeld(a.fehler || "?"); });
