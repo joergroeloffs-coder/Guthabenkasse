@@ -8,11 +8,11 @@ const NAVY = '#001D61', CREME = '#FBF6E6', GOLD = '#C9A24A';
 
 const vogel = (x, y, s = 1, f = NAVY) => `<path d="M${x - 2.2 * s} ${y + .6 * s} Q${x - 1.1 * s} ${y - 1.2 * s} ${x} ${y} Q${x + 1.1 * s} ${y - 1.2 * s} ${x + 2.2 * s} ${y + .6 * s}" fill="none" stroke="${f}" stroke-width="${.35 * s}" stroke-linecap="round"/>`;
 const ornament = (y, f) => `<g stroke="${f}" stroke-width=".25" fill="${f}"><path d="M27 ${y}H41M47 ${y}H61"/><path d="M44 ${y - 1.2}L45.2 ${y}L44 ${y + 1.2}L42.8 ${y}Z"/><circle cx="41.9" cy="${y}" r=".35"/><circle cx="46.1" cy="${y}" r=".35"/></g>`;
-const fuss = (f1, f2) => `<rect x="0" y="45.2" width="88" height="11.8" fill="${NAVY}" opacity=".82"/>
+const fuss = (f1, f2) => `<rect x="0" y="41.2" width="88" height="15.8" fill="${NAVY}" opacity=".86"/>
   <g font-family="Liberation Sans, Arial, sans-serif" text-anchor="middle" fill="${f1}">
-    <text x="44" y="48.6" font-size="2.05" font-weight="700" letter-spacing=".25">GUTHABENKARTE · GIFT CARD</text>
-    <text x="44" y="51.1" font-size="1.75" fill="${f2}">Restguthaben wird am Ende des Abends an der Kasse zurückgezahlt.</text>
-    <text x="44" y="53.2" font-size="1.75" fill="${f2}">Any remaining balance is refunded at the till at the end of the evening.</text>
+    <text x="44" y="44.7" font-size="2.1" font-weight="700" letter-spacing=".3" fill="${GOLD}">GUTHABENKARTE · GIFT CARD</text>
+    <text x="44" y="48.5" font-size="3.1" font-weight="700">Restguthaben zurück an der Kasse</text>
+    <text x="44" y="51.6" font-size="2.8" fill="${f2}">Unspent balance refunded at the till</text>
   </g>`;
 
 // Das kleine „OLDSUM / FÖHR“ im Original ist zu klein aufgelöst; es wird sauber nachgesetzt.
@@ -44,7 +44,7 @@ const szenen = {
   <path d="M0 37 Q24 31 50 35 T88 32.5 V57 H0Z" fill="#86B06B"/><path d="M0 42 Q30 36.5 58 40.5 T88 38.5 V57 H0Z" fill="#5E9150"/>
   <g stroke="#4B7E41" stroke-width=".25" opacity=".7"><path d="M5 46H20M30 44.5H46M56 43H78M12 50H34M48 48.6H70"/></g>
   <!-- Friesenhaus mit Reetdach -->
-  <g>
+  <g transform="translate(0,-3.2)">
     <rect x="9.5" y="34" width="24.5" height="9.5" fill="#FBF8EE"/><rect x="9.5" y="42.4" width="24.5" height="1.1" fill="#CBBF9E"/>
     <path d="M6 35.2 L21.75 23.6 L37.5 35.2 L35.4 36.6 L21.75 26.6 L8.1 36.6Z" fill="#6F5130"/>
     <path d="M6.6 36 L21.75 24.6 L36.9 36 L34.8 37.4 L21.75 27.7 L8.7 37.4Z" fill="#8F6B3E"/>
@@ -55,7 +55,7 @@ const szenen = {
     <rect x="19.4" y="37" width="4.2" height="6.4" fill="#2E6B4B"/><circle cx="22.8" cy="40.3" r=".3" fill="#E8C96A"/>
     <g fill="#E58AA3"><circle cx="9" cy="42" r=".7"/><circle cx="10.2" cy="40.6" r=".7"/><circle cx="35" cy="41.6" r=".7"/><circle cx="36" cy="40" r=".7"/></g>
   </g>
-  <g><ellipse cx="62" cy="41.4" rx="3" ry="1.9" fill="#fff"/><ellipse cx="65.2" cy="40.2" rx="1.1" ry="1.2" fill="#3a3a3a"/><path d="M60 43V44.8M63.6 43V44.8" stroke="#3a3a3a" stroke-width=".35"/>
+  <g transform="translate(0,-3.2)"><ellipse cx="62" cy="41.4" rx="3" ry="1.9" fill="#fff"/><ellipse cx="65.2" cy="40.2" rx="1.1" ry="1.2" fill="#3a3a3a"/><path d="M60 43V44.8M63.6 43V44.8" stroke="#3a3a3a" stroke-width=".35"/>
     <ellipse cx="73" cy="43.8" rx="3.2" ry="2" fill="#fff"/><ellipse cx="76.4" cy="42.5" rx="1.15" ry="1.25" fill="#3a3a3a"/><path d="M71 45.6V47.4M74.8 45.6V47.4" stroke="#3a3a3a" stroke-width=".35"/></g>
   ${vogel(48, 27, 1)}${vogel(55, 25, .75)}${vogel(40, 29, .6)}
   ${logoNavy}${ornament(17.6, NAVY)}${fuss(CREME, '#E8DFC2')}` },
