@@ -338,6 +338,10 @@ function sync(inhalt, ctx, a) {
   var gf = geraetPruefen(inhalt, ctx, a.geraet);
   if (gf) return gf;
   var g = a.geraet.id, ergebnisse = {};
+  if (a.meldung && typeof a.meldung === "object") {
+    inhalt.meldungen[g] = { n: Number(a.meldung.n) || 0, k: String(a.meldung.k || ""), zeit: new Date(ctx.jetzt).toISOString() };
+    ctx.geaendert = true;
+  }
   var neu = Array.isArray(a.neu) ? a.neu : [];
   neu.sort(function (x, y) { return (x.n || 0) - (y.n || 0) || (x.zeit || 0) - (y.zeit || 0); });
   for (var i = 0; i < neu.length; i++) {

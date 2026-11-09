@@ -9,9 +9,9 @@ const schicht = lies('quelle/v2-schicht.js');
 
 const css = `
 .syncChip{display:inline-block;font-size:12px;padding:3px 9px;border-radius:99px;background:rgba(255,255,255,.12);color:#fff;white-space:nowrap;font-weight:600}
-.syncChip.s-ok{background:#2f6b44}.syncChip.s-warte{background:#8a6a12}.syncChip.s-offline{background:#8a4a12}.syncChip.s-fehler{background:#9a2b22}.syncChip.s-aus{background:#555}
+.syncChip.s-ok{background:#2f6b44}.syncChip.s-warte{background:#8a6a12}.syncChip.s-offline{background:#8a4a12}.syncChip.s-fehler{background:#9a2b22}.syncChip.s-aus{background:#555}.syncChip.s-ok,.syncChip.s-warte,.syncChip.s-offline,.syncChip.s-fehler,.syncChip.s-aus{color:#fff}
 .s-ok{color:#1f6b3f}.s-warte{color:#8a6a12}.s-offline{color:#a0560f}.s-fehler{color:#9a2b22}
-table.tab{width:100%;border-collapse:collapse;font-size:13px}table.tab td,table.tab th{padding:5px 6px;border-bottom:1px solid var(--linieFein);text-align:left;vertical-align:top}table.tab td.n{text-align:right;white-space:nowrap}
+div.rolle{overflow-x:auto}table.tab{width:100%;border-collapse:collapse;font-size:13px}table.tab td,table.tab th{padding:5px 6px;border-bottom:1px solid var(--linieFein);text-align:left;vertical-align:top}table.tab td.n{text-align:right;white-space:nowrap}
 .schmalKopf .syncChip{font-size:11px;padding:2px 7px}
 details.mehr{margin-top:14px}details.mehr>summary{cursor:pointer;font-weight:600;padding:8px 0}
 @media print{#syncChip,#syncChip2{display:none}}
@@ -32,7 +32,7 @@ function bau(modus) {
   ersetze('</style>\n</head>', css + '</style>\n</head>');
   // Statusanzeige in Kopf und schmaler Leiste
   ersetze('<span class="schmalFassung" id="schmalFassung"></span>', '<span class="schmalFassung" id="schmalFassung"></span><span class="syncChip" id="syncChip2"></span>');
-  ersetze('<div class="kopfZahl">', '<div class="kopfZahl"><span class="syncChip" id="syncChip" style="margin-bottom:4px"></span>');
+  ersetze('<span class="version" id="version"></span>', '<span class="version" id="version"></span> <span class="syncChip" id="syncChip"></span>');
   ersetze('<div class="marke">Fering Vereinsmanager · Guthabenkasse', '<div class="marke">Fering Vereinsmanager · ' + (modus === 'terminal' ? 'Guthabenkasse Terminal' : 'Guthabenkasse Verkauf'));
 
   // Reiter
@@ -78,6 +78,7 @@ function bau(modus) {
   ersetze('<div class="reihe" style="margin-top:10px">\n        <label class="feld grow"><span>Abgleich</span>', '<details class="mehr"><summary>Erweitert: von Hand abgleichen</summary>\n      <div class="reihe" style="margin-top:10px">\n        <label class="feld grow"><span>Abgleich</span>');
   ersetze('<button class="knopf" id="btnWolkePruefen">Verbindung prüfen</button>\n      </div>', '<button class="knopf" id="btnWolkePruefen">Verbindung prüfen</button>\n      </div></details>');
   if (modus === 'verkauf') {
+    ersetze('</style>\n</head>', '.kopfZahl b,.kopfZahl .fassung{display:none}.kopfZahl>span:not(.syncChip){display:none}</style>\n</head>');
     // Name der Bedienung ist hier wichtig (steht in der Abrechnung); Karten-Dinge gibt es nicht
   }
   ersetze('Einrichtung steht oben in der Datei\n        <span class="mono">ablage.gs</span>.', 'Einrichtung: Datei <span class="mono">ablage.gs</span>.');

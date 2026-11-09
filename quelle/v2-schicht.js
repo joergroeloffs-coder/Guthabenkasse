@@ -48,7 +48,8 @@ neueId = function () {
 var idbRef = null, idbEinmal = 0;
 var speicherZustand = { ls: true, idb: null };
 var KEY_ALT = "guthabenkasse.v1";
-KEY = "guthabenkasse." + MODUS + ".v2";
+/* Das Terminal behält den Speicherort der bisherigen Guthabenkasse: Karten und Guthaben sind sofort da. */
+KEY = MODUS === "terminal" ? "guthabenkasse.v1" : "guthabenkasse.verkauf.v2";
 
 function idbOeffnen(fertig) {
   try {
@@ -97,7 +98,7 @@ sichern = function () {
 function sichernBestaetigt() {
   var ok = sichern(), w = sichern.letzter;
   return new Promise(function (resolve) {
-    if (!idbRef) { resolve(ok); return; }
+    if (ok || !idbRef) { resolve(ok); return; }   /* der Browserspeicher hat bestätigt: gespeichert */
     if (w.idb !== null) { resolve(ok || w.idb); return; }
     var fertig = false, t = setTimeout(function () { if (!fertig) { fertig = true; resolve(ok); } }, 2000);
     w.fertig.push(function () { if (fertig) return; fertig = true; clearTimeout(t); resolve(ok || w.idb); });
@@ -130,9 +131,6 @@ laden = function () {
   var roh = null;
   try { roh = localStorage.getItem(KEY); } catch (e) { nurImSpeicher = true; }
   var von = "";
-  if (!roh && MODUS === "terminal") {
-    try { roh = localStorage.getItem(KEY_ALT); if (roh) von = "alt"; } catch (e) {}
-  }
   var d = null;
   if (roh) {
     try { d = JSON.parse(roh); } catch (e) { d = null; }
@@ -141,7 +139,7 @@ laden = function () {
     }
   }
   db = d ? migriere(d) : leereDaten();
-  if (von === "alt") { db.migriert = true; v2Meldung = "Bestand aus der bisherigen Guthabenkasse übernommen."; }
+  if (d && d.v2Start === undefined && d.buchungen && d.buchungen.length) { db.migriert = true; v2Meldung = "Bestand aus der bisherigen Guthabenkasse übernommen: " + d.buchungen.length + " Buchungen, " + Object.keys(d.karten || {}).length + " Karten."; }
   v2Felder(db);
 };
 var v2Meldung = "";
@@ -187,7 +185,8 @@ function syncSchleife(ms) {
 function syncEinmal(ms) {
   if (!wolkeBereit()) return Promise.resolve({ keine: true, ergebnisse: {} });
   var neu = ausstehende().slice(0, 150).map(function (b) { var c = {}; for (var k in b) c[k] = b[k]; return c; });
-  var req = { aktion: "sync", wort: db.ablage.wort, geraet: geraetInfo(), neu: neu, cursor: db.cursor || 0, kv: db.kv || 0 };
+  var kz = (db.kette && db.kette[db.geraet]) || { n: 0, k: "" };
+  var req = { aktion: "sync", wort: db.ablage.wort, geraet: geraetInfo(), neu: neu, cursor: db.cursor || 0, kv: db.kv || 0, meldung: { n: kz.n, k: kz.k } };
   sync.laeuft = true; zeichneStatus();
   return Promise.race([wolkeRufen(req), nachZeit(ms || 15000)]).then(function (a) {
     sync.laeuft = false; sync.online = true;
@@ -199,7 +198,12 @@ function syncEinmal(ms) {
     sync.letzter = Date.now(); db.letzterAbgleich = sync.letzter;
     var n = verarbeiteSync(a, neu);
     a.angenommen = n; a.ok = true;
-    return sichernBestaetigt().then(function () { zeichneAlles(); zeichneStatus(); opsSenden(); return a; });
+    return sichernBestaetigt().then(function () {
+      zeichneAlles(); zeichneStatus(); opsSenden();
+      /* Waren Buchungen dabei und ist nun nichts mehr offen, die Ablage das gleich wissen lassen */
+      if (neu.length && !ausstehende().length) setTimeout(function () { syncJetzt(10000); }, 400);
+      return a;
+    });
   }).catch(function (f) {
     sync.laeuft = false; sync.online = false; sync.fehler = String(f && f.message || f);
     zeichneStatus();
@@ -385,6 +389,7 @@ var buchtGerade = false, letzteBuchung = { roh: "", zeit: 0, cent: 0, tab: "" },
 
 function aktuellerModus() {
   if (db.modus === "schnell" || db.modus === "sicher") return db.modus;
+  if (ohneAblage()) return "schnell";
   var n = db.erfahren[db.bediener || "-"] || 0;
   return n >= 10 ? "schnell" : "sicher";
 }
@@ -770,14 +775,14 @@ function geraeteTabelle() {
   var liste = (db.geraeteListe || []).slice();
   var mich = liste.filter(function (g) { return g.id === db.geraet; })[0];
   if (!mich) liste.push({ id: db.geraet, name: db.geraetName || ("Gerät " + db.geraet), bediener: db.bediener, aufgabe: "Terminal", zuletzt: null, online: sync.online === true, ausstehend: ausstehende().length, fehler: "" });
-  return '<table class="tab"><tr><th>Gerät</th><th>Bediener</th><th>Aufgabe</th><th>Zuletzt verbunden</th><th>Offen</th><th>Fehler</th></tr>' +
+  return '<div class="rolle"><table class="tab"><tr><th>Gerät</th><th>Bediener</th><th>Aufgabe</th><th>Zuletzt verbunden</th><th>Offen</th><th>Fehler</th></tr>' +
     liste.map(function (g) {
       var mir = g.id === db.geraet;
       var on = mir ? sync.online === true : g.online;
       return '<tr><td><b>' + esc(g.id) + '</b> ' + esc(g.name || "") + (mir ? ' (dieses)' : '') + '</td><td>' + esc(g.bediener || "–") + '</td><td>' + esc(g.aufgabe || "") + '</td><td>' +
         (g.zuletzt ? esc(zeitpunkt(Date.parse(g.zuletzt))) : "–") + ' <span class="' + (on ? "s-ok" : "s-offline") + '">' + (on ? "● online" : "○ zuletzt") + '</span></td><td>' + (mir ? ausstehende().length : g.ausstehend) +
         '</td><td>' + esc(mir ? (sync.fehler || sync.serverFehler || "") : g.fehler || "") + '</td></tr>';
-    }).join("") + '</table>';
+    }).join("") + '</table></div>';
 }
 
 function zeichneVerwaltung() {

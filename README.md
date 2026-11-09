@@ -1,3 +1,11 @@
+# Guthabenkasse 2.0 — Terminal und Verkauf
+
+Seit Fassung 2.0 gibt es zwei Programme mit gemeinsamem Bestand: **`guthabenkasse-terminal.html`** (Aufbuchen, Abbuchen, Karten, Verwaltung, Abschluss) und **`guthabenkasse-verkauf.html`** (nur Abbuchen und Abfragen). Einrichtung, Offline-Strategie, Rollen, Sicherungen und Einschränkungen: [docs/EINRICHTUNG-V2.md](docs/EINRICHTUNG-V2.md). Testbericht: [docs/TESTBERICHT-V2.md](docs/TESTBERICHT-V2.md). Konzept: [docs/BESTAND-UND-KONZEPT.md](docs/BESTAND-UND-KONZEPT.md).
+
+Die Ablage `ablage.gs` ist neu (Version 2, Rollen über drei Zugangswörter) und muss neu veröffentlicht werden.
+
+---
+
 # Guthabenkasse
 
 Wertkarten mit QR-Code für Feste: Eine laminierte Karte trägt nur eine
