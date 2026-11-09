@@ -100,4 +100,16 @@ await T3.evaluate(() => { reiterZeigen('verwaltung'); }); await w(T3, 300);
 await T3.evaluate(() => document.getElementById('vNeuLaden').click()); await w(T3, 2500);
 t('Neu laden holt Karten', await T3.evaluate(() => Object.keys(db.karten).length) >= 2);
 t('Neu laden: Guthaben sichtbar', await T3.evaluate(() => Object.keys(salden()).some(k => salden()[k] > 0)));
+// Bestehende Karten nochmal drucken: gleiche Nummern, Namen und Prüfnummern; Altkarten bleiben Altkarten
+await T.evaluate(() => { window.__d = []; window.drucken = function (h) { window.__d.push(h); }; });
+await T.evaluate(() => { kartenBlatt(['T0201', 'T0202']); db.karten.T0201.name = 'Anna'; db.karten.T0202.status = 'gesperrt'; db.karten.A0900 = { nr: 'A0900', ts: 1 }; sichern(); });
+const opsVor = await T.evaluate(() => db.ops.length), codeVor = await T.evaluate(() => db.karten.T0201.code);
+await T.evaluate(() => { document.getElementById('bVon').value = ''; document.getElementById('bBis').value = ''; document.getElementById('bDruck').click(); });
+const html = await T.evaluate(() => window.__d.join('')); 
+t('Nochmal drucken: Karte T0201 dabei', html.includes('T0201'));
+t('Nochmal drucken: gesperrte Karte nicht', !html.includes('T0202'));
+t('Nochmal drucken: Altkarte ohne Prüfnummer bleibt ohne', await T.evaluate(() => !db.karten.A0900.code) && html.includes('A0900'));
+t('Nochmal drucken: Prüfnummer unverändert, keine neuen Aufträge', await T.evaluate(() => db.karten.T0201.code) === codeVor && await T.evaluate(() => !db.ops.some(o => JSON.stringify(o).includes('A0900'))));
+await T.evaluate(() => { window.__d = []; document.getElementById('bVon').value = 'T0201'; document.getElementById('bBis').value = 'T0201'; document.getElementById('bDruck').click(); });
+t('Nochmal drucken: Bereich', (await T.evaluate(() => window.__d.join(''))).includes('T0201') && !(await T.evaluate(() => window.__d.join(''))).includes('A0900'));
 console.log('Seitenfehler:', A.steuer.log.length ? A.steuer.log : 'keine'); console.log(ok + ' ok, ' + bad + ' Fehler'); await A.ende();

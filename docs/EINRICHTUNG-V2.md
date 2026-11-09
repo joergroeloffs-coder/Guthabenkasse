@@ -62,6 +62,9 @@ Wie 3, mit **anderem** Gerätezeichen (z. B. `W`). Insgesamt sind höchstens dre
 ## Rücknahme (Storno)
 Die Historie wird nie verändert: Eine Rücknahme ist eine Gegenbuchung mit fester Kennung `st-<Buchung>`, sie wirkt höchstens einmal (auch bei Doppelklick oder zwei Geräten). Eine Rücknahme lässt sich nicht zurücknehmen. Gerät, Bediener und Zeit stehen dabei. Das Verkaufsgerät darf nur seine **eigene letzte** Abbuchung innerhalb von 2 Minuten zurücknehmen. (Die frühere Funktion `nehmeZurueck()` konnte dieselbe Buchung mehrfach zurücknehmen; das ist behoben.)
 
+## Bestehende Karten nochmal drucken
+Terminal → Karten → **Bestehende Karten nochmal drucken**: Von/Bis (leer = alle aktiven Karten), optional nur Karten mit Guthaben. Nummer, Name und Prüfnummer bleiben; gesperrte und gelöschte Karten werden ausgelassen. Einzelne Karten: Karte antippen → „Karte nochmal drucken“.
+
 ## Karte ersetzen / sperren
 Am Terminal: Karten → Karte antippen → „Karte ersetzen“ (neue Nummer + Prüfnummer, Guthaben wird übertragen, alte Karte gesperrt, neue wird gedruckt) oder „Sperren“. Gesperrte Karten lehnt die Ablage bei jedem Gerät ab. Das Ersetzen braucht Verbindung.
 

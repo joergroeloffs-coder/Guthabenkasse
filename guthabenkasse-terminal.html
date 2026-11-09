@@ -742,6 +742,11 @@ details.mehr{margin-top:14px}details.mehr>summary{cursor:pointer;font-weight:600
         Nummer wird nicht neu vergeben. Eine einzelne Karte löschen Sie in der Liste unten: Nummer antippen.</p>
     </div></div>
 
+  <div class="karte"><div class="titel"><h2>Bestehende Karten nochmal drucken</h2></div><div class="inhalt">
+      <p class="muted" style="margin-top:0">Von und Bis leer lassen: alle aktiven Karten. Die Karten behalten Nummer, Name und Prüfnummer; gesperrte und gelöschte werden nicht gedruckt.</p>
+      <div class="reihe umbruch" style="align-items:flex-end"><label class="feld" style="width:130px"><span>Von</span><input id="bVon" class="mono" placeholder="T0001" autocomplete="off" spellcheck="false"></label><label class="feld" style="width:130px"><span>Bis</span><input id="bBis" class="mono" placeholder="T0020" autocomplete="off" spellcheck="false"></label><button class="knopf voll" id="bDruck">Drucken</button></div>
+      <label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:14px"><input type="checkbox" id="bGuth" style="width:auto;height:auto"> nur Karten mit Guthaben</label></div></div>
+
   <div class="karte"><div class="titel"><h2>Alle Karten</h2></div>
     <div class="inhalt">
       <input id="suche" placeholder="Nummer suchen …" autocomplete="off">
@@ -4644,9 +4649,11 @@ function opsSenden() {
 }
 function opAnlegen(op) { db.ops.push(op); sichern(); return opsSenden(); }
 
+var nurWiederdruck = false;
 function codeSichern(nr) {
   var k = db.karten[nr] || (db.karten[nr] = { nr: nr, ts: Date.now() });
-  if (!k.code && MODUS === "terminal") {
+  /* Beim nochmaligen Drucken bleibt jede Karte, wie sie ist: auch eine Altkarte ohne Prüfnummer. */
+  if (!k.code && MODUS === "terminal" && !nurWiederdruck) {
     k.code = pruefCodeNeu(); k.status = "aktiv";
     var e = { nr: nr, code: k.code };
     if (k.name) { e.name = k.name; e.zusatz = k.zusatz || ""; }
@@ -5233,6 +5240,7 @@ function v2Verwaltung(e) {
     case "sLokal": sicherungSpeichern(); break;
     case "pinBtn": var p = document.getElementById("pinNeu").value.trim(); db.pin = p ? kettenHash("pin|" + p) : ""; sichern(); vMeld(p ? "PIN gesetzt" : "PIN entfernt"); break;
     case "eSpeichern": einstSpeichern(); break;
+    case "bDruck": bestehendeDrucken(); break;
     case "gEntfernen": geraetEntfernen(); break;
     case "vNeuLaden":
       if (!confirm("Karten und Stand neu von der Ablage laden? Wartende Kartenänderungen dieses Geräts (" + db.ops.length + ") werden verworfen.")) break;
@@ -5313,6 +5321,22 @@ function v2Detail(e) {
   if (was !== "ersetzen" && was !== "sperren" && was !== "freigeben") return;
   var nr = offeneKarte; if (!nr) return;
   e.stopPropagation(); kartenAktion(was, nr);
+}
+
+/* ======================= Bestehende Karten nochmal drucken ======================= */
+function bestehendeDrucken() {
+  var r = bereichNummern($("bVon").value, $("bBis").value), nrs;
+  if (r.fehler) { melden(r.fehler); return; }
+  var nurGuthaben = $("bGuth").checked;
+  var liste = r.leer ? aktiveKarten() : r.alle.filter(function (n) { return db.karten[n] && !istGeloescht(n); });
+  nrs = liste.filter(function (n) { var k = db.karten[n]; return !(k && k.status === "gesperrt") && (!nurGuthaben || saldo(n) > 0); });
+  var weg = liste.length - nrs.length;
+  if (!nrs.length) { melden("Keine passenden Karten gefunden" + (weg ? " (" + weg + " gesperrt oder ohne Guthaben)" : "")); return; }
+  if (nrs.length > 200 && !confirm(nrs.length + " Karten drucken?")) return;
+  nrs.sort();
+  nurWiederdruck = true;
+  try { drucken(kartenBlatt(nrs)); } finally { nurWiederdruck = false; }
+  melden(nrs.length + " Karte(n) zum Drucken" + (weg ? " · " + weg + " ausgelassen (gesperrt oder ohne Guthaben)" : ""));
 }
 
 /* ======================= Neues Fest ======================= */
