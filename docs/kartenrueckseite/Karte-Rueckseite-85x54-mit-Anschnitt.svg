@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="88mm" height="57mm" viewBox="0 0 88 57">
+  <title>Guthabenkarte Rückseite – eine Karte mit Anschnitt (88 × 57 mm)</title>
+  <g id="Gestaltung" inkscape:groupmode="layer" inkscape:label="Gestaltung (hier arbeiten)"/>
+  <g id="Hilfslinien" inkscape:groupmode="layer" inkscape:label="Hilfslinien (nicht drucken)">
+    <rect x="0" y="0" width="88" height="57" fill="none" stroke="#00A0E3" stroke-width=".2" stroke-dasharray="1 .8"/>
+    <rect x="1.5" y="1.5" width="85" height="54" fill="none" stroke="#E5007D" stroke-width=".3"/>
+    <rect x="5.5" y="5.5" width="77" height="46" fill="none" stroke="#00A651" stroke-width=".2" stroke-dasharray="1.5 1"/>
+    <path d="M40 28.5H48M44 24.5V32.5" stroke="#9a9a9a" stroke-width="0.15" fill="none"/>
+  </g>
+</svg>

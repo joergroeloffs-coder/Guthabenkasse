@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 210 297">
+  <title>Passprobe Rückseite</title>
+  <rect x="16" y="12" width="85" height="54" fill="none" stroke="#000" stroke-width=".25"/>
+  <path d="M13 12h2M16 9v2M102 12h2M101 9v2M13 66h2M16 67v2M102 66h2M101 67v2" stroke="#000" stroke-width=".2"/>
+  <path d="M54.5 39H62.5M58.5 35V43" stroke="#000" stroke-width="0.2" fill="none"/>
+  <rect x="109" y="12" width="85" height="54" fill="none" stroke="#000" stroke-width=".25"/>
+  <path d="M106 12h2M109 9v2M195 12h2M194 9v2M106 66h2M109 67v2M195 66h2M194 67v2" stroke="#000" stroke-width=".2"/>
+  <path d="M147.5 39H155.5M151.5 35V43" stroke="#000" stroke-width="0.2" fill="none"/>
+  <rect x="16" y="72" width="85" height="54" fill="none" stroke="#000" stroke-width=".25"/>
+  <path d="M13 72h2M16 69v2M102 72h2M101 69v2M13 126h2M16 127v2M102 126h2M101 127v2" stroke="#000" stroke-width=".2"/>
+  <path d="M54.5 99H62.5M58.5 95V103" stroke="#000" stroke-width="0.2" fill="none"/>
+  <rect x="109" y="72" width="85" height="54" fill="none" stroke="#000" stroke-width=".25"/>
+  <path d="M106 72h2M109 69v2M195 72h2M194 69v2M106 126h2M109 127v2M195 126h2M194 127v2" stroke="#000" stroke-width=".2"/>
+  <path d="M147.5 99H155.5M151.5 95V103" stroke="#000" stroke-width="0.2" fill="none"/>
+  <rect x="16" y="132" width="85" height="54" fill="none" stroke="#000" stroke-width=".25"/>
+  <path d="M13 132h2M16 129v2M102 132h2M101 129v2M13 186h2M16 187v2M102 186h2M101 187v2" stroke="#000" stroke-width=".2"/>
+  <path d="M54.5 159H62.5M58.5 155V163" stroke="#000" stroke-width="0.2" fill="none"/>
+  <rect x="109" y="132" width="85" height="54" fill="none" stroke="#000" stroke-width=".25"/>
+  <path d="M106 132h2M109 129v2M195 132h2M194 129v2M106 186h2M109 187v2M195 186h2M194 187v2" stroke="#000" stroke-width=".2"/>
+  <path d="M147.5 159H155.5M151.5 155V163" stroke="#000" stroke-width="0.2" fill="none"/>
+  <rect x="16" y="192" width="85" height="54" fill="none" stroke="#000" stroke-width=".25"/>
+  <path d="M13 192h2M16 189v2M102 192h2M101 189v2M13 246h2M16 247v2M102 246h2M101 247v2" stroke="#000" stroke-width=".2"/>
+  <path d="M54.5 219H62.5M58.5 215V223" stroke="#000" stroke-width="0.2" fill="none"/>
+  <rect x="109" y="192" width="85" height="54" fill="none" stroke="#000" stroke-width=".25"/>
+  <path d="M106 192h2M109 189v2M195 192h2M194 189v2M106 246h2M109 247v2M195 246h2M194 247v2" stroke="#000" stroke-width=".2"/>
+  <path d="M147.5 219H155.5M151.5 215V223" stroke="#000" stroke-width="0.2" fill="none"/>
+  <g font-family="Liberation Sans, Arial, sans-serif" font-size="2.6" fill="#000">
+    <text x="16" y="6" font-weight="700">Passprobe Rückseite – auf die Rückseite eines Blattes mit gedruckten Vorderseiten drucken</text>
+    <text x="16" y="9.4" font-size="2.2">Gegen das Licht halten: die Linien der Rückseite müssen die gestrichelten Ränder der Vorderseite decken. Abweichung ausmessen → in „Versatz“ eintragen.</text>
+    <text x="16" y="270" font-size="2.2">oben ▲ · Wenden an der langen Kante · ein Strich = 1 mm: ├──┤ <tspan dx="2"></tspan></text>
+    <path d="M60 268h10M60 267v2M61 267.6v1.4M62 267.6v1.4M63 267.6v1.4M64 267.6v1.4M65 267.4v1.6M66 267.6v1.4M67 267.6v1.4M68 267.6v1.4M69 267.6v1.4M70 267v2" stroke="#000" stroke-width=".15" fill="none"/>
+  </g>
+</svg>

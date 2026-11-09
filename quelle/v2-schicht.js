@@ -951,6 +951,9 @@ function v2Verwaltung(e) {
     case "pinBtn": var p = document.getElementById("pinNeu").value.trim(); db.pin = p ? kettenHash("pin|" + p) : ""; sichern(); vMeld(p ? "PIN gesetzt" : "PIN entfernt"); break;
     case "eSpeichern": einstSpeichern(); break;
     case "bDruck": bestehendeDrucken(); break;
+    case "rDruck": rueckDrucken(false); break;
+    case "rProbe": rueckDrucken(true); break;
+    case "rWeg": rueck.bild = ""; rueckSichern(); rueckZeichnen(); break;
     case "gEntfernen": geraetEntfernen(); break;
     case "vNeuLaden":
       if (!confirm("Karten und Stand neu von der Ablage laden? Wartende Kartenänderungen dieses Geräts (" + db.ops.length + ") werden verworfen.")) break;
@@ -1049,6 +1052,74 @@ function bestehendeDrucken() {
   melden(nrs.length + " Karte(n) zum Drucken" + (weg ? " · " + weg + " ausgelassen (gesperrt oder ohne Guthaben)" : ""));
 }
 
+/* ======================= Rückseite der Karten drucken =======================
+   Dasselbe Raster wie die Vorderseite (aus dem Druck gemessen): Spalten bei 16 und 109 mm, Zeilen bei
+   12, 72, 132 und 192 mm, Karte 85 × 54 mm. Ein Bild für alle Karten, auf A4 achtmal. */
+var RUECK_KEY = "guthabenkasse.rueckseite.v1";
+var rueck = { bild: "", x: 0, y: 0, anschnitt: true, dreh: false, blaetter: 1 };
+try { var rg = JSON.parse(localStorage.getItem(RUECK_KEY) || "{}"); for (var rk in rg) rueck[rk] = rg[rk]; } catch (e) {}
+function rueckSichern() { try { localStorage.setItem(RUECK_KEY, JSON.stringify(rueck)); } catch (e) { melden("Das Bild ist für den Gerätespeicher zu groß – bitte ein kleineres wählen."); } }
+
+/* Bild verkleinern (höchstens 1100 Pixel breit ≈ 300 dpi bei 88 mm) und als JPEG merken */
+function rueckBildLaden(datei) {
+  if (!datei) return;
+  var fr = new FileReader();
+  fr.onload = function () {
+    var bild = new Image();
+    bild.onload = function () {
+      var f = Math.min(1, 1100 / bild.width), w = Math.round(bild.width * f), h = Math.round(bild.height * f);
+      var c = document.createElement("canvas"); c.width = w; c.height = h;
+      var g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, w, h); g.drawImage(bild, 0, 0, w, h);
+      rueck.bild = c.toDataURL("image/jpeg", 0.92); rueckSichern(); rueckZeichnen();
+      var verh = bild.width / bild.height, soll = rueck.anschnitt ? 88 / 57 : 85 / 54;
+      if (Math.abs(verh - soll) > 0.03) melden("Hinweis: das Bild hat nicht genau das Seitenverhältnis " + (rueck.anschnitt ? "88 × 57" : "85 × 54") + " mm – es wird zugeschnitten.");
+    };
+    bild.onerror = function () { melden("Das Bild konnte nicht gelesen werden."); };
+    bild.src = fr.result;
+  };
+  fr.readAsDataURL(datei);
+}
+function rueckZeichnen() {
+  var v = document.getElementById("rVorschau"); if (!v) return;
+  v.innerHTML = rueck.bild ? '<img src="' + rueck.bild + '" alt="" style="max-width:100%;max-height:120px;border:1px solid #CDB77E;border-radius:3px">' : '<span class="muted">Noch kein Bild gewählt (gedruckt wird dann nur die Passprobe).</span>';
+  var f = function (id, w) { var e = document.getElementById(id); if (e && document.activeElement !== e) { if (e.type === "checkbox") e.checked = !!w; else e.value = w; } };
+  f("rX", rueck.x); f("rY", rueck.y); f("rAnschnitt", rueck.anschnitt); f("rDreh", rueck.dreh); f("rBlaetter", rueck.blaetter);
+}
+function rueckEinlesen() {
+  var z = function (id, min, max, std) { var e = document.getElementById(id); var n = e ? parseFloat(String(e.value).replace(",", ".")) : NaN; return isNaN(n) ? std : Math.max(min, Math.min(max, n)); };
+  rueck.x = z("rX", -5, 5, 0); rueck.y = z("rY", -5, 5, 0);
+  rueck.anschnitt = !!(document.getElementById("rAnschnitt") || {}).checked;
+  rueck.dreh = !!(document.getElementById("rDreh") || {}).checked;
+  rueck.blaetter = Math.round(z("rBlaetter", 1, 100, 1)); rueckSichern();
+}
+/* Eine Seite: acht Plätze wie auf der Vorderseite. Gedreht (Blatt um 180° eingelegt) liegt das Raster
+   am unteren Rand gespiegelt: 297 − 246 = 51 mm oben. */
+function rueckSeite(passprobe) {
+  var an = rueck.anschnitt ? 1.5 : 0, plaetze = "";
+  for (var i = 0; i < 8; i++) {
+    var inhalt;
+    if (passprobe) {
+      inhalt = '<svg viewBox="0 0 85 54" width="85mm" height="54mm" style="display:block"><rect x="0.13" y="0.13" width="84.74" height="53.74" fill="none" stroke="#000" stroke-width=".25"/>' +
+        '<path d="M42.5 46.5v8M38.5 50.5h8" stroke="#000" stroke-width=".2" fill="none" transform="translate(0,-23.5)"/>' +
+        '<text x="3" y="6" font-size="3" font-family="Arial,sans-serif">Passprobe ' + (i + 1) + '</text></svg>';
+    } else if (rueck.bild) {
+      inhalt = '<img src="' + rueck.bild + '" alt="" style="position:absolute;left:' + (-an) + 'mm;top:' + (-an) + 'mm;width:' + (85 + 2 * an) + 'mm;height:' + (54 + 2 * an) + 'mm;object-fit:cover;' + (rueck.dreh ? 'transform:rotate(180deg);' : '') + '">';
+    } else inhalt = "";
+    plaetze += '<div style="width:85mm;height:54mm;position:relative;overflow:visible">' + inhalt + '</div>';
+  }
+  /* Versatz über den Seitenrand, nicht über „position“: das Blatt wird nie breiter als 210 mm
+     (sonst schrumpft der Druck die Seite, und alles verrutscht). */
+  var oben = (rueck.dreh ? 51 : 12) + rueck.y, links = 10 + rueck.x, rechts = 10 - rueck.x;
+  return '<div class="bogen karten" style="break-after:page;page-break-after:always;padding:' + oben + 'mm ' + rechts + 'mm ' + (rueck.dreh ? 0 : 12) + 'mm ' + links + 'mm">' + plaetze + '</div>';
+}
+function rueckDrucken(passprobe) {
+  rueckEinlesen();
+  if (!passprobe && !rueck.bild) { melden("Erst ein Bild für die Rückseite wählen."); return; }
+  var seiten = "", n = passprobe ? 1 : rueck.blaetter;
+  for (var i = 0; i < n; i++) seiten += rueckSeite(passprobe);
+  drucken(seiten);
+}
+
 /* ======================= Neues Fest ======================= */
 var _betriebAufNull = betriebAufNull;
 betriebAufNull = function () {
@@ -1090,6 +1161,11 @@ function v2Start() {
   document.addEventListener("input", function (e) {
     if (e.target && e.target.id === "geraetName") { db.geraetName = e.target.value.slice(0, 20); sichern(); }
   });
+  document.addEventListener("change", function (e) {
+    if (e.target && e.target.id === "rBild") { rueckBildLaden(e.target.files && e.target.files[0]); e.target.value = ""; }
+    else if (e.target && /^r(X|Y|Anschnitt|Dreh|Blaetter)$/.test(e.target.id)) rueckEinlesen();
+  });
+  rueckZeichnen();
   document.addEventListener("change", function (e) { if (e.target && e.target.id === "eBestaetigen") { db.bestaetigen = !!e.target.checked; sichern(); } });
   window.addEventListener("online", function () { sync.online = null; syncJetzt(15000); });
   window.addEventListener("offline", function () { sync.online = false; zeichneStatus(); });

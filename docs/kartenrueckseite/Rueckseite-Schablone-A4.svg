@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="210mm" height="297mm" viewBox="0 0 210 297">
+  <title>Guthabenkarten Rückseite – Schablone A4</title>
+  <g id="Gestaltung" inkscape:groupmode="layer" inkscape:label="Gestaltung (hier arbeiten)">
+    <g id="Karte-1" inkscape:label="Karte 1 (hier gestalten)"/>
+    <g id="Karte-2" inkscape:label="Karte 2 (hier gestalten)"/>
+    <g id="Karte-3" inkscape:label="Karte 3 (hier gestalten)"/>
+    <g id="Karte-4" inkscape:label="Karte 4 (hier gestalten)"/>
+    <g id="Karte-5" inkscape:label="Karte 5 (hier gestalten)"/>
+    <g id="Karte-6" inkscape:label="Karte 6 (hier gestalten)"/>
+    <g id="Karte-7" inkscape:label="Karte 7 (hier gestalten)"/>
+    <g id="Karte-8" inkscape:label="Karte 8 (hier gestalten)"/>
+  </g>
+  <g id="Hilfslinien" inkscape:groupmode="layer" inkscape:label="Hilfslinien (nicht drucken)">
+    <g id="Hilfe-Karte-1">
+    <rect x="14.5" y="10.5" width="88" height="57" fill="none" stroke="#00A0E3" stroke-width=".2" stroke-dasharray="1 .8"/>
+    <rect x="16" y="12" width="85" height="54" fill="none" stroke="#E5007D" stroke-width=".3"/>
+    <rect x="20" y="16" width="77" height="46" fill="none" stroke="#00A651" stroke-width=".2" stroke-dasharray="1.5 1"/>
+    <path d="M54.5 39H62.5M58.5 35V43" stroke="#9a9a9a" stroke-width="0.15" fill="none"/>
+    <text x="18" y="15.4" font-size="2.2" font-family="Liberation Sans, Arial, sans-serif" fill="#E5007D">Karte 1</text>
+  </g>
+    <g id="Hilfe-Karte-2">
+    <rect x="107.5" y="10.5" width="88" height="57" fill="none" stroke="#00A0E3" stroke-width=".2" stroke-dasharray="1 .8"/>
+    <rect x="109" y="12" width="85" height="54" fill="none" stroke="#E5007D" stroke-width=".3"/>
+    <rect x="113" y="16" width="77" height="46" fill="none" stroke="#00A651" stroke-width=".2" stroke-dasharray="1.5 1"/>
+    <path d="M147.5 39H155.5M151.5 35V43" stroke="#9a9a9a" stroke-width="0.15" fill="none"/>
+    <text x="111" y="15.4" font-size="2.2" font-family="Liberation Sans, Arial, sans-serif" fill="#E5007D">Karte 2</text>
+  </g>
+    <g id="Hilfe-Karte-3">
+    <rect x="14.5" y="70.5" width="88" height="57" fill="none" stroke="#00A0E3" stroke-width=".2" stroke-dasharray="1 .8"/>
+    <rect x="16" y="72" width="85" height="54" fill="none" stroke="#E5007D" stroke-width=".3"/>
+    <rect x="20" y="76" width="77" height="46" fill="none" stroke="#00A651" stroke-width=".2" stroke-dasharray="1.5 1"/>
+    <path d="M54.5 99H62.5M58.5 95V103" stroke="#9a9a9a" stroke-width="0.15" fill="none"/>
+    <text x="18" y="75.4" font-size="2.2" font-family="Liberation Sans, Arial, sans-serif" fill="#E5007D">Karte 3</text>
+  </g>
+    <g id="Hilfe-Karte-4">
+    <rect x="107.5" y="70.5" width="88" height="57" fill="none" stroke="#00A0E3" stroke-width=".2" stroke-dasharray="1 .8"/>
+    <rect x="109" y="72" width="85" height="54" fill="none" stroke="#E5007D" stroke-width=".3"/>
+    <rect x="113" y="76" width="77" height="46" fill="none" stroke="#00A651" stroke-width=".2" stroke-dasharray="1.5 1"/>
+    <path d="M147.5 99H155.5M151.5 95V103" stroke="#9a9a9a" stroke-width="0.15" fill="none"/>
+    <text x="111" y="75.4" font-size="2.2" font-family="Liberation Sans, Arial, sans-serif" fill="#E5007D">Karte 4</text>
+  </g>
+    <g id="Hilfe-Karte-5">
+    <rect x="14.5" y="130.5" width="88" height="57" fill="none" stroke="#00A0E3" stroke-width=".2" stroke-dasharray="1 .8"/>
+    <rect x="16" y="132" width="85" height="54" fill="none" stroke="#E5007D" stroke-width=".3"/>
+    <rect x="20" y="136" width="77" height="46" fill="none" stroke="#00A651" stroke-width=".2" stroke-dasharray="1.5 1"/>
+    <path d="M54.5 159H62.5M58.5 155V163" stroke="#9a9a9a" stroke-width="0.15" fill="none"/>
+    <text x="18" y="135.4" font-size="2.2" font-family="Liberation Sans, Arial, sans-serif" fill="#E5007D">Karte 5</text>
+  </g>
+    <g id="Hilfe-Karte-6">
+    <rect x="107.5" y="130.5" width="88" height="57" fill="none" stroke="#00A0E3" stroke-width=".2" stroke-dasharray="1 .8"/>
+    <rect x="109" y="132" width="85" height="54" fill="none" stroke="#E5007D" stroke-width=".3"/>
+    <rect x="113" y="136" width="77" height="46" fill="none" stroke="#00A651" stroke-width=".2" stroke-dasharray="1.5 1"/>
+    <path d="M147.5 159H155.5M151.5 155V163" stroke="#9a9a9a" stroke-width="0.15" fill="none"/>
+    <text x="111" y="135.4" font-size="2.2" font-family="Liberation Sans, Arial, sans-serif" fill="#E5007D">Karte 6</text>
+  </g>
+    <g id="Hilfe-Karte-7">
+    <rect x="14.5" y="190.5" width="88" height="57" fill="none" stroke="#00A0E3" stroke-width=".2" stroke-dasharray="1 .8"/>
+    <rect x="16" y="192" width="85" height="54" fill="none" stroke="#E5007D" stroke-width=".3"/>
+    <rect x="20" y="196" width="77" height="46" fill="none" stroke="#00A651" stroke-width=".2" stroke-dasharray="1.5 1"/>
+    <path d="M54.5 219H62.5M58.5 215V223" stroke="#9a9a9a" stroke-width="0.15" fill="none"/>
+    <text x="18" y="195.4" font-size="2.2" font-family="Liberation Sans, Arial, sans-serif" fill="#E5007D">Karte 7</text>
+  </g>
+    <g id="Hilfe-Karte-8">
+    <rect x="107.5" y="190.5" width="88" height="57" fill="none" stroke="#00A0E3" stroke-width=".2" stroke-dasharray="1 .8"/>
+    <rect x="109" y="192" width="85" height="54" fill="none" stroke="#E5007D" stroke-width=".3"/>
+    <rect x="113" y="196" width="77" height="46" fill="none" stroke="#00A651" stroke-width=".2" stroke-dasharray="1.5 1"/>
+    <path d="M147.5 219H155.5M151.5 215V223" stroke="#9a9a9a" stroke-width="0.15" fill="none"/>
+    <text x="111" y="195.4" font-size="2.2" font-family="Liberation Sans, Arial, sans-serif" fill="#E5007D">Karte 8</text>
+  </g>
+    <g font-family="Liberation Sans, Arial, sans-serif" font-size="2.6" fill="#333">
+  <text x="16" y="5.2" font-weight="700">Guthabenkarten · Rückseite · A4 · 8 Karten à 85 × 54 mm</text>
+  <text x="16" y="8.6" font-size="2.2">Hilfslinien nicht drucken. Wenden an der langen Kante. Ränder: die Rückseite hat dasselbe Raster wie die Vorderseite.</text>
+</g>
+<g font-family="Liberation Sans, Arial, sans-serif" font-size="2.3">
+  <rect x="16" y="253" width="6" height="3" fill="none" stroke="#E5007D" stroke-width=".3"/><text x="23.5" y="255.5">Schnittkante 85 × 54 mm (hier wird geschnitten)</text>
+  <rect x="16" y="258" width="6" height="3" fill="none" stroke="#00A651" stroke-width=".2" stroke-dasharray="1.2 .8"/><text x="23.5" y="260.5">Sicherheitsrand 4 mm: Text, Logo und alles Wichtige bleibt innerhalb</text>
+  <rect x="16" y="263" width="6" height="3" fill="none" stroke="#00A0E3" stroke-width=".2" stroke-dasharray="1 .8"/><text x="23.5" y="265.5">Anschnitt 1,5 mm: Hintergrund bis hierher ziehen, damit beim Schneiden kein weißer Rand bleibt</text>
+  <path d="M16 270H22M19 267V273" stroke="#9a9a9a" stroke-width=".2" fill="none"/><text x="23.5" y="271">Mitte jeder Karte</text>
+  <text x="16" y="277" font-size="2.1" fill="#555">Druckbereich der meisten Drucker: mindestens 4 mm Rand; alle Karten liegen weit innerhalb.</text>
+</g>
+  </g>
+</svg>
