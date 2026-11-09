@@ -53,7 +53,7 @@ html,body{margin:0;height:100%;background:var(--kopf);color:var(--papier);font-f
 <body>
 <div id="buehne">
   <div id="kopf"><h1 id="titel">Guthaben abfragen</h1>
-    <div id="sprachen"><button data-s="de">DE</button><button data-s="en">EN</button></div></div>
+    <div id="sprachen"><button data-s="de">DE</button><button data-s="tr">TR</button><button data-s="en">EN</button></div></div>
   <div id="mitte">
     <div id="kamera"><video id="video" playsinline muted></video><div id="rahmen"></div><div id="kamerafehler"></div>
       <div id="ergebnis"><div class="was" id="eWas"></div><div class="betrag" id="eBetrag"></div><div class="karte" id="eKarte"></div><div class="rest" id="eRest"></div><div id="balken"></div></div>
@@ -67,7 +67,7 @@ html,body{margin:0;height:100%;background:var(--kopf);color:var(--papier);font-f
   <b style="font-size:18px">Einrichtung des Anzeigegeräts</b>
   <label>Adresse der Ablage<input id="eAdresse" placeholder="https://script.google.com/macros/s/…/exec" spellcheck="false"></label>
   <label>Zugangswort (Anzeige)<input id="eWort" spellcheck="false"></label>
-  <label>Standardsprache<select id="eSprache"><option value="de">Deutsch</option><option value="en">English</option></select></label>
+  <label>Standardsprache<select id="eSprache"><option value="de">Deutsch</option><option value="tr">Türkçe</option><option value="en">English</option></select></label>
   <label>Kamera<select id="eKamera"><option value="environment">hinten</option><option value="user">vorn (Selfie-Kamera)</option></select></label>
   <label>Hinweis zur Rückgabe (freiwillig)<input id="eRueck" maxlength="120" placeholder="z. B. Rückgabe an der Kasse am Tresen"></label>
   <div id="einrichtMeldung"></div>
@@ -93,13 +93,16 @@ var TEXT = {
         rueck: "Nicht ausgegebenes Guthaben bekommen Sie am Ende des Abends zurück.", unbekannt: "Karte nicht erkannt", unbekanntT: "Bitte fragen Sie an der Kasse.",
         gesperrt: "Karte gesperrt", gesperrtT: "Bitte melden Sie sich an der Kasse.", keineKarte: "Das ist keine Guthabenkarte", netz: "Keine Verbindung", netzT: "Bitte fragen Sie an der Kasse.",
         zuviele: "Einen Moment bitte", einricht: "Noch nicht eingerichtet", kamera: "Die Kamera ist nicht freigegeben. Bitte die Seite über https öffnen und die Kamera erlauben.", sprache: "Sprache" },
+  tr: { titel: "Bakiye sorgulama", halten: "Kartınızı kameraya tutun", ihr: "Bakiyeniz", karte: "Kart", offen: "Ödenecek tutar",
+        rueck: "Harcamadığınız para akşamın sonunda iade edilir.", unbekannt: "Kart tanınmadı", unbekanntT: "Lütfen kasaya sorun.",
+        gesperrt: "Kart engelli", gesperrtT: "Lütfen kasaya başvurun.", keineKarte: "Bu bir bakiye kartı değil", netz: "Bağlantı yok", netzT: "Lütfen kasaya sorun.",
+        zuviele: "Lütfen bir an bekleyin", einricht: "Henüz kurulmadı", kamera: "Kamera izni verilmedi. Lütfen sayfayı https ile açın ve kameraya izin verin.", sprache: "Dil" },
   en: { titel: "Check your balance", halten: "Hold your card in front of the camera", ihr: "Your balance", karte: "Card", offen: "Still to pay",
         rueck: "Any balance you don't spend is refunded at the end of the evening.", unbekannt: "Card not recognised", unbekanntT: "Please ask at the till.",
         gesperrt: "Card blocked", gesperrtT: "Please see the staff at the till.", keineKarte: "This is not a balance card", netz: "No connection", netzT: "Please ask at the till.",
         zuviele: "One moment please", einricht: "Not set up yet", kamera: "Camera access is blocked. Please open the page via https and allow the camera.", sprache: "Language" }
 };
-if (cfg.sprache !== "en") cfg.sprache = "de";
-var sprache = cfg.sprache;
+var sprache = cfg.sprache || "de";
 function t(k) { return (TEXT[sprache] && TEXT[sprache][k]) || TEXT.de[k]; }
 function euro(c) { return (Math.abs(c) / 100).toLocaleString("de-DE", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " €"; }
 

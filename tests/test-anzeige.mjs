@@ -24,11 +24,10 @@ let x = await e(); t('Guthaben wird gezeigt', x.includes('12,50') && x.includes(
 await p.screenshot({ path: '/tmp/anzeige-de.png' });
 const n0 = anfragen; await p.evaluate(() => abfragen('GK-A0001-K7Q2')); await p.waitForTimeout(300);
 t('dieselbe Karte nicht erneut abgefragt', anfragen === n0);
-await p.click('[data-s=en]'); await p.waitForTimeout(200);
-t('Sprache umschaltbar', (await p.textContent('#titel')).includes('balance'));
-t('keine türkische Taste mehr', await p.evaluate(() => !document.querySelector('[data-s=tr]')));
+await p.click('[data-s=tr]'); await p.waitForTimeout(200);
+t('Sprache umschaltbar', (await p.textContent('#titel')).includes('Bakiye'));
 await p.evaluate(() => abfragen('GK-A0100')); await p.waitForTimeout(700); x = await e(); t('Altkarte ohne Prüfnummer', x.includes('5,00'), x);
-await p.screenshot({ path: '/tmp/anzeige-en.png' });
+await p.screenshot({ path: '/tmp/anzeige-tr.png' });
 await p.click('[data-s=en]'); await p.evaluate(() => abfragen('GK-A0001-ZZZZ')); await p.waitForTimeout(700); x = await e(); t('falsche Prüfnummer: nicht erkannt', x.includes('not recognised'), x);
 await p.evaluate(() => abfragen('hallo')); await p.waitForTimeout(300); x = await e(); t('kein Kartencode', x.includes('not a balance card'), x);
 srv.post('ka', { aktion: 'karten', was: 'sperren', nr: 'A0001', grund: 'x', geraet: { id: 'D' } });
