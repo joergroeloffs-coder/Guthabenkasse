@@ -37,7 +37,7 @@ Die Karten liegen weit innerhalb des druckbaren Bereichs (mindestens 10 mm Rand)
 * Neu erzeugen: `node docs/kartenrueckseite/bauen.mjs`.
 
 ## Fertige Rückseiten mit dem Logo (Ordner `szenen/`)
-Drei Szenen mit dem Logo des Ual Fering Wiartshüs, Oldsum / Föhr, Unterzeile „Guthabenkarte · Gift Card“ und dem kurzen, gut lesbaren Hinweis „Restguthaben gibt es an der Kasse ausgezahlt“ / „Unspent balance is paid out at the till“ (Schrift 3 mm hoch):
+Drei Szenen mit dem Logo des Ual Fering Wiartshüs, Oldsum / Föhr, Unterzeile „Guthabenkarte · Gift Card“ und dem kurzen, gut lesbaren Hinweis „Restguthaben wird an der Kasse ausgezahlt“ / „Unspent balance is paid out at the till“ (Schrift 3 mm hoch):
 * **Szene A „Watt“** – Wattenmeer bei Ebbe mit Prickenreihe und Sonne.
 * **Szene B „Reetdach“** – Friesenhaus mit Reetdach am Deich, Schafe.
 * **Szene C „Abendrot“** – Sonnenuntergang mit Segelboot (Logo in Creme).

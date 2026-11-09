@@ -11,7 +11,7 @@ const ornament = (y, f) => `<g stroke="${f}" stroke-width=".25" fill="${f}"><pat
 const fuss = (f1, f2) => `<rect x="0" y="41.2" width="88" height="15.8" fill="${NAVY}" opacity=".86"/>
   <g font-family="Liberation Sans, Arial, sans-serif" text-anchor="middle" fill="${f1}">
     <text x="44" y="44.7" font-size="2.1" font-weight="700" letter-spacing=".3" fill="${GOLD}">GUTHABENKARTE · GIFT CARD</text>
-    <text x="44" y="48.5" font-size="2.85" font-weight="700">Restguthaben gibt es an der Kasse ausgezahlt</text>
+    <text x="44" y="48.5" font-size="3.1" font-weight="700">Restguthaben wird an der Kasse ausgezahlt</text>
     <text x="44" y="51.6" font-size="2.7" fill="${f2}">Unspent balance is paid out at the till</text>
   </g>`;
 
