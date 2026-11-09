@@ -28,6 +28,15 @@ Rücknahme oder Korrektur ist eine Gegenbuchung, keine Löschung.
 | **Karten** | Neue Karten drucken (8 je A4, 85 × 54 mm), wahlweise **mit Namen** (ein Name je Zeile) oder aus einer **Gästeliste** (Excel/CSV in den Kasten ziehen, Spalten ankreuzen). **Karten vorab aufladen** (Von/Bis/Betrag, etwa Karten 1–20 je 50 €). **Karten löschen** (Von/Bis, alle unbenutzten, oder einzeln). Liste aller Karten mit Suche nach Nummer und Name. Nummer antippen klappt die Karte auf: Guthaben direkt auf einen Betrag setzen, Namen ändern, Verlauf, einzelne Buchungen zurücknehmen, Restguthaben auszahlen, Karte nochmal drucken oder löschen. Abschluss drucken. |
 | **Einstellungen** | Rolle des Geräts (beides / nur Aufbuchen / nur Abbuchen), Gerätezeichen, Anlass, Ablage, Sicherung. |
 
+**Handy: Kopf und Reiter einklappen, Vollbild.** Auf den Seiten *Aufbuchen* und *Abbuchen* zeigt das Handy nur
+eine schmale Leiste (☰, Name der Seite, Fassung, ⛶); der Rest gehört dem Ziffernblock und dem Kamerabild. Die Tasten
+teilen sich die ganze übrige Höhe. ☰ klappt Kopf und Reiter über den Inhalt, die Wahl eines Reiters oder ein Tipp
+auf den Inhalt schließt sie wieder; *Karten* und *Einstellungen* zeigen den vollen Kopf. Abschalten:
+*Einstellungen → Dieses Gerät → Kopf und Reiter auf dem Handy einklappen*. Die **Browserleiste** lässt sich nur teilweise
+verstecken: als Programm auf dem Startbildschirm gibt es sie nicht (das Manifest steht auf *standalone*); sonst fragt die Kasse
+beim ersten Tipp auf einer Buchen-Seite **Vollbild** an (Android/Chrome; ⛶ in der Leiste schaltet um, abschaltbar). Im normalen
+Safari auf dem iPhone geht das nicht.
+
 **Sprache (Deutsch / Türkçe / English):** *Einstellungen → Dieses Gerät → Sprache / Dil.* Die ganze
 Oberfläche wechselt: Reiter, Beschriftungen, Hinweise, Ergebnisse, Meldungen, Rückfragen, die
 gedruckten Karten und der Abschluss. Die Sprache gehört zum **Gerät**, nicht zu den Daten:
@@ -247,7 +256,8 @@ in der `index.html`.
 
 | | |
 | --- | --- |
-| **0.11.0** | Treuhand-Modus: Ablage wächst nur, Neubeginn nur mit Admin-Wort (Archiv), laufende Nummer und Prüfkette je Buchung, Bericht per Mail mit dem Umsatz (Abbuchungen ohne Trinkgeld, abzüglich Rücknahmen; Auszahlungen ändern ihn nicht) |
+| **0.12.0** | Handy: Kopf und Reiter klappen auf den Buchen-Seiten ein (schmale Leiste mit ☰), Ziffernblock füllt den ganzen Platz und hat größere Tasten, Vollbild beim Buchen wo möglich |
+| 0.11.0 | Treuhand-Modus: Ablage wächst nur, Neubeginn nur mit Admin-Wort (Archiv), laufende Nummer und Prüfkette je Buchung, Bericht per Mail mit dem Umsatz (Abbuchungen ohne Trinkgeld, abzüglich Rücknahmen; Auszahlungen ändern ihn nicht) |
 | 0.10.0 | Englisch als dritte Sprache; die Übersetzungsschicht kennt jetzt beliebig viele Sprachen (`SPRACHEN`) |
 | 0.9.0 | Türkisch: Sprachumschalter je Gerät (Deutsch / Türkçe) für die ganze Oberfläche, Druck und Abschluss |
 | 0.8.0 | Anschreiben: Karten mit Namen dürfen bis zu einer Grenze (50 €) ins Minus, „Noch zu zahlen“, Begleichen, Block „Offen“ im Abschluss |
