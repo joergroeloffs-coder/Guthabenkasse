@@ -55,6 +55,7 @@
        Änderungen, die letzten 12 bleiben) und auf Wunsch.
 ======================================================================== */
 
+var SKRIPT_VERSION = "2.1";
 var WORT_VERKAUF = "";
 var WORT_KASSE   = "";
 var WORT_ADMIN   = "";
@@ -73,6 +74,16 @@ var SICHERUNG_ABSTAND = 20 * 60000;
 var SICHERUNG_BEHALTEN = 12;
 var ONLINE_FENSTER   = 75000;      /* "aktuell online": Kontakt in den letzten 75 s */
 
+
+/* Adresse im Browser öffnen: zeigt, welche Fassung läuft und welche Wörter eingetragen sind (nie die Wörter selbst). */
+function doGet() {
+  var t = "Guthabenkasse Ablage – Skriptfassung " + SKRIPT_VERSION + "\n\nEingetragene Zugangswörter:\n" +
+    "  Verkauf:  " + (WORT_VERKAUF ? "ja (" + WORT_VERKAUF.length + " Zeichen)" : "NEIN") + "\n" +
+    "  Kasse:    " + (WORT_KASSE ? "ja (" + WORT_KASSE.length + " Zeichen)" : (ZUGANGSWORT ? "über ZUGANGSWORT (alt)" : "NEIN")) + "\n" +
+    "  Admin:    " + (WORT_ADMIN ? "ja (" + WORT_ADMIN.length + " Zeichen)" : "NEIN") + "\n" +
+    "  Anzeige:  " + (WORT_ANZEIGE ? "ja (" + WORT_ANZEIGE.length + " Zeichen)" : "NEIN") + "\n\nDatei: " + DATEINAME + "\n";
+  return ContentService.createTextOutput(t).setMimeType(ContentService.MimeType.TEXT);
+}
 
 function doPost(e) {
   var antwort;

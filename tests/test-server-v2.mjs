@@ -126,4 +126,5 @@ r=s.post('ad',{aktion:'neubeginn'}); t('neubeginn admin',r.ok);
   let limit=false; for(let i=0;i<40;i++){ if(s6.post('an',{aktion:'bestand',karte:'GK-A0100'}).zuviele) limit=true; } t('Anzeige: Begrenzung je Minute',limit);
   t('Verkauf/Kasse dürfen auch abfragen',s6.post('vk',{aktion:'bestand',karte:'GK-A0100'}).cent===500);
 }
+{ const g=server2().sb.doGet().text; t('Browser-Seite nennt Fassung und Wörter',/Skriptfassung/.test(g)&&/Anzeige:\s+ja/.test(g)&&!/\bvk\b|\bka\b|\bad\b/.test(g.replace(/Verkauf|Kasse|Admin|Anzeige/g,''))); }
 console.log(ok+' ok, '+bad+' Fehler');

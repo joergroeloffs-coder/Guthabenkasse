@@ -8,7 +8,7 @@ export function server2(opt={}){
   const mk=(name,inhalt)=>({name,inhalt,papier:false,t:new Date(uhr),getBlob(){return{getDataAsString:()=>this.inhalt};},setContent(s){this.inhalt=s;},isTrashed(){return this.papier;},getName(){return this.name;},setTrashed(b){this.papier=b;},getSize(){return this.inhalt.length;},getDateCreated(){return this.t;}});
   const D=class extends Date{ constructor(...a){ if(a.length) super(...a); else super(uhr);} static now(){return uhr;} };
   const sb={console,JSON,Math,Date:D,String,Number,Object,Array,isFinite,parseInt,parseFloat,
-    ContentService:{MimeType:{JSON:'json'},createTextOutput:s=>({text:s,setMimeType(){return this;}})},
+    ContentService:{MimeType:{JSON:'json',TEXT:'text'},createTextOutput:s=>({text:s,setMimeType(){return this;}})},
     LockService:{getScriptLock:()=>({waitLock(){},releaseLock(){}})},
     MimeType:{PLAIN_TEXT:'t'},
     DriveApp:{getFilesByName:n=>{const t=dateien.filter(d=>d.name===n);let i=0;return{hasNext:()=>i<t.length,next:()=>t[i++]};},
