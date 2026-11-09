@@ -91,4 +91,14 @@ for (const [k, s] of Object.entries(szenen)) {
   await q.pdf({ path: HIER + `Szene-${k}-${s.name}-Rueckseite-A4.pdf`, preferCSSPageSize: true, printBackground: true, margin: { top: 0, bottom: 0, left: 0, right: 0 } });
   await q.close();
 }
+// Gemischter Bogen: acht Rückseiten, die Szenen abwechselnd (Reihenfolge: A B / C A / B C / A B)
+{
+  const reihe = ['A', 'B', 'C', 'A', 'B', 'C', 'A', 'B'];
+  const bild = k => 'data:image/png;base64,' + readFileSync(HIER + `Szene-${k}-${szenen[k].name}.png`).toString('base64');
+  const platz = k => `<div style="width:85mm;height:54mm;position:relative"><img src="${bild(k)}" style="position:absolute;left:-1.5mm;top:-1.5mm;width:88mm;height:57mm"></div>`;
+  const q = await b.newPage();
+  await q.setContent(`<html><head><style>@page{size:210mm 297mm;margin:0}html,body{margin:0}.bogen{padding:12mm 10mm;display:grid;grid-template-columns:repeat(2,85mm);gap:6mm 8mm;justify-content:center}</style></head><body><div class="bogen">${reihe.map(platz).join('')}</div></body></html>`);
+  await q.pdf({ path: HIER + 'Mix-Rueckseite-A4.pdf', preferCSSPageSize: true, printBackground: true, margin: { top: 0, bottom: 0, left: 0, right: 0 } });
+  await q.close();
+}
 await b.close(); console.log('fertig');
