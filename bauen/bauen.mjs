@@ -29,6 +29,8 @@ function bau(modus) {
   ersetze('href="manifest.webmanifest"', 'href="manifest-' + modus + '.webmanifest"');
   ersetze('content="Guthabenkasse"', 'content="' + (modus === 'terminal' ? 'GK Terminal' : 'GK Verkauf') + '"');
   ersetze('qrSvg(kartenCode(nr))', 'qrSvg(qrText(nr))');
+  // „Guthabenkarte“ nicht doppelt: ohne Anlass-Namen steht es nur einmal da
+  ersetze("_t('<div class=\"art\">Guthabenkarte</div>')+", "(a.name?_t('<div class=\"art\">Guthabenkarte</div>'):\"\")+");
   ersetze('id="btnKartenDrucken">Karten drucken</button>', 'id="btnKartenDrucken">Vorschau der Karten</button>');
   ersetze('</style>\n</head>', css + '</style>\n</head>');
   // Statusanzeige in Kopf und schmaler Leiste

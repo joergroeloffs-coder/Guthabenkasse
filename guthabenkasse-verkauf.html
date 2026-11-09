@@ -3073,7 +3073,7 @@ function kartenBlatt(nrs){
       '<div class="daten"><div class="verein">'+(a.verein?esc(a.verein):"&nbsp;")+
       (a.zusatz?'<br>'+esc(a.zusatz):"")+'</div>'+
       '<div><div class="anlass">'+esc(a.name||_t("Guthabenkarte"))+'</div>'+
-      _t('<div class="art">Guthabenkarte</div>')+
+      (a.name?_t('<div class="art">Guthabenkarte</div>'):"")+
       (kartenName(nr)?'<div class="kname '+nameGroesse(kartenName(nr))+'">'+esc(kartenName(nr))+'</div>':'')+
       (kartenZusatz(nr)?'<div class="kzus">'+esc(kartenZusatz(nr))+'</div>':'')+
       '</div>'+
