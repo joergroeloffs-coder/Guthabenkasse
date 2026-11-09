@@ -10,7 +10,7 @@ const logo = (datei, f) => `<image href="${url(datei)}" x="17" y="7" width="54" 
 const typ = 'font-family="Liberation Sans, Arial, sans-serif"';
 const schritte = [
   ['An der Kasse aufladen', 'Top up at the till'],
-  ['Karte zeigen – der QR-Code wird gescannt', 'Show your card – the QR code is scanned'],
+  ['Zum Bezahlen – Karte scannen lassen', 'To pay – have your card scanned'],
   ['Restguthaben wird an der Kasse ausgezahlt', 'Unspent balance is paid out at the till'],
 ];
 const panel = () => {

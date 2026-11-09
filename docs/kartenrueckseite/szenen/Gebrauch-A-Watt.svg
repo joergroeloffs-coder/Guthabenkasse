@@ -8,8 +8,8 @@
     <text x="14.6" y="32.6" font-family="Liberation Sans, Arial, sans-serif" font-size="3.0" font-weight="700" fill="#001D61">An der Kasse aufladen</text>
     <text x="14.6" y="35.7" font-family="Liberation Sans, Arial, sans-serif" font-size="2.6" fill="#3b4a6b">Top up at the till</text></g><g>
     <circle cx="9.6" cy="40.8" r="2.4" fill="#001D61"/><text x="9.6" y="41.85" font-family="Liberation Sans, Arial, sans-serif" font-size="3.1" font-weight="700" text-anchor="middle" fill="#FBF6E6">2</text>
-    <text x="14.6" y="39.9" font-family="Liberation Sans, Arial, sans-serif" font-size="3.0" font-weight="700" fill="#001D61">Karte zeigen – der QR-Code wird gescannt</text>
-    <text x="14.6" y="43" font-family="Liberation Sans, Arial, sans-serif" font-size="2.6" fill="#3b4a6b">Show your card – the QR code is scanned</text></g><g>
+    <text x="14.6" y="39.9" font-family="Liberation Sans, Arial, sans-serif" font-size="3.0" font-weight="700" fill="#001D61">Zum Bezahlen – Karte scannen lassen</text>
+    <text x="14.6" y="43" font-family="Liberation Sans, Arial, sans-serif" font-size="2.6" fill="#3b4a6b">To pay – have your card scanned</text></g><g>
     <circle cx="9.6" cy="48.1" r="2.4" fill="#001D61"/><text x="9.6" y="49.150000000000006" font-family="Liberation Sans, Arial, sans-serif" font-size="3.1" font-weight="700" text-anchor="middle" fill="#FBF6E6">3</text>
     <text x="14.6" y="47.2" font-family="Liberation Sans, Arial, sans-serif" font-size="3.0" font-weight="700" fill="#001D61">Restguthaben wird an der Kasse ausgezahlt</text>
     <text x="14.6" y="50.300000000000004" font-family="Liberation Sans, Arial, sans-serif" font-size="2.6" fill="#3b4a6b">Unspent balance is paid out at the till</text></g></svg>
