@@ -4140,6 +4140,12 @@ function start(){
 var MODUS = "verkauf";
 var OFFLINE_STANDARD = 2000;
 
+/* Übersetzung der neuen Texte (Türkisch bitte gegenlesen) */
+(function(){
+  var W={"tr": {"S": {"Verwaltung": "Yönetim", "Abrechnung": "Hesap", "Buchen": "Onayla", "Abbrechen": "İptal", "Meine Abrechnung": "Hesabım"}, "J": {"Online": "Çevrimiçi", "Offline": "Çevrimdışı", "Keine Ablage": "Depo yok", "Gleicht ab …": "Eşitleniyor …", "offen": "açık", "Bucht …": "Kaydediliyor …", "Nicht gebucht": "Kaydedilmedi", "Karte gesperrt": "Kart engellendi", "Gerade erst gebucht": "Az önce işlendi", "Dieselbe Karte, derselbe Betrag – nicht noch einmal gebucht.": "Aynı kart, aynı tutar – tekrar işlenmedi.", "Guthaben ": "Bakiye ", " abbuchen?": " harcansın mı?", "Offline gebucht – wird übertragen, sobald Verbindung da ist": "Çevrimdışı işlendi – bağlantı gelince aktarılacak", "Unklar – nicht noch einmal buchen": "Belirsiz – tekrar işlem yapmayın", "Einen Moment, die letzte Buchung läuft noch.": "Bir saniye, son işlem sürüyor.", "Zurückgenommen": "Geri alındı", "Diese Buchung ist schon zurückgenommen": "Bu işlem zaten geri alındı", "Eine Rücknahme lässt sich nicht zurücknehmen": "Geri alma geri alınamaz"}}, "en": {"S": {"Verwaltung": "Admin", "Abrechnung": "Report", "Buchen": "Book", "Abbrechen": "Cancel", "Meine Abrechnung": "My report"}, "J": {"Online": "Online", "Offline": "Offline", "Keine Ablage": "No storage", "Gleicht ab …": "Syncing …", "offen": "pending", "Bucht …": "Booking …", "Nicht gebucht": "Not booked", "Karte gesperrt": "Card blocked", "Gerade erst gebucht": "Just booked", "Dieselbe Karte, derselbe Betrag – nicht noch einmal gebucht.": "Same card, same amount – not booked again.", "Guthaben ": "Balance ", " abbuchen?": " charge?", "Offline gebucht – wird übertragen, sobald Verbindung da ist": "Booked offline – will be sent when connected", "Unklar – nicht noch einmal buchen": "Unclear – do not book again", "Einen Moment, die letzte Buchung läuft noch.": "One moment, the last booking is still running.", "Zurückgenommen": "Reversed", "Diese Buchung ist schon zurückgenommen": "Already reversed", "Eine Rücknahme lässt sich nicht zurücknehmen": "A reversal cannot be reversed"}}};
+  ["tr","en"].forEach(function(l){ for(var k in W[l]) for(var de in W[l][k]) if(SPRACHEN[l][k]) SPRACHEN[l][k][de]=W[l][k][de]; });
+})();
+
 /* ---- Fehlende Elemente (in der Verkaufs-App fehlen ganze Bereiche) ---- */
 var _stumm = {};
 $ = function (id) {
@@ -4421,11 +4427,11 @@ function statusKlasse() {
 }
 function zeichneStatus() {
   var n = ausstehende().length, k = statusKlasse(), t;
-  if (k === "s-aus") t = "Keine Ablage";
-  else if (k === "s-fehler") t = sync.serverFehler ? "Fehler" : "Abgelehnt: " + db.abgelehnt.filter(function (x) { return !x.gesehen; }).length;
-  else if (k === "s-offline") t = "Offline" + (n ? " · " + n + " offen" : "");
-  else if (k === "s-warte") t = sync.laeuft ? "Gleicht ab …" : n + " offen";
-  else t = "Online";
+  if (k === "s-aus") t = _t("Keine Ablage");
+  else if (k === "s-fehler") t = sync.serverFehler ? "!" : "! " + db.abgelehnt.filter(function (x) { return !x.gesehen; }).length;
+  else if (k === "s-offline") t = _t("Offline") + (n ? " · " + n + " " + _t("offen") : "");
+  else if (k === "s-warte") t = sync.laeuft ? _t("Gleicht ab …") : n + " " + _t("offen");
+  else t = _t("Online");
   ["syncChip", "syncChip2"].forEach(function (id) {
     var e = document.getElementById(id); if (!e) return;
     e.className = "syncChip " + k; e.textContent = "● " + t; e.title = statusText();
@@ -4564,11 +4570,11 @@ buche = function (tab, roh) {
   if (cent > 50000 && !confirm(euro(cent) + " " + (tab === "ab" ? _t("abbuchen") : _t("aufbuchen")) + _t(" — stimmt das?"))) {
     urteil(tab, "b-nein", _t("Nicht gebucht"), _t("Betrag nicht bestätigt.")); klingen("nein"); return;
   }
-  if (buchtGerade) { melden("Einen Moment, die letzte Buchung läuft noch."); return; }
+  if (buchtGerade) { melden(_t("Einen Moment, die letzte Buchung läuft noch.")); return; }
   /* Doppelbuchungsschutz: dieselbe Karte, derselbe Betrag, wenige Sekunden später */
   var norm = String(roh || "").trim().toUpperCase();
   if (letzteBuchung.roh === norm && letzteBuchung.tab === tab && letzteBuchung.cent === cent && Date.now() - letzteBuchung.zeit < 5000) {
-    urteil(tab, "b-offen", "Gerade erst gebucht", "Dieselbe Karte, derselbe Betrag – nicht noch einmal gebucht.");
+    urteil(tab, "b-offen", _t("Gerade erst gebucht"), _t("Dieselbe Karte, derselbe Betrag – nicht noch einmal gebucht."));
     klingen("nein"); if (istHandy()) { setPhase(tab, "ergebnis"); kameraAus(); } return;
   }
   kcMerker[nr] = kartenPruef(roh) || (MODUS === "terminal" ? "" : "");
@@ -4577,10 +4583,10 @@ buche = function (tab, roh) {
   /* Sicherheitsmodus: erst Guthaben zeigen, dann bestätigen */
   if (tab === "ab" && aktuellerModus() === "sicher") {
     wartendeBestaetigung = { tab: tab, nr: nr, cent: cent, roh: norm, kc: kcMerker[nr] || "" };
-    urteil(tab, "b-bestand", "Guthaben " + euro(saldo(nr)), "Karte " + kartenLabel(nr) + " · " + euro(cent) + " abbuchen?");
+    urteil(tab, "b-bestand", _t("Guthaben ") + euro(saldo(nr)), _t("Karte ") + kartenLabel(nr) + " · " + euro(cent) + _t(" abbuchen?"));
     var r = bestaetigReihe();
     r.innerHTML = '<span class="trinkTitel">Abbuchen ' + esc(euro(cent)) + '?</span>' +
-      '<button data-bestaetigen="1"><b>Buchen</b></button><button data-bestaetigen="0"><b>Abbrechen</b></button>';
+      '<button data-bestaetigen="1"><b>' + _t("Buchen") + '</b></button><button data-bestaetigen="0"><b>' + _t("Abbrechen") + '</b></button>';
     r.classList.remove("hide");
     if (istHandy()) { setPhase("ab", "ergebnis"); kameraAus(); }
     return;
@@ -4598,7 +4604,7 @@ function ausfuehren(tab, nr, cent, norm, kc) {
     fertig();
   }, function (f) {
     fertig(); console.error(f);
-    urteil(tab, "b-nein", "Nicht gebucht", "Fehler: " + (f && f.message || f)); klingen("nein");
+    urteil(tab, "b-nein", _t("Nicht gebucht"), "Fehler: " + (f && f.message || f)); klingen("nein");
   });
 }
 
@@ -4635,7 +4641,7 @@ function abbuchenAusfuehren(nr, cent) {
     return sichernBestaetigt().then(function (gespeichert) {
       if (!gespeichert) {
         db.buchungen = db.buchungen.filter(function (b) { return b !== verkauf && b !== tb; });
-        urteil("ab", "b-nein", "Nicht gebucht", "Das Gerät kann gerade nicht speichern."); klingen("nein"); return false;
+        urteil("ab", "b-nein", _t("Nicht gebucht"), "Das Gerät kann gerade nicht speichern."); klingen("nein"); return false;
       }
       var zeigen = function (notiz) {
         if (istHandy()) setPhase("ab", "ergebnis");
@@ -4647,7 +4653,7 @@ function abbuchenAusfuehren(nr, cent) {
         ergebnisAbschluss("ab");
       };
       if (ohneAblage()) { zeigen(""); return true; }
-      urteil("ab", "b-offen", "Bucht …", euro(cent) + " · Karte " + kartenLabel(nr));
+      urteil("ab", "b-offen", _t("Bucht …"), euro(cent) + " · Karte " + kartenLabel(nr));
       if (istHandy()) setPhase("ab", "ergebnis");
       return bestaetigen(verkauf.id, 8000).then(function (st) {
         if (st.st === "ok" || st.st === "doppelt") { zeigen(st.ueber ? "Offline-Buchung überzieht die Karte" : ""); return true; }
@@ -4663,10 +4669,10 @@ function abbuchenAusfuehren(nr, cent) {
         var summe = cent + tip;
         if (offlineErlaubt(nr, summe)) {
           verkauf.off = 1; if (tb) tb.off = 1; sichern();
-          zeigen("Offline gebucht – wird übertragen, sobald Verbindung da ist");
+          zeigen(_t("Offline gebucht – wird übertragen, sobald Verbindung da ist"));
           return true;
         }
-        urteil("ab", "b-offen", "Unklar – nicht noch einmal buchen",
+        urteil("ab", "b-offen", _t("Unklar – nicht noch einmal buchen"),
           euro(cent) + " ist vorgemerkt, die Ablage antwortet nicht. Das Ergebnis wird geklärt, sobald die Verbindung wieder da ist. Karte " + kartenLabel(nr));
         klingen("nein"); ergebnisAbschluss("ab"); return false;
       });
@@ -4707,7 +4713,7 @@ function aufbuchenAusfuehren(nr, cent) {
       klingen("auf"); $("aufBetrag").value = ""; db.aufBetrag = ""; sichern(); ergebnisAbschluss("auf");
     };
     if (ohneAblage()) { zeigen(""); return true; }
-    urteil("auf", "b-offen", "Bucht …", euro(cent) + " · Karte " + kartenLabel(nr));
+    urteil("auf", "b-offen", _t("Bucht …"), euro(cent) + " · Karte " + kartenLabel(nr));
     if (istHandy()) setPhase("auf", "ergebnis");
     return bestaetigen(b.id, 8000).then(function (st) {
       if (st.st === "ok" || st.st === "doppelt") { zeigen(""); return true; }
@@ -4753,8 +4759,8 @@ var stornoLaeuft = {};
 nehmeZurueck = function (id) {
   var b = db.buchungen.filter(function (x) { return x.id === id; })[0];
   if (!b) return;
-  if (b.art === "storno") { melden("Eine Rücknahme lässt sich nicht zurücknehmen"); return; }
-  if (db.buchungen.some(function (x) { return x.art === "storno" && x.ref === id; })) { melden("Diese Buchung ist schon zurückgenommen"); return; }
+  if (b.art === "storno") { melden(_t("Eine Rücknahme lässt sich nicht zurücknehmen")); return; }
+  if (db.buchungen.some(function (x) { return x.art === "storno" && x.ref === id; })) { melden(_t("Diese Buchung ist schon zurückgenommen")); return; }
   if (stornoLaeuft[id]) return;
   var wirkung = saldo(b.karte) - b.cent, erzwingen = false;
   if (wirkung < 0) {

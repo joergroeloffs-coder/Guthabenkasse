@@ -69,4 +69,13 @@ r=s.post('ka',{aktion:'bericht'}); t('kassenbuch einmal',r.bericht.kasse.anfang=
 r=s.post('ka',{aktion:'abschluss'}); t('abschluss verweigert',!!r.fehler&&r.vorlaeufig);
 // Neubeginn Admin
 r=s.post('ad',{aktion:'neubeginn'}); t('neubeginn admin',r.ok);
+// Kompatibilität: Gerät mit Fassung 0.12 (holen/legen)
+{ const s2=server2(); const B=(n,c,a)=>({id:'alt'+n,karte:'B0001',cent:c,art:a,zeit:1700000000000+n,geraet:'B',n:n,k:'x'+n});
+  const paket={karten:{B0001:{nr:'B0001',ts:1}},buchungen:[B(1,1000,'auf'),B(2,-300,'ab')],anlass:{name:'Alt',verein:'',zusatz:'',ts:1},geloescht:{},epoche:0,nummernNeu:false};
+  const r1=s2.post('ka',{aktion:'legen',daten:paket,geraet:'B'}); const r2=s2.post('ka',{aktion:'legen',daten:paket,geraet:'B'});
+  const h=s2.post('ka',{aktion:'holen'});
+  t('alt: legen ok',r1.ok&&r2.ok); t('alt: keine Doppelten',h.daten.buchungen.length===2&&h.daten.buchungen.every(b=>typeof b.s==='number'));
+  t('alt: Verkauf darf nicht legen',!!s2.post('vk',{aktion:'legen',daten:paket,geraet:'B'}).verweigert);
+  const sy=dev(s2,'T','k1').sync('ka',[]); t('alt→neu: Buchungen per Abgleich sichtbar',sy.buchungen.length===2);
+}
 console.log(ok+' ok, '+bad+' Fehler');
