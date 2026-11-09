@@ -898,7 +898,7 @@ function berichtHtmlV2(b) {
     '<div class="feldTitel" style="margin-top:10px">Kassensturz</div><table class="tab"><tr><td>Anfangsbestand</td><td class="n">' + eur(k.anfang) + '</td></tr><tr><td>Aufladungen (bar)</td><td class="n">' + eur(k.aufladungen) + '</td></tr><tr><td>Rückzahlungen Restguthaben</td><td class="n">-' + eur(k.auszahlungenRest) + '</td></tr><tr><td>Einzahlungen / Auszahlungen</td><td class="n">' + eur(k.einzahlungen) + ' / -' + eur(k.auszahlungen) + '</td></tr><tr><td><b>Soll</b></td><td class="n"><b>' + eur(k.soll) + '</b></td></tr><tr><td>Gezählt</td><td class="n">' + (k.gezaehlt === null ? "–" : eur(k.gezaehlt)) + '</td></tr><tr><td><b>Differenz</b></td><td class="n"><b>' + (k.differenz === null ? "–" : eur(k.differenz)) + '</b></td></tr></table>' +
     (b.ueberziehungen.length ? '<div class="hinweis" style="margin-top:10px">Überziehungen durch Offline-Buchungen:<br>' + b.ueberziehungen.map(function (u) { return esc(u.karte + " " + euro(u.cent) + " · Gerät " + u.geraet + (u.quittiert ? " · quittiert" : " · OFFEN")); }).join("<br>") + (b.ueberziehungen.some(function (u) { return !u.quittiert; }) ? '<br><button class="knopf klein" id="vQuittieren">Alle quittieren</button>' : '') + '</div>' : '') +
     (b.verworfen && b.verworfen.length ? '<div class="hinweis" style="margin-top:10px">Von der Ablage abgelehnte Buchungen: ' + b.verworfen.length + '</div>' : '') +
-    (b.pruefung && !b.pruefung.unveraendert ? '<div class="hinweis" style="margin-top:10px"><b>Prüfung:</b><br>' + b.pruefung.luecken.map(function (l) { return "Gerät " + esc(l.geraet) + ": Nummern " + l.von + "–" + l.bis + " fehlen"; }).join("<br>") + b.pruefung.kette.map(function (l) { return "Gerät " + esc(l.geraet) + ": Prüfsumme bei " + l.n + " passt nicht"; }).join("<br>") + (b.vermerke || []).slice(-5).map(function (v) { return "<br>" + esc(v.text); }).join("") + '</div>' : '') +
+    (b.pruefung && !b.pruefung.unveraendert ? '<div class="hinweis" style="margin-top:10px"><b>Prüfung' + (b.pruefung.befundOffen ? ' – nicht quittiert' : ' – quittiert' + (b.pruefung.quittiertText ? ': ' + esc(b.pruefung.quittiertText) : '')) + ':</b><br>' + b.pruefung.luecken.map(function (l) { return "Gerät " + esc(l.geraet) + ": Nummern " + l.von + "–" + l.bis + " fehlen"; }).join("<br>") + b.pruefung.kette.map(function (l) { return "Gerät " + esc(l.geraet) + ": Prüfsumme bei " + l.n + " passt nicht"; }).join("<br>") + (b.vermerke || []).slice(-8).map(function (v) { return "<br>" + esc(v.zeit.slice(0, 16).replace("T", " ") + " · " + v.text); }).join("") + (b.pruefung.befundOffen ? '<br><button class="knopf klein" id="vBefund">Auffälligkeiten quittieren (Administrator)</button>' : '') + '</div>' : '') +
     '<p class="muted">Stand ' + esc(String(b.stand)) + ' · ' + esc(zeitpunkt(Date.parse(b.zeit))) + '</p>';
 }
 function sicherungsListeHtml() {
@@ -959,6 +959,10 @@ function v2Verwaltung(e) {
       else { if (a.bericht) { verwaltungStand.bericht = a.bericht; zeichneVerwaltung(); } vMeld((a.fehler || "Nicht möglich") + (a.gruende ? " – " + a.gruende.join("; ") : "")); }
     })); break;
     case "vQuittieren": ab(rufeAblage({ aktion: "quittieren", was: "ueberziehung" }).then(function () { return berichtHolen(false); })); break;
+    case "vBefund":
+      var bt = prompt("Auffälligkeiten als geprüft quittieren – kurze Begründung (z. B. „Testbuchungen, alte Geräte“):"); if (bt === null) break;
+      var aw = adminWort("Auffälligkeiten quittieren"); if (!aw) break;
+      ab(rufeAblage({ aktion: "quittieren", was: "befund", text: bt }, aw).then(function (a) { vMeld(a.ok ? "Quittiert" : (a.fehler || "?")); return berichtHolen(false); })); break;
     case "kbAnfangBtn": kassenEintrag("anfang", "kbAnfang"); break;
     case "kbEinBtn": kassenEintrag("einzahlung", "kbEin"); break;
     case "kbAusBtn": kassenEintrag("auszahlung", "kbAus"); break;

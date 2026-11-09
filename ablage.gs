@@ -862,7 +862,11 @@ function pruefen(inhalt) {
   var schwer = inhalt.vermerke.filter(function (v) { return v.art !== "admin" && v.art !== "sperre" && v.art !== "einstellung" && v.art !== "ersatz" && v.art !== "geraet" && v.art !== "ueberziehung" && v.art !== "gesperrt"; });
   var offen = schwer.filter(function (v) { return Date.parse(v.zeit) > (inhalt.quittiert.befund || 0); });
   res.unveraendert = !res.luecken.length && !res.doppelt.length && !res.kette.length && !res.ohneNummer && !schwer.length;
-  res.befundOffen = !!(res.luecken.length || res.doppelt.length || res.kette.length || res.ohneNummer || offen.length) && !(Date.now() >= 0 && inhalt.quittiert.befund && !res.luecken.length && !res.doppelt.length && !res.kette.length && !res.ohneNummer && !offen.length);
+  /* Was quittiert wurde, ist der damalige Befund; ein anderer Befund (oder neue Vermerke) ist wieder offen. */
+  res.signatur = JSON.stringify([res.luecken, res.doppelt, res.kette, res.ohneNummer]);
+  var strukturOffen = (res.luecken.length || res.doppelt.length || res.kette.length || res.ohneNummer) && res.signatur !== inhalt.quittiert.signatur;
+  res.befundOffen = !!(strukturOffen || offen.length);
+  res.quittiertText = inhalt.quittiertText || "";
   res.vollstaendig = res.geraete.length > 0 && res.geraete.every(function (g) { return g.passt; });
   return res;
 }
@@ -978,7 +982,7 @@ function quittieren(inhalt, ctx, a) {
   }
   if (a.was === "befund") {
     if (!darf(ctx.rolle, "befunde")) return NEIN("Auffälligkeiten quittieren");
-    inhalt.quittiert.befund = ctx.jetzt; inhalt.quittiertText = String(a.text || "").slice(0, 200);
+    inhalt.quittiert.befund = ctx.jetzt; inhalt.quittiert.signatur = pruefen(inhalt).signatur; inhalt.quittiertText = String(a.text || "").slice(0, 200);
     vermerk(inhalt, "einstellung", geraetVon(a), "Auffälligkeiten quittiert: " + inhalt.quittiertText);
     ctx.geaendert = true; return { ok: true };
   }

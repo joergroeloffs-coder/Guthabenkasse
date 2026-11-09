@@ -89,4 +89,15 @@ r=s.post('ad',{aktion:'neubeginn'}); t('neubeginn admin',r.ok);
   t('Terminal übernimmt Gerät',s3.post('ka',{aktion:'quittieren',was:'geraet',id:'Q'}).ok);
   b=s3.post('ka',{aktion:'bericht'}).bericht; t('Gerät Q stimmt jetzt',b.pruefung.geraete.find(g=>g.geraet==='Q').passt);
 }
+// Auffälligkeiten quittieren (nur Administrator), später neue Auffälligkeit wieder offen
+{ const s4=server2(); const D=dev(s4,'D','kd'); s4.post('ka',{aktion:'karten',was:'anlegen',karten:[{nr:'A0001',code:'AAAA'}]});
+  const b1=D.buche('A0001',500,'auf'); D.buche('A0001',500,'auf'); const b3=D.buche('A0001',500,'auf');   // Nummer 2 nie gesendet → Lücke
+  D.sync('ka',[b1,b3]);
+  let r=s4.post('ka',{aktion:'bericht'}).bericht; t('Lücke → Auffälligkeit offen',r.pruefung.befundOffen&&r.pruefung.luecken.length===1);
+  t('Kasse darf nicht quittieren',!!s4.post('ka',{aktion:'quittieren',was:'befund',text:'x'}).verweigert);
+  t('Admin quittiert',s4.post('ad',{aktion:'quittieren',was:'befund',text:'Test'}).ok);
+  r=s4.post('ka',{aktion:'bericht'}).bericht; t('danach nicht mehr offen',!r.pruefung.befundOffen&&r.pruefung.quittiertText==='Test');
+  const b5=D.buche('A0001',500,'auf'); D.buche('A0001',500,'auf'); const b7=D.buche('A0001',500,'auf'); D.sync('ka',[b5,b7]);
+  r=s4.post('ka',{aktion:'bericht'}).bericht; t('neue Lücke → wieder offen',r.pruefung.befundOffen);
+}
 console.log(ok+' ok, '+bad+' Fehler');
