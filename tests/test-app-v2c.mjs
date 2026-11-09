@@ -1,0 +1,42 @@
+import { start } from './pw2.mjs';
+let ok = 0, bad = 0; const t = (n, c, extra = '') => { if (c) ok++; else { bad++; console.log('FAIL', n, extra); } };
+const A = await start({ schnell: true });
+const T = await A.seite('terminal', 'T', 'ka', 'Anna'); const V = await A.seite('verkauf', 'V', 'vk', 'Ben');
+const w = (p, ms) => p.waitForTimeout(ms);
+const erg = p => p.evaluate(() => ['befund2', 'befund'].map(i => document.getElementById(i)).filter(Boolean).map(x => x.innerText).join('|'));
+const holen = () => A.srv.post('ka', { aktion: 'holen' }).daten;
+const saldo = nr => holen().buchungen.filter(b => b.karte === nr).reduce((s, b) => s + b.cent, 0);
+const frei = p => p.evaluate(() => { letzteBuchung = { roh: '', zeit: 0, cent: 0, tab: '' }; });
+await T.evaluate(() => kartenBlatt(['T0001'])); await w(T, 700);
+const code = await T.evaluate(() => db.karten.T0001.code);
+// Schneller Weg: Ergebnis sofort, auch wenn die Ablage 6 s braucht
+A.steuer.verzoegerung = 6000;
+const t0 = Date.now();
+await T.evaluate(c => { $("aufBetrag").value = "20"; buche("auf", "GK-T0001-" + c); }, code);
+await T.waitForFunction(() => /20,00/.test(document.getElementById('befund').innerText), null, { timeout: 2000 });
+t('Aufbuchen: Ergebnis sofort trotz langsamer Ablage', Date.now() - t0 < 1500, String(Date.now() - t0));
+await w(T, 9000); A.steuer.verzoegerung = 0;
+t('Aufbuchen: danach in der Ablage', saldo('T0001') === 2000);
+await V.evaluate(() => syncJetzt(5000));
+A.steuer.verzoegerung = 6000; const t1 = Date.now();
+await V.evaluate(c => { $("abBetrag").value = "5"; buche("ab", "GK-T0001-" + c); }, code);
+await V.waitForFunction(() => /15,00/.test(document.getElementById('befund2').innerText), null, { timeout: 2000 });
+t('Abbuchen: Ergebnis sofort', Date.now() - t1 < 1500, String(Date.now() - t1));
+await w(V, 9000); A.steuer.verzoegerung = 0;
+t('Abbuchen: danach übertragen', saldo('T0001') === 1500 && await V.evaluate(() => ausstehende().length) === 0);
+// Offline: bis zum Limit geht es, darüber nicht
+A.steuer.offline = true;
+await V.evaluate(() => syncJetzt(3000)); await w(V, 500);
+await V.evaluate(c => { $("abBetrag").value = "3"; letzteBuchung = { roh: '', zeit: 0, cent: 0, tab: '' }; buche("ab", "GK-T0001-" + c); }, code); await w(V, 500);
+t('Offline klein: gebucht', (await erg(V)).includes('12,00') && await V.evaluate(() => ausstehende().length) === 1, await erg(V));
+await V.evaluate(c => { db.einst.offlineLimit = 500; $("abBetrag").value = "4"; letzteBuchung = { roh: '', zeit: 0, cent: 0, tab: '' }; buche("ab", "GK-T0001-" + c); }, code); await w(V, 500);
+t('Offline über Limit: nicht gebucht', (await erg(V)).includes('Ohne Verbindung') && await V.evaluate(() => ausstehende().length) === 1, await erg(V));
+A.steuer.offline = false; await V.evaluate(() => syncJetzt(5000)); await w(V, 500);
+t('Nach Verbindung: nachgeliefert', saldo('T0001') === 1200);
+// Spätere Ablehnung (Karte inzwischen gesperrt) wird gemeldet, nicht verschluckt
+await V.evaluate(() => { window.__m = []; var m = melden; melden = function (x) { window.__m.push(x); m(x); }; });
+A.srv.post('ka', { aktion: 'karten', was: 'sperren', nr: 'T0001', grund: 'Test', geraet: { id: 'T' } });
+await V.evaluate(c => { $("abBetrag").value = "1"; letzteBuchung = { roh: '', zeit: 0, cent: 0, tab: '' }; buche("ab", "GK-T0001-" + c); }, code); await w(V, 3500);
+t('Späte Ablehnung: Meldung', (await V.evaluate(() => window.__m.join('|'))).includes('abgelehnt'), await V.evaluate(() => window.__m.join('|')));
+t('Späte Ablehnung: Buchung entfernt, Hinweis vorhanden', await V.evaluate(() => db.abgelehnt.length >= 1 && ausstehende().length === 0));
+console.log('Seitenfehler:', A.steuer.log.length ? A.steuer.log : 'keine'); console.log(ok + ' ok, ' + bad + ' Fehler'); await A.ende();

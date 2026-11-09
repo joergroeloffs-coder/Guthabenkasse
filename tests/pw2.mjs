@@ -18,10 +18,10 @@ export async function start(opt = {}) {
       route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(antwort) });
     });
     await page.goto('file:///home/user/guthabenkasse/guthabenkasse-' + modus + '.html');
-    await page.evaluate(([g, w, n]) => {
+    await page.evaluate(([g, w, n, schnell]) => {
       db.geraet = g; db.ablage = { adresse: 'https://script.google.com/macros/s/TEST/exec', wort: w, intervall: 0 };
-      db.bediener = n; db.modus = 'schnell'; db.ton = false; db.kompakt = false; sichern();
-    }, [geraet, wort, name]);
+      db.bediener = n; db.modus = 'schnell'; db.bestaetigen = !schnell; db.ton = false; db.kompakt = false; sichern();
+    }, [geraet, wort, name, !!opt.schnell]);
     return page;
   }
   return { srv, browser, steuer, seite, ende: () => browser.close() };

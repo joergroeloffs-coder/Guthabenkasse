@@ -119,6 +119,7 @@ function v2Felder(d) {
   if (!Array.isArray(d.abgelehnt)) d.abgelehnt = [];
   if (!Array.isArray(d.ops)) d.ops = [];
   if (!d.modus) d.modus = "auto";
+  if (d.bestaetigen === undefined) d.bestaetigen = false;
   if (!d.erfahren) d.erfahren = {};
   if (!d.geraeteListe) d.geraeteListe = [];
   if (d.v2Start === undefined) {
@@ -247,7 +248,7 @@ function verarbeiteSync(a, gesendet) {
     melden("Neues Fest übernommen");
   }
   db.buchungen.forEach(function (b) { idx[b.id] = b; });
-  var res = a.ergebnisse || {};
+  var res = a.ergebnisse || {}, abgelehntVorher = db.abgelehnt.length;
   Object.keys(res).forEach(function (id) {
     var r = res[id], b = idx[id]; if (!b) return;
     if (r.st === "ok" || r.st === "doppelt") {
@@ -258,6 +259,10 @@ function verarbeiteSync(a, gesendet) {
       delete idx[id];
     }
   });
+  if (db.abgelehnt.length > abgelehntVorher) {
+    var z = db.abgelehnt[db.abgelehnt.length - 1];
+    melden("Buchung von der Ablage abgelehnt: " + euro(Math.abs(z.cent)) + " · " + z.karte + " · " + z.grund); klingen("nein");
+  }
   (a.buchungen || []).forEach(function (sb) {
     var l = idx[sb.id];
     if (l) { l.s = sb.s; if (sb.ueber) l.ueber = true; delete l.kc; }
@@ -537,6 +542,11 @@ function abbuchenAusfuehren(nr, cent) {
     }
     var tip = aufrundenTrinkgeld(cent), nichtGereicht = false;
     if (tip > 0 && vorher < cent + tip && !minusErlaubt(nr, vorher - cent - tip).ok) { tip = 0; nichtGereicht = true; }
+    /* Ohne Verbindung nur bis zum Offline-Limit je Karte */
+    if (wolkeBereit() && sync.online === false && !offlineErlaubt(nr, cent + tip)) {
+      urteil("ab", "b-nein", "Ohne Verbindung nicht möglich", "Offline sind je Karte höchstens " + euro((db.einst && db.einst.offlineLimit) || OFFLINE_STANDARD) + " erlaubt · Karte " + kartenLabel(nr));
+      klingen("nein"); return false;
+    }
     var verkauf = buchen(nr, -cent, "ab", null, null, true), tb = null;
     if (anschreibenAn && vorher - cent < 0) verkauf.an = 1;
     if (tip > 0) { tb = buchen(nr, -tip, "trinkgeld", null, null, true); tb.zu = verkauf.id; if (verkauf.an) tb.an = 1; }
@@ -555,6 +565,11 @@ function abbuchenAusfuehren(nr, cent) {
         ergebnisAbschluss("ab");
       };
       if (ohneAblage()) { zeigen(""); return true; }
+      if (!db.bestaetigen) {
+        /* Schneller Weg: sofort zeigen, die Ablage erfährt es gleich danach. Dass der Gast schon bedient
+           ist, zählt mehr als eine späte Ablehnung; ein Überziehen wird nur vermerkt. */
+        verkauf.off = 1; if (tb) tb.off = 1; sichern(); zeigen(""); wolkeVormerken(); return true;
+      }
       urteil("ab", "b-offen", _t("Bucht …"), euro(cent) + " · Karte " + kartenLabel(nr));
       if (istHandy()) setPhase("ab", "ergebnis");
       return bestaetigen(verkauf.id, 12000).then(function (st) {
@@ -615,6 +630,7 @@ function aufbuchenAusfuehren(nr, cent) {
       klingen("auf"); $("aufBetrag").value = ""; db.aufBetrag = ""; sichern(); ergebnisAbschluss("auf");
     };
     if (ohneAblage()) { zeigen(""); return true; }
+    if (!db.bestaetigen) { zeigen(""); wolkeVormerken(); return true; }
     urteil("auf", "b-offen", _t("Bucht …"), euro(cent) + " · Karte " + kartenLabel(nr));
     if (istHandy()) setPhase("auf", "ergebnis");
     return bestaetigen(b.id, 12000).then(function (st) {
@@ -855,6 +871,7 @@ function zeichneVerwaltung() {
       '<p class="muted">Die Ablage sichert sich selbst, alle 20 Minuten bei Änderungen (die letzten zwölf bleiben). Wiederherstellen braucht das Administrator-Wort; vorher wird der jetzige Stand gesichert.</p></div></div>' +
 
     '<div class="karte"><div class="titel"><h2>Erweitert</h2></div><div class="inhalt">' +
+      '<label style="display:flex;gap:8px;align-items:center;margin:0 0 12px;font-size:14px"><input type="checkbox" id="eBestaetigen" style="width:auto;height:auto"' + (db.bestaetigen ? ' checked' : '') + '> Ergebnis erst zeigen, wenn die Ablage bestätigt hat (langsamer, sicherer)</label>' +
       '<div class="feldTitel">Buchungsablauf</div>' +
       '<div class="wahl" id="wahlModus"><button data-modus="auto">Automatisch</button><button data-modus="schnell">Schnell</button><button data-modus="sicher">Sicher</button></div>' +
       '<p class="muted" id="modusInfo" style="margin:6px 0 0"></p>' +
@@ -1054,6 +1071,7 @@ function v2Start() {
   document.addEventListener("input", function (e) {
     if (e.target && e.target.id === "geraetName") { db.geraetName = e.target.value.slice(0, 20); sichern(); }
   });
+  document.addEventListener("change", function (e) { if (e.target && e.target.id === "eBestaetigen") { db.bestaetigen = !!e.target.checked; sichern(); } });
   window.addEventListener("online", function () { sync.online = null; syncJetzt(15000); });
   window.addEventListener("offline", function () { sync.online = false; zeichneStatus(); });
   document.addEventListener("visibilitychange", function () { if (!document.hidden) syncJetzt(15000); });
