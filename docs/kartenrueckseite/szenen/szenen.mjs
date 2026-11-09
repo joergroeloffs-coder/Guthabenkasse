@@ -10,7 +10,7 @@ const vogel = (x, y, s = 1, f = NAVY) => `<path d="M${x - 2.2 * s} ${y + .6 * s}
 const ornament = (y, f) => `<g stroke="${f}" stroke-width=".25" fill="${f}"><path d="M27 ${y}H41M47 ${y}H61"/><path d="M44 ${y - 1.2}L45.2 ${y}L44 ${y + 1.2}L42.8 ${y}Z"/><circle cx="41.9" cy="${y}" r=".35"/><circle cx="46.1" cy="${y}" r=".35"/></g>`;
 const fuss = (f1, f2) => `<rect x="0" y="41.2" width="88" height="15.8" fill="${NAVY}" opacity=".86"/>
   <g font-family="Liberation Sans, Arial, sans-serif" text-anchor="middle" fill="${f1}">
-    <text x="44" y="44.7" font-size="2.1" font-weight="700" letter-spacing=".3" fill="${GOLD}">GUTHABENKARTE · GIFT CARD</text>
+    <text x="44" y="44.7" font-size="2.1" font-weight="700" letter-spacing=".3" fill="${GOLD}">GUTHABENKARTE · BALANCE CARD</text>
     <text x="44" y="48.5" font-size="3.1" font-weight="700">Restguthaben wird an der Kasse ausgezahlt</text>
     <text x="44" y="51.6" font-size="2.7" fill="${f2}">Unspent balance is paid out at the till</text>
   </g>`;
