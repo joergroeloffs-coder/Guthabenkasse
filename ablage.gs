@@ -239,6 +239,8 @@ function speichern(datei, inhalt) { datei.setContent(JSON.stringify(inhalt)); }
 function geraetVon(a) { return String((a.geraet && (a.geraet.id || a.geraet)) || "?").slice(0, 1); }
 
 function vermerk(inhalt, art, geraet, text, extra) {
+  var l = inhalt.vermerke[inhalt.vermerke.length - 1];
+  if (l && l.art === art && l.text === text && Date.now() - Date.parse(l.zeit) < 600000) return;   /* dasselbe nicht im Minutentakt */
   var v = { zeit: new Date().toISOString(), art: art, geraet: geraet, text: text };
   if (extra) for (var k in extra) v[k] = extra[k];
   inhalt.vermerke.push(v);
@@ -315,18 +317,32 @@ function geraetPruefen(inhalt, ctx, g) {
     }
     reg = inhalt.geraete[g.id] = { schluessel: g.schluessel, erstmals: new Date().toISOString() };
   }
+  var vorher = JSON.stringify([reg.name, reg.bediener, reg.aufgabe, reg.rolle, reg.ausstehend, reg.version, reg.fehler, reg.offline]);
   reg.name = String(g.name || reg.name || ("Gerät " + g.id)).slice(0, 30);
   reg.bediener = String(g.bediener || "").slice(0, 30);
   reg.aufgabe = ctx.rolle === "verkauf" ? "Verkauf" : "Terminal";
   reg.rolle = ctx.rolle;
-  reg.zuletzt = new Date(ctx.jetzt).toISOString();
-  reg.zuletztMs = ctx.jetzt;
   reg.ausstehend = Number(g.ausstehend) || 0;
   reg.version = String(g.version || "").slice(0, 12);
   reg.fehler = String(g.fehler || "").slice(0, 120);
   reg.offline = !!g.offline;
-  ctx.geaendert = true;
+  var nachher = JSON.stringify([reg.name, reg.bediener, reg.aufgabe, reg.rolle, reg.ausstehend, reg.version, reg.fehler, reg.offline]);
+  /* Das Lebenszeichen steht im Zwischenspeicher; die Datei wird nur beschrieben, wenn sich etwas
+     ändert oder der letzte Eintrag älter als fünf Minuten ist. So belastet das Abfragen im
+     Sekundentakt Drive nicht. */
+  herzschlag(g.id, ctx.jetzt);
+  if (vorher !== nachher || !reg.zuletztMs || ctx.jetzt - reg.zuletztMs > 300000) {
+    reg.zuletzt = new Date(ctx.jetzt).toISOString(); reg.zuletztMs = ctx.jetzt;
+    ctx.geaendert = true;
+  }
   return null;
+}
+
+function herzschlag(id, ms) {
+  try { CacheService.getScriptCache().put("hb-" + id, String(ms), 21600); } catch (e) {}
+}
+function herzschlagLesen(id) {
+  try { return Number(CacheService.getScriptCache().get("hb-" + id)) || 0; } catch (e) { return 0; }
 }
 
 
@@ -339,8 +355,8 @@ function sync(inhalt, ctx, a) {
   if (gf) return gf;
   var g = a.geraet.id, ergebnisse = {};
   if (a.meldung && typeof a.meldung === "object") {
-    inhalt.meldungen[g] = { n: Number(a.meldung.n) || 0, k: String(a.meldung.k || ""), zeit: new Date(ctx.jetzt).toISOString() };
-    ctx.geaendert = true;
+    var alt = inhalt.meldungen[g], mn = Number(a.meldung.n) || 0, mk = String(a.meldung.k || "");
+    if (!alt || alt.n !== mn || alt.k !== mk) { inhalt.meldungen[g] = { n: mn, k: mk, zeit: new Date(ctx.jetzt).toISOString() }; ctx.geaendert = true; }
   }
   var neu = Array.isArray(a.neu) ? a.neu : [];
   neu.sort(function (x, y) { return (x.n || 0) - (y.n || 0) || (x.zeit || 0) - (y.zeit || 0); });
@@ -673,6 +689,7 @@ function geraeteListe(inhalt, ctx) {
   var jetzt = ctx.jetzt, aus = [];
   Object.keys(inhalt.geraete).sort().forEach(function (id) {
     var g = inhalt.geraete[id];
+    var hb = herzschlagLesen(id); if (hb > (g.zuletztMs || 0)) { g = Object.assign({}, g, { zuletztMs: hb, zuletzt: new Date(hb).toISOString() }); }
     aus.push({ id: id, name: g.name || ("Gerät " + id), bediener: g.bediener || "", aufgabe: g.aufgabe || "", rolle: g.rolle || "",
                zuletzt: g.zuletzt || null, online: !!(g.zuletztMs && jetzt - g.zuletztMs < ONLINE_FENSTER) && !g.offline,
                ausstehend: g.ausstehend || 0, fehler: g.fehler || "", version: g.version || "", offline: !!g.offline });

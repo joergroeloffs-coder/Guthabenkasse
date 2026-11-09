@@ -100,4 +100,12 @@ r=s.post('ad',{aktion:'neubeginn'}); t('neubeginn admin',r.ok);
   const b5=D.buche('A0001',500,'auf'); D.buche('A0001',500,'auf'); const b7=D.buche('A0001',500,'auf'); D.sync('ka',[b5,b7]);
   r=s4.post('ka',{aktion:'bericht'}).bericht; t('neue Lücke → wieder offen',r.pruefung.befundOffen);
 }
+// Abfragen im Takt schreiben nichts: Stand bleibt, Gerät erscheint online
+{ const s5=server2(); const D=dev(s5,'D','kd'); D.sync('ka',[]); const st0=s5.post('ka',{aktion:'holen'}).stand;
+  for(let i=0;i<5;i++){ s5.zeit(s5.jetzt()+15000); D.sync('ka',[]); }
+  t('Abfragen ohne Änderung schreiben nicht',s5.post('ka',{aktion:'holen'}).stand===st0);
+  const l=D.sync('ka',[]).geraete.find(g=>g.id==='D'); t('Gerät online über Herzschlag',l&&l.online);
+  const X=dev(s5,'D','fremd'); for(let i=0;i<4;i++) X.sync('ka',[]);
+  t('Konflikt-Vermerk nicht im Minutentakt',s5.post('ad',{aktion:'bericht'}).bericht.vermerke.filter(v=>/abgewiesen/.test(v.text)).length===1);
+}
 console.log(ok+' ok, '+bad+' Fehler');
