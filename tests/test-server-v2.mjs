@@ -78,4 +78,15 @@ r=s.post('ad',{aktion:'neubeginn'}); t('neubeginn admin',r.ok);
   t('alt: Verkauf darf nicht legen',!!s2.post('vk',{aktion:'legen',daten:paket,geraet:'B'}).verweigert);
   const sy=dev(s2,'T','k1').sync('ka',[]); t('alt→neu: Buchungen per Abgleich sichtbar',sy.buchungen.length===2);
 }
+// Gerät, das sich nie mehr meldet: Abschluss blockiert, dann am Terminal übernommen
+{ const s3=server2(); const D=dev(s3,'D','kd'); const E=dev(s3,'E','ke');
+  s3.post('ka',{aktion:'karten',was:'anlegen',karten:[{nr:'A0001',code:'AAAA'}]});
+  D.sync('ka',[D.buche('A0001',1000,'auf')]); E.sync('ka',[]);
+  s3.post('ka',{aktion:'legen',daten:{karten:{},buchungen:[{id:'g1',karte:'A0001',cent:-100,art:'ab',zeit:1700000000001,geraet:'Q',n:1,k:'x'}],anlass:{},geloescht:{},epoche:0},geraet:'Q'});
+  let b=s3.post('ka',{aktion:'bericht'}).bericht; const q=b.pruefung.geraete.find(g=>g.geraet==='Q');
+  t('nie gemeldetes Gerät blockiert den Abschluss',!b.endgueltig&&q&&!q.gemeldet);
+  t('Verkauf darf kein Gerät abschließen',!!s3.post('vk',{aktion:'quittieren',was:'geraet',id:'Q'}).verweigert||!s3.post('vk',{aktion:'quittieren',was:'geraet',id:'Q'}).ok);
+  t('Terminal übernimmt Gerät',s3.post('ka',{aktion:'quittieren',was:'geraet',id:'Q'}).ok);
+  b=s3.post('ka',{aktion:'bericht'}).bericht; t('Gerät Q stimmt jetzt',b.pruefung.geraete.find(g=>g.geraet==='Q').passt);
+}
 console.log(ok+' ok, '+bad+' Fehler');

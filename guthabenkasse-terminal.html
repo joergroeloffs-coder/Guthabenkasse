@@ -5171,6 +5171,13 @@ function berichtHtmlV2(b) {
     '<p style="margin:10px 0" class="' + (b.endgueltig ? "s-ok" : "s-warte") + '"><b>' + (b.endgueltig ? "Endgültig möglich" : "Vorläufig") + '</b>' + (b.gruende.length ? ' – ' + esc(b.gruende.join("; ")) : '') + '</p>' +
     '<table class="tab"><tr><td>Aufgebucht</td><td class="n">' + eur(b.aufgebucht) + '</td></tr><tr><td>Abgebucht gesamt</td><td class="n">' + eur(b.umsatz.brutto) + '</td></tr><tr><td>Zurückgenommen (' + b.stornos.anzahl + ')</td><td class="n">' + eur(b.umsatz.zurueckgenommen) + '</td></tr>' +
     '<tr><td>Ausgezahlte Restbeträge</td><td class="n">' + eur(b.ausgezahlt) + '</td></tr><tr><td>Korrekturen am Guthaben</td><td class="n">' + eur(b.korrekturen) + '</td></tr><tr><td>Auf Karten im Minus</td><td class="n">' + eur(b.minus) + '</td></tr></table>' +
+    '<div class="feldTitel" style="margin-top:10px">Meldung der Geräte</div><div class="rolle"><table class="tab"><tr><th>Gerät</th><th>letzte Nr.</th><th>Meldung</th><th></th></tr>' +
+      ((b.pruefung && b.pruefung.geraete) || []).map(function (g) {
+        var ok = g.passt, t = ok ? "stimmt" : (g.gemeldet ? "stimmt nicht (meldet " + g.gemeldetN + ")" : "fehlt");
+        return '<tr><td><b>' + esc(g.geraet) + '</b></td><td>' + g.letzte + '</td><td class="' + (ok ? "s-ok" : "s-fehler") + '">' + (ok ? "● " : "○ ") + t + '</td><td>' +
+          (ok ? '' : '<button class="knopf klein" data-gabschl="' + esc(g.geraet) + '">als abgeschlossen übernehmen</button>') + '</td></tr>';
+      }).join("") + '</table></div>' +
+      '<p class="muted" style="margin:4px 0 0">Ein Gerät meldet sich von selbst, solange es online ist (Programm geöffnet, alle 15 Sekunden). Ein Gerät, das nicht mehr erreichbar ist, kann hier mit seinem Stand in der Ablage abgeschlossen werden.</p>' +
     '<div class="feldTitel" style="margin-top:10px">Je Gerät</div><table class="tab">' + b.proGeraet.map(function (g) { return '<tr><td>' + esc(g.geraet + " " + g.name) + '</td><td class="n">' + eur(g.abgebucht) + '</td><td class="n">TG ' + eur(g.trinkgeld) + '</td></tr>'; }).join("") + '</table>' +
     '<div class="feldTitel" style="margin-top:10px">Je Bediener</div><table class="tab">' + b.proBedienung.map(function (g) { return '<tr><td>' + esc(g.name) + '</td><td class="n">' + eur(g.abgebucht) + '</td><td class="n">TG ' + eur(g.trinkgeld) + '</td></tr>'; }).join("") + '</table>' +
     '<div class="feldTitel" style="margin-top:10px">Kassensturz</div><table class="tab"><tr><td>Anfangsbestand</td><td class="n">' + eur(k.anfang) + '</td></tr><tr><td>Aufladungen (bar)</td><td class="n">' + eur(k.aufladungen) + '</td></tr><tr><td>Rückzahlungen Restguthaben</td><td class="n">-' + eur(k.auszahlungenRest) + '</td></tr><tr><td>Einzahlungen / Auszahlungen</td><td class="n">' + eur(k.einzahlungen) + ' / -' + eur(k.auszahlungen) + '</td></tr><tr><td><b>Soll</b></td><td class="n"><b>' + eur(k.soll) + '</b></td></tr><tr><td>Gezählt</td><td class="n">' + (k.gezaehlt === null ? "–" : eur(k.gezaehlt)) + '</td></tr><tr><td><b>Differenz</b></td><td class="n"><b>' + (k.differenz === null ? "–" : eur(k.differenz)) + '</b></td></tr></table>' +
@@ -5215,6 +5222,12 @@ function v2Verwaltung(e) {
   if (knopf.getAttribute("data-gesehen")) { db.abgelehnt.forEach(function (x) { x.gesehen = true; }); sichern(); zeichneVerwaltung(); zeichneMeine(); zeichneStatus(); return; }
   if (knopf.getAttribute("data-modus")) { db.modus = knopf.getAttribute("data-modus"); sichern(); zeichneEinstellungen(); return; }
   if (knopf.getAttribute("data-tm")) { trinkModusSetzen(knopf.getAttribute("data-tm")); return; }
+  if (knopf.getAttribute("data-gabschl")) {
+    var gid = knopf.getAttribute("data-gabschl");
+    if (!confirm("Gerät " + gid + " mit dem Stand übernehmen, den die Ablage von ihm hat?\n\nBuchungen, die dieses Gerät noch nicht übertragen hat, würden danach nicht mehr erscheinen. Nur wählen, wenn das Gerät wirklich nicht mehr gebraucht wird.")) return;
+    rufeAblage({ aktion: "quittieren", was: "geraet", id: gid }).then(function (a) { vMeld(a.ok ? "Gerät " + gid + " abgeschlossen übernommen" : (a.fehler || "?")); return berichtHolen(false); }).then(null, function (f) { vMeld("Keine Verbindung: " + f.message); });
+    return;
+  }
   if (knopf.getAttribute("data-gentf")) { geraetEntfernen(knopf.getAttribute("data-gentf")); return; }
   if (knopf.getAttribute("data-wiederher")) { wiederherstellen(knopf.getAttribute("data-wiederher")); return; }
   if (!id) return;

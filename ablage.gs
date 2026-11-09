@@ -968,6 +968,14 @@ function quittieren(inhalt, ctx, a) {
     ueberziehungen(inhalt).forEach(function (x) { if (!x.quittiert && (!a.ids || a.ids.indexOf(x.id) >= 0)) { inhalt.quittiert.ueber[x.id] = ctx.jetzt; n++; } });
     ctx.geaendert = true; return { ok: true, quittiert: n };
   }
+  if (a.was === "geraet") {
+    /* Ein Gerät, das sich nicht mehr melden kann (verloren, ausgeschaltet, ersetzt): sein Stand in der Ablage wird als sein Abschluss übernommen. */
+    var id = String(a.id || "").slice(0, 1), st = ketteStand(inhalt)[id];
+    if (!st) return { fehler: "Zu diesem Gerät gibt es keine Buchungen." };
+    inhalt.meldungen[id] = { n: st.n, k: st.k, zeit: new Date(ctx.jetzt).toISOString(), manuell: true };
+    vermerk(inhalt, "einstellung", geraetVon(a), "Gerät " + id + " am Terminal als abgeschlossen übernommen (letzte Nummer " + st.n + ")");
+    ctx.geaendert = true; return { ok: true, n: st.n };
+  }
   if (a.was === "befund") {
     if (!darf(ctx.rolle, "befunde")) return NEIN("Auffälligkeiten quittieren");
     inhalt.quittiert.befund = ctx.jetzt; inhalt.quittiertText = String(a.text || "").slice(0, 200);
