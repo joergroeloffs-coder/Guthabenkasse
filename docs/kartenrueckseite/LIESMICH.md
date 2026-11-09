@@ -53,3 +53,6 @@ Oben ein schmales Bild mit Logo, unten auf cremefarbenem Grund drei Schritte, de
 3. Restguthaben wird an der Kasse ausgezahlt · Unspent balance is paid out at the till
 
 Dateien: `Gebrauch-A-Watt`, `Gebrauch-B-Reetdach`, `Gebrauch-C-Abendrot` (`.png` für das Terminal, `.svg`, `…-Rueckseite-A4.pdf` als druckfertiger Bogen) und `Gebrauch-Mix-Rueckseite-A4.pdf` (gemischt). Neu erzeugen: `node docs/kartenrueckseite/szenen/gebrauch.mjs`.
+
+## Rückseite nur mit der Anleitung (für jede Veranstaltung)
+`szenen/Rueckseite-Nur-Anleitung.png` (Terminal), `.svg` und `…-A4.pdf` (druckfertiger Bogen): keine Szene, kein Anlass – nur die drei Schritte (Deutsch 4,2 mm fett, Englisch 3,4 mm). Die Karten sind damit für jedes Fest nutzbar. Neu erzeugen: `node docs/kartenrueckseite/szenen/nuranleitung.mjs`.
