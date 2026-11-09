@@ -215,6 +215,7 @@ function lesen(datei) {
   inhalt.chronik = inhalt.chronik || [];
   inhalt.kassenbuch = inhalt.kassenbuch || [];
   inhalt.quittiert = inhalt.quittiert || { ueber: {}, befund: 0 };
+  inhalt.verworfen = inhalt.verworfen || {};
   inhalt.einst = inhalt.einst || {};
   if (inhalt.einst.anschreiben === undefined) inhalt.einst.anschreiben = !!ANSCHREIBEN_STANDARD;
   if (inhalt.einst.anschreibenGrenze === undefined) inhalt.einst.anschreibenGrenze = ANSCHREIBEN_GRENZE;
@@ -343,6 +344,11 @@ function sync(inhalt, ctx, a) {
     var res = buchungAnnehmen(inhalt, ctx, neu[i], g);
     ergebnisse[neu[i] && neu[i].id] = res;
     if (res.st === "ok") ctx.geaendert = true;
+    if (res.st === "abgelehnt" && neu[i] && typeof neu[i].n === "number" && typeof neu[i].k === "string") {
+      /* die Nummer und Prüfsumme bleiben in der Kette, die Buchung selbst nicht */
+      inhalt.verworfen[g + ":" + neu[i].n] = { k: neu[i].k, grund: res.grund, id: neu[i].id, cent: neu[i].cent, karte: neu[i].karte, zeit: neu[i].zeit };
+      ctx.geaendert = true;
+    }
   }
   var cursor = Number(a.cursor) || 0;
   var antwort = {
@@ -354,12 +360,21 @@ function sync(inhalt, ctx, a) {
   };
   if (cursor > inhalt.seq) { antwort.zurueckgesetzt = true; antwort.buchungen = inhalt.daten.buchungen; }
   if (Number(a.kv) !== inhalt.kv || antwort.zurueckgesetzt) {
-    antwort.karten = inhalt.daten.karten; antwort.geloescht = inhalt.daten.geloescht; antwort.anlass = inhalt.daten.anlass;
+    antwort.karten = kartenFuer(inhalt, ctx.rolle); antwort.geloescht = inhalt.daten.geloescht; antwort.anlass = inhalt.daten.anlass;
   }
   if (a.zustand) { antwort.salden = null; }
   if (ctx.rolle !== "verkauf") antwort.geraete = geraeteListe(inhalt, ctx);
   antwort.nummernNeu = inhalt.daten.nummernNeu;
   return antwort;
+}
+
+function kartenFuer(inhalt, rolle) {
+  if (rolle !== "verkauf") return inhalt.daten.karten;
+  var aus = {};
+  Object.keys(inhalt.daten.karten).forEach(function (nr) {
+    var k = Object.assign({}, inhalt.daten.karten[nr]); delete k.code; k.hatCode = !!inhalt.daten.karten[nr].code; aus[nr] = k;
+  });
+  return aus;
 }
 
 function statusVon(inhalt, ids) {
@@ -421,8 +436,8 @@ function buchungAnnehmen(inhalt, ctx, x, geraetId) {
     return { st: "abgelehnt", grund: "Karte gesperrt" + (karte.ersetztDurch ? " (ersetzt durch " + karte.ersetztDurch + ")" : ""), code: "gesperrt" };
   }
   if ((d.geloescht[x.karte] || 0) > 0) return { st: "abgelehnt", grund: "Karte gelöscht", code: "geloescht" };
-  if (karte.code && x.kc !== karte.code) {
-    return { st: "abgelehnt", grund: "Prüfnummer der Karte stimmt nicht", code: "pruefnummer" };
+  if (karte.code && x.kc !== karte.code && !(r !== "verkauf" && x.kc === undefined)) {
+    return { st: "abgelehnt", grund: (x.kc === undefined ? "Prüfnummer fehlt – die Karte ganz scannen" : "Prüfnummer der Karte stimmt nicht"), code: "pruefnummer" };
   }
 
   /* Guthaben */
@@ -433,7 +448,7 @@ function buchungAnnehmen(inhalt, ctx, x, geraetId) {
       if (!darf(r, "aufbuchen") || !inhalt.einst.anschreiben) return { st: "abgelehnt", grund: "Anschreiben ist nicht eingeschaltet", code: "anschreiben", saldo: saldo };
       if (!karte.name) return { st: "abgelehnt", grund: "Anschreiben nur mit Namen auf der Karte", code: "name", saldo: saldo };
       if (nach < -inhalt.einst.anschreibenGrenze) return { st: "abgelehnt", grund: "Über der Grenze für das Anschreiben", code: "grenze", saldo: saldo };
-    } else if (x.off) {
+    } else if (x.off || (x.mig && darf(r, "aufbuchen"))) {
       ueber = true;                       /* offline gebucht: angenommen, aber gekennzeichnet */
     } else {
       return { st: "abgelehnt", grund: "Zu wenig Guthaben", code: "guthaben", saldo: saldo, fehlt: -nach };
@@ -444,7 +459,7 @@ function buchungAnnehmen(inhalt, ctx, x, geraetId) {
 
 function annehmen(inhalt, ctx, x, extra) {
   var b = {};
-  var felder = ["id", "karte", "cent", "art", "zeit", "geraet", "wer", "ref", "stapel", "zu", "n", "k", "off", "an"];
+  var felder = ["id", "karte", "cent", "art", "zeit", "geraet", "wer", "ref", "stapel", "zu", "n", "k", "off", "an", "mig"];
   felder.forEach(function (f) { if (x[f] !== undefined) b[f] = x[f]; });
   if (extra) for (var k in extra) b[k] = extra[k];
   b.s = ++inhalt.seq;
@@ -764,6 +779,10 @@ function ketteStand(inhalt) {
     var s = st[b.geraet] || (st[b.geraet] = { n: 0, k: "" });
     if (b.n > s.n) { s.n = b.n; s.k = b.k || ""; }
   });
+  Object.keys(inhalt.verworfen || {}).forEach(function (key) {
+    var p = key.split(":"), n = Number(p[1]), s = st[p[0]] || (st[p[0]] = { n: 0, k: "" });
+    if (n > s.n) { s.n = n; s.k = inhalt.verworfen[key].k; }
+  });
   return st;
 }
 
@@ -782,7 +801,7 @@ function neubeginn(inhalt, ctx, a) {
   Object.keys(inhalt).forEach(function (k) { delete inhalt[k]; });
   inhalt.version = 2; inhalt.stand = stand; inhalt.seq = seq; inhalt.kv = kv; inhalt.daten = d; inhalt.geraete = geraete;
   inhalt.basis = basis; inhalt.basisK = basisK; inhalt.meldungen = {}; inhalt.vermerke = []; inhalt.berichte = berichte;
-  inhalt.chronik = chronik; inhalt.kassenbuch = []; inhalt.quittiert = { ueber: {}, befund: 0 }; inhalt.einst = einst;
+  inhalt.chronik = chronik; inhalt.kassenbuch = []; inhalt.quittiert = { ueber: {}, befund: 0 }; inhalt.einst = einst; inhalt.verworfen = {};
   inhalt.epochenwechsel = 1;
   ctx.geaendert = true;
   return { ok: true, epoche: ep, archiv: name, seq: seq, treuhand: true };
@@ -800,6 +819,11 @@ function pruefen(inhalt) {
 
   Object.keys(namen).sort().forEach(function (g) {
     var liste = nachGeraet[g] || [], nm = {}, maxN = 0;
+    Object.keys(inhalt.verworfen).forEach(function (key) {
+      var p = key.split(":"); if (p[0] !== g) return;
+      var vn = Number(p[1]); (nm[vn] = nm[vn] || []).push({ n: vn, k: inhalt.verworfen[key].k, verworfen: true, geraet: g });
+      if (vn > maxN) maxN = vn;
+    });
     liste.forEach(function (b) {
       if (typeof b.n !== "number") { if (b.art !== "ersatz" && b.art !== "storno") res.ohneNummer++; return; }
       (nm[b.n] = nm[b.n] || []).push(b);
@@ -812,10 +836,10 @@ function pruefen(inhalt) {
       if (n <= maxN && !nm[n]) { if (von === null) von = n; }
       else if (von !== null) { res.luecken.push({ geraet: g, von: von, bis: n - 1 }); von = null; }
     }
-    Object.keys(nm).forEach(function (k) { if (nm[k].length > 1) res.doppelt.push({ geraet: g, n: Number(k) }); });
+    Object.keys(nm).forEach(function (k) { if (nm[k].length > 1 && !nm[k].some(function (z) { return z.verworfen; })) res.doppelt.push({ geraet: g, n: Number(k) }); });
     for (n = basis + 1; n <= maxN; n++) {
       var b = nm[n] && nm[n][0];
-      if (!b) continue;
+      if (!b || b.verworfen) continue;
       var vor;
       if (n - 1 === basis) vor = inhalt.basisK[g] || "";
       else vor = (nm[n - 1] && nm[n - 1][0]) ? nm[n - 1][0].k : null;
@@ -896,6 +920,7 @@ function berichtRechnen(inhalt, ctx, nurGeraet) {
     pruefung: p, vermerke: inhalt.vermerke.slice(-30), buchungenAnzahl: B.length,
     ueberziehungen: ueber, geraete: gl, ausstehend: ausstehend,
     kasse: kassenRechnung(inhalt),
+    verworfen: Object.keys(inhalt.verworfen).map(function (k) { var v = inhalt.verworfen[k]; return { geraet: k.split(':')[0], n: Number(k.split(':')[1]), id: v.id, cent: v.cent, karte: v.karte, grund: v.grund, zeit: v.zeit }; }),
     endgueltig: gruende.length === 0, gruende: gruende,
     letzterAbschluss: inhalt.berichte.length ? inhalt.berichte[inhalt.berichte.length - 1] : null
   };
