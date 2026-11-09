@@ -56,3 +56,5 @@ Dateien: `Gebrauch-A-Watt`, `Gebrauch-B-Reetdach`, `Gebrauch-C-Abendrot` (`.png`
 
 ## Rückseite nur mit der Anleitung (für jede Veranstaltung)
 `szenen/Rueckseite-Nur-Anleitung.png` (Terminal), `.svg` und `…-A4.pdf` (druckfertiger Bogen): keine Szene, kein Anlass – nur die drei Schritte (Deutsch 4,2 mm fett, Englisch 3,4 mm). Die Karten sind damit für jedes Fest nutzbar. Neu erzeugen: `node docs/kartenrueckseite/szenen/nuranleitung.mjs`.
+
+**Im Terminal ist diese Rückseite der Standard** (Karten → Rückseite der Karten → Rückseite drucken; ohne eigenes Bild wird sie gedruckt). „Standard wiederherstellen“ entfernt ein eigenes Bild wieder.

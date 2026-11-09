@@ -69,7 +69,7 @@ Terminal → Karten → Anzahl oder Namen/Gästeliste → **Vorschau der Karten*
 Terminal → Karten → **Bestehende Karten nochmal drucken**: Von/Bis (leer = alle aktiven Karten), optional nur Karten mit Guthaben. Nummer, Name und Prüfnummer bleiben; gesperrte und gelöschte Karten werden ausgelassen. Einzelne Karten: Karte antippen → „Karte nochmal drucken“.
 
 ## Rückseite der Karten
-Schablone und Anleitung: `docs/kartenrueckseite/`. Im Terminal unter Karten → **Rückseite der Karten**: Bild wählen, Passprobe drucken, Versatz einstellen, achtmal auf A4 drucken (Wenden an der langen Kante). Das Raster ist identisch mit der Vorderseite.
+Schablone und Anleitung: `docs/kartenrueckseite/`. Im Terminal unter Karten → **Rückseite der Karten**: **Standard ist die Rückseite mit der Gebrauchsanleitung** (Deutsch/Englisch, ohne Anlass – für jede Veranstaltung nutzbar). Eigenes Bild wählen (optional), Passprobe drucken, Versatz einstellen, achtmal auf A4 drucken (Wenden an der langen Kante). Das Raster ist identisch mit der Vorderseite.
 
 ## Karte ersetzen / sperren
 Am Terminal: Karten → Karte antippen → „Karte ersetzen“ (neue Nummer + Prüfnummer, Guthaben wird übertragen, alte Karte gesperrt, neue wird gedruckt) oder „Sperren“. Gesperrte Karten lehnt die Ablage bei jedem Gerät ab. Das Ersetzen braucht Verbindung.

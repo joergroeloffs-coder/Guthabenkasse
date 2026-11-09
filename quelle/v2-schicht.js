@@ -1015,7 +1015,7 @@ function v2Verwaltung(e) {
     case "kmZu": kartenModalZu(); break;
     case "rDruck": rueckDrucken(false); break;
     case "rProbe": rueckDrucken(true); break;
-    case "rWeg": rueck.bild = ""; rueckSichern(); rueckZeichnen(); break;
+    case "rWeg": rueck.bild = ""; rueckSichern(); rueckZeichnen(); melden("Standard-Rückseite (Anleitung) eingestellt"); break;
     case "gEntfernen": geraetEntfernen(); break;
     case "vNeuLaden":
       if (!confirm("Karten und Stand neu von der Ablage laden? Wartende Kartenänderungen dieses Geräts (" + db.ops.length + ") werden verworfen.")) break;
@@ -1118,6 +1118,8 @@ function bestehendeDrucken() {
    Dasselbe Raster wie die Vorderseite (aus dem Druck gemessen): Spalten bei 16 und 109 mm, Zeilen bei
    12, 72, 132 und 192 mm, Karte 85 × 54 mm. Ein Bild für alle Karten, auf A4 achtmal. */
 var RUECK_KEY = "guthabenkasse.rueckseite.v1";
+/* Standard: die Rückseite mit der Gebrauchsanleitung (kein Anlass, für jede Veranstaltung) */
+var RUECK_STANDARD = "__RUECK_STANDARD__";
 var rueck = { bild: "", x: 0, y: 0, anschnitt: true, dreh: false, blaetter: 1 };
 try { var rg = JSON.parse(localStorage.getItem(RUECK_KEY) || "{}"); for (var rk in rg) rueck[rk] = rg[rk]; } catch (e) {}
 function rueckSichern() { try { localStorage.setItem(RUECK_KEY, JSON.stringify(rueck)); } catch (e) { melden("Das Bild ist für den Gerätespeicher zu groß – bitte ein kleineres wählen."); } }
@@ -1143,7 +1145,8 @@ function rueckBildLaden(datei) {
 }
 function rueckZeichnen() {
   var v = document.getElementById("rVorschau"); if (!v) return;
-  v.innerHTML = rueck.bild ? '<img src="' + rueck.bild + '" alt="" style="max-width:100%;max-height:120px;border:1px solid #CDB77E;border-radius:3px">' : '<span class="muted">Noch kein Bild gewählt (gedruckt wird dann nur die Passprobe).</span>';
+  v.innerHTML = '<img src="' + (rueck.bild || RUECK_STANDARD) + '" alt="" style="max-width:100%;max-height:120px;border:1px solid #CDB77E;border-radius:3px">' +
+    '<div class="muted" style="margin-top:4px">' + (rueck.bild ? 'Eigenes Bild' : 'Standard: Rückseite mit der Gebrauchsanleitung (Deutsch/Englisch), für jede Veranstaltung nutzbar') + '</div>';
   var f = function (id, w) { var e = document.getElementById(id); if (e && document.activeElement !== e) { if (e.type === "checkbox") e.checked = !!w; else e.value = w; } };
   f("rX", rueck.x); f("rY", rueck.y); f("rAnschnitt", rueck.anschnitt); f("rDreh", rueck.dreh); f("rBlaetter", rueck.blaetter);
 }
@@ -1164,9 +1167,9 @@ function rueckSeite(passprobe) {
       inhalt = '<svg viewBox="0 0 85 54" width="85mm" height="54mm" style="display:block"><rect x="0.13" y="0.13" width="84.74" height="53.74" fill="none" stroke="#000" stroke-width=".25"/>' +
         '<path d="M42.5 46.5v8M38.5 50.5h8" stroke="#000" stroke-width=".2" fill="none" transform="translate(0,-23.5)"/>' +
         '<text x="3" y="6" font-size="3" font-family="Arial,sans-serif">Passprobe ' + (i + 1) + '</text></svg>';
-    } else if (rueck.bild) {
-      inhalt = '<img src="' + rueck.bild + '" alt="" style="position:absolute;left:' + (-an) + 'mm;top:' + (-an) + 'mm;width:' + (85 + 2 * an) + 'mm;height:' + (54 + 2 * an) + 'mm;object-fit:cover;' + (rueck.dreh ? 'transform:rotate(180deg);' : '') + '">';
-    } else inhalt = "";
+    } else {
+      inhalt = '<img src="' + (rueck.bild || RUECK_STANDARD) + '" alt="" style="position:absolute;left:' + (-an) + 'mm;top:' + (-an) + 'mm;width:' + (85 + 2 * an) + 'mm;height:' + (54 + 2 * an) + 'mm;object-fit:cover;' + (rueck.dreh ? 'transform:rotate(180deg);' : '') + '">';
+    }
     plaetze += '<div style="width:85mm;height:54mm;position:relative;overflow:visible">' + inhalt + '</div>';
   }
   /* Versatz über den Seitenrand, nicht über „position“: das Blatt wird nie breiter als 210 mm
@@ -1176,7 +1179,6 @@ function rueckSeite(passprobe) {
 }
 function rueckDrucken(passprobe) {
   rueckEinlesen();
-  if (!passprobe && !rueck.bild) { melden("Erst ein Bild für die Rückseite wählen."); return; }
   var seiten = "", n = passprobe ? 1 : rueck.blaetter;
   for (var i = 0; i < n; i++) seiten += rueckSeite(passprobe);
   drucken(seiten);
