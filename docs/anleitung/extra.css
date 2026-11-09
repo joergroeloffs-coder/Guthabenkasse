@@ -1,0 +1,30 @@
+
+/* ---- Zusätze für die Guthabenkasse ---- */
+.dreibilder{display:flex;gap:7pt;margin:4pt 0 6pt}
+.dreibilder figure{flex:1;margin:0;min-width:0}
+.dreibilder figcaption{font-size:8.5pt;line-height:1.35}
+.urteil .was ul{font-size:9.5pt}
+.urteil .was li{margin-bottom:2pt}
+.urteil .was p{margin:0 0 4pt}
+
+.mitbild{display:flex;gap:10pt;align-items:flex-start;margin:6pt 0}
+.mitbild .text{flex:1;min-width:0}
+.mitbild > figure{flex:0 0 36%;margin:0}
+.mitbild .text > p{font-size:9.5pt}
+.zweibilder{display:flex;gap:6pt;flex:0 0 50%}
+.zweibilder figure{flex:1;margin:0;min-width:0}
+.zweibilder figcaption{font-size:8pt}
+.dreibilder figure{flex:1}
+.dreibilder img{width:78%;margin:0 auto}
+
+.inhalt{margin-top:4mm !important}
+.inhalt .zeile{padding:2.5pt 0 !important}
+.mitbild > figure{flex:0 0 33%}
+.titel .inhalt .zeile, section.titel .inhalt .zeile{padding:1.5pt 0 !important}
+table.eng td,table.eng th{padding-top:3pt !important;padding-bottom:3pt !important;font-size:9pt !important;line-height:1.3}
+/* 0.11: mehr Kapitel, also dichter */
+.titel{padding-top:0 !important}
+.titel img.symbol{width:22mm !important;height:22mm !important;margin-bottom:3mm !important}
+.titel .verein{margin-top:4mm !important}
+.titel .inhalt .zeile, section.titel .inhalt .zeile{padding:.8pt 0 !important}
+.titel .reihe p{margin-bottom:0}

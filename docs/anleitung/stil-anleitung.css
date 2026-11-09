@@ -1,0 +1,126 @@
+:root{
+  --papier:#FAF8F1; --grund:#E9EDE7; --flaeche:#FFFFFF;
+  --linie:#CDB77E; --linieFein:#E6DCC0;
+  --tinte:#10251A; --tinteWeich:#57685C;
+  --watt:#1E5C3E; --wattHell:#E5EFE8;
+  --kopf:#0C1D14; --gold:#B08D3C; --goldHell:#F5EEDC;
+  --ziegel:#93382B; --ziegelHell:#F7E7E2;
+  --messing:#80621C; --sand:#F7F0DC;
+}
+*{box-sizing:border-box}
+@page{ size:A4; margin:15mm 15mm 16mm; }
+html,body{margin:0;padding:0}
+body{
+  font-family:'Inter','Liberation Sans',system-ui,sans-serif;
+  font-size:10.2pt; line-height:1.5; color:var(--tinte);
+  -webkit-print-color-adjust:exact; print-color-adjust:exact;
+}
+h1,h2,h3{font-family:'Newsreader','Bitstream Charter',Georgia,serif;font-weight:400;margin:0}
+p{margin:0 0 7pt}
+strong{font-weight:600}
+.blatt{break-after:page;page-break-after:always}
+.blatt:last-child{break-after:auto;page-break-after:auto}
+
+/* ---- Kapitelkopf: farbiges Band mit Nummer ---- */
+.kapitel{display:flex;align-items:center;gap:10pt;margin:0 0 12pt}
+.kapitel .nr{
+  width:26pt;height:26pt;border-radius:13pt;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13pt;font-weight:600;color:#fff;background:var(--watt);
+}
+.kapitel h2{font-size:19pt;line-height:1.1}
+.kapitel .wozu{font-size:9pt;color:var(--tinteWeich);margin-top:1pt}
+.k-gold .nr{background:var(--gold)}
+.k-ziegel .nr{background:var(--ziegel)}
+.k-messing .nr{background:var(--messing)}
+.k-kopf .nr{background:var(--kopf)}
+
+h3{font-size:12.5pt;margin:12pt 0 4pt}
+
+/* ---- Schritte ---- */
+.schritte{counter-reset:s;margin:0}
+.schritt{
+  display:flex;gap:9pt;margin-bottom:9pt;break-inside:avoid;page-break-inside:avoid;
+}
+.schritt .zahl{
+  counter-increment:s;flex:0 0 auto;
+  width:20pt;height:20pt;border-radius:10pt;background:var(--wattHell);
+  color:var(--watt);font-weight:600;font-size:10pt;
+  display:flex;align-items:center;justify-content:center;
+}
+.schritt .zahl::before{content:counter(s)}
+.schritt .was{flex:1}
+.schritt .was > b:first-child{display:block;font-size:11pt}
+.schritt .was p{margin:1pt 0 0}
+
+/* ---- Kästen ---- */
+.kasten{
+  border-left:3pt solid var(--watt);background:var(--wattHell);
+  padding:7pt 9pt;margin:9pt 0;border-radius:0 3pt 3pt 0;
+  break-inside:avoid;page-break-inside:avoid;
+}
+.kasten > b:first-child{display:block;margin-bottom:2pt}
+.kasten p:last-child{margin-bottom:0}
+.k-warnung{border-color:var(--ziegel);background:var(--ziegelHell)}
+.k-merke{border-color:var(--gold);background:var(--goldHell)}
+
+/* ---- Tabellen ---- */
+table{width:100%;border-collapse:collapse;margin:6pt 0 9pt;font-size:9.5pt}
+th{text-align:left;font-weight:400;font-size:7.5pt;text-transform:uppercase;
+   letter-spacing:.08em;color:var(--tinteWeich);
+   border-bottom:1pt solid var(--gold);padding:0 6pt 3pt 0}
+td{padding:4pt 6pt 4pt 0;border-bottom:.5pt solid var(--linieFein);vertical-align:top}
+tr{break-inside:avoid;page-break-inside:avoid}
+.mono{font-family:'IBM Plex Mono','DejaVu Sans Mono',monospace;font-size:8.7pt}
+
+/* ---- Bilder ---- */
+figure{margin:8pt 0;break-inside:avoid;page-break-inside:avoid}
+figure img{display:block;width:100%;border:.5pt solid var(--linieFein);border-radius:3pt}
+figcaption{font-size:8.5pt;color:var(--tinteWeich);margin-top:3pt}
+.schmal{max-width:78%}
+
+/* ---- Titelseite ---- */
+.titel{text-align:center;padding-top:4mm}
+.titel img.symbol{width:27mm;height:27mm;display:block;margin:0 auto 6mm}
+.titel h1{font-size:32pt;line-height:1.05}
+.titel .unterzeile{font-size:13pt;color:var(--tinteWeich);margin-top:3pt}
+.titel .verein{font-size:10pt;color:var(--tinteWeich);margin-top:7mm;
+  letter-spacing:.16em;text-transform:uppercase}
+.adresse{
+  background:var(--kopf);color:var(--papier);border-radius:4pt;
+  padding:8pt 12pt;margin:6mm auto 0;max-width:132mm;text-align:center;
+}
+.adresse .wofuer{font-size:8pt;letter-spacing:.16em;text-transform:uppercase;
+  color:#93A899;margin-bottom:3pt}
+.adresse .wo{font-family:'IBM Plex Mono','DejaVu Sans Mono',monospace;font-size:11.5pt;
+  word-break:break-all}
+
+/* ---- Farbige Kärtchen nebeneinander ---- */
+.reihe{display:flex;gap:8pt;margin:9pt 0}
+.reihe > div{flex:1;padding:7pt 9pt;border-radius:3pt;break-inside:avoid}
+.f-gruen{background:var(--wattHell)}
+.f-sand{background:var(--sand)}
+.f-ziegel{background:var(--ziegelHell)}
+.reihe > div > b:first-child{display:block;font-size:10.5pt;margin-bottom:2pt}
+.reihe p{margin:0;font-size:9.5pt}
+
+/* ---- Urteilsliste am Einlass ---- */
+.urteil{display:flex;gap:9pt;align-items:flex-start;margin-bottom:5pt;
+        break-inside:avoid;page-break-inside:avoid}
+.urteil img{width:52%;border:.5pt solid var(--linieFein);border-radius:3pt;flex:0 0 auto}
+.urteil .was{flex:1;font-size:9.5pt}
+.urteil .was > b:first-child{display:block}
+
+/* ---- Inhaltsverzeichnis auf der Titelseite ---- */
+.inhalt{margin:7mm auto 0;max-width:150mm}
+.inhalt .zeile{display:flex;gap:8pt;align-items:baseline;padding:3.5pt 0;
+               border-bottom:.5pt solid var(--linieFein)}
+.inhalt .nr{width:15pt;height:15pt;border-radius:8pt;flex:0 0 auto;font-size:8pt;
+            font-weight:600;color:#fff;background:var(--watt);
+            display:flex;align-items:center;justify-content:center}
+.inhalt .titel2{flex:1;text-align:left;font-weight:600}
+.inhalt .seite{color:var(--tinteWeich);font-size:9pt}
+.inhalt .wo{font-weight:400;color:var(--tinteWeich);font-size:9pt}
+
+.fuss{margin-top:10pt;padding-top:5pt;border-top:.5pt solid var(--linieFein);
+      font-size:8.5pt;color:var(--tinteWeich)}
