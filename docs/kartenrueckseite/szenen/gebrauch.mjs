@@ -14,12 +14,12 @@ const schritte = [
   ['Restguthaben wird an der Kasse ausgezahlt', 'Unspent balance is paid out at the till'],
 ];
 const panel = () => {
-  const ys = [32.6, 39.9, 47.2];
+  const ys = [32.0, 39.7, 47.4];
   return `<rect x="0" y="27.5" width="88" height="29.5" fill="${CREME}"/><rect x="0" y="27.5" width="88" height="0.5" fill="${GOLD}"/>
   ${schritte.map(([de, en], i) => `<g>
-    <circle cx="9.6" cy="${ys[i] + 0.9}" r="2.4" fill="${NAVY}"/><text x="9.6" y="${ys[i] + 1.95}" ${typ} font-size="3.1" font-weight="700" text-anchor="middle" fill="${CREME}">${i + 1}</text>
-    <text x="14.6" y="${ys[i]}" ${typ} font-size="3.0" font-weight="700" fill="${NAVY}">${de}</text>
-    <text x="14.6" y="${ys[i] + 3.1}" ${typ} font-size="2.6" fill="#3b4a6b">${en}</text></g>`).join('')}`;
+    <circle cx="8.8" cy="${ys[i] + 1.1}" r="2.55" fill="${NAVY}"/><text x="8.8" y="${ys[i] + 2.25}" ${typ} font-size="3.4" font-weight="700" text-anchor="middle" fill="${CREME}">${i + 1}</text>
+    <text x="13" y="${ys[i]}" ${typ} font-size="3.3" font-weight="700" fill="${NAVY}">${de}</text>
+    <text x="13" y="${ys[i] + 3.3}" ${typ} font-size="2.85" fill="#3b4a6b">${en}</text></g>`).join('')}`;
 };
 const kopfzeile = (f) => `<text x="44" y="19.7" ${typ} font-size="1.9" font-weight="700" letter-spacing=".3" text-anchor="middle" fill="${f}">GUTHABENKARTE · BALANCE CARD</text>`;
 const szenen = {
