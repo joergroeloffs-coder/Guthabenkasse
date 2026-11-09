@@ -47,7 +47,7 @@ Je Szene: `Szene-X-….png` (88 × 57 mm mit Anschnitt, 1039 × 673 px – im Te
 **Logo:** Die Vorlage (`logo-original-234x26.png`) hat nur 234 × 26 Pixel. Sie wird weich hochgerechnet; die Schrift wirkt deshalb bei 300 dpi leicht pixelig. „OLDSUM / FÖHR“ ist neu als Text gesetzt. Für beste Druckqualität bitte das Logo als **SVG, PDF oder PNG ab 2000 Pixel Breite** nachliefern; dann wird es ausgetauscht.
 
 ## Rückseite mit kurzer Gebrauchsanleitung (`szenen/Gebrauch-…`)
-Oben ein schmales Bild mit Logo, unten auf cremefarbenem Grund drei Schritte, deutsch und englisch, gut lesbar (Schrift 3,3 mm fett / 2,85 mm):
+Oben ein schmales Bild mit Logo, unten auf cremefarbenem Grund drei Schritte, deutsch und englisch, gut lesbar (Schrift 3,7 mm fett / 3,0 mm, schmaleres Bild oben):
 1. An der Kasse aufladen · Top up at the till
 2. Zum Bezahlen – Karte scannen lassen · To pay – have your card scanned
 3. Restguthaben wird an der Kasse ausgezahlt · Unspent balance is paid out at the till
