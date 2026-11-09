@@ -35,3 +35,13 @@ Die Karten liegen weit innerhalb des druckbaren Bereichs (mindestens 10 mm Rand)
 * Die meisten Drucker haben ein paar Zehntel Millimeter Einzugstoleranz. Für eine Rückseite mit Vollflächenhintergrund deshalb den Anschnitt nutzen.
 * Das Bild wird im Gerätespeicher des Terminals gemerkt (nicht in der Ablage und nicht auf den anderen Geräten).
 * Neu erzeugen: `node docs/kartenrueckseite/bauen.mjs`.
+
+## Fertige Rückseiten mit dem Logo (Ordner `szenen/`)
+Drei Szenen mit dem Logo des Ual Fering Wiartshüs, Oldsum / Föhr, Unterzeile „Guthabenkarte · Bakiye Kartı“ und dem Hinweis zur Rückzahlung des Restguthabens (deutsch/türkisch):
+* **Szene A „Watt“** – Wattenmeer bei Ebbe mit Prickenreihe und Sonne.
+* **Szene B „Reetdach“** – Friesenhaus mit Reetdach am Deich, Schafe.
+* **Szene C „Abendrot“** – Sonnenuntergang mit Segelboot (Logo in Creme).
+
+Je Szene: `Szene-X-….png` (88 × 57 mm mit Anschnitt, 1039 × 673 px – im Terminal unter Karten → Rückseite der Karten wählen), `.svg` und `Szene-X-…-Rueckseite-A4.pdf` (druckfertiger A4-Bogen, 8 Karten im Raster der Vorderseite). Neu erzeugen: `node docs/kartenrueckseite/szenen/szenen.mjs`.
+
+**Logo:** Die Vorlage (`logo-original-234x26.png`) hat nur 234 × 26 Pixel. Sie wird weich hochgerechnet; die Schrift wirkt deshalb bei 300 dpi leicht pixelig. „OLDSUM / FÖHR“ ist neu als Text gesetzt. Für beste Druckqualität bitte das Logo als **SVG, PDF oder PNG ab 2000 Pixel Breite** nachliefern; dann wird es ausgetauscht.
