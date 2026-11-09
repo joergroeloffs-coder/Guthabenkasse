@@ -9,7 +9,7 @@ und Bausteine wie die Ticketkasse des Vereins.
 > Geräterolle ist umstellbar, die Ablage schützt nur ein Zugangswort.
 
 **Für den ersten Abend:** [`Bedienungsanleitung.pdf`](Bedienungsanleitung.pdf)
-(9 Seiten, Stand Fassung 0.7.1, mit Bildern; als [`HTML`](Bedienungsanleitung.html) zum Nachlesen im Browser).
+(11 Seiten, Stand Fassung 0.11.0, mit Bildern; als [`HTML`](Bedienungsanleitung.html) zum Nachlesen im Browser).
 
 ## Gedanke
 
