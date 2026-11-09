@@ -4930,13 +4930,13 @@ function geraeteTabelle() {
   var liste = (db.geraeteListe || []).slice();
   var mich = liste.filter(function (g) { return g.id === db.geraet; })[0];
   if (!mich) liste.push({ id: db.geraet, name: db.geraetName || ("Gerät " + db.geraet), bediener: db.bediener, aufgabe: "Terminal", zuletzt: null, online: sync.online === true, ausstehend: ausstehende().length, fehler: "" });
-  return '<div class="rolle"><table class="tab"><tr><th>Gerät</th><th>Bediener</th><th>Aufgabe</th><th>Zuletzt verbunden</th><th>Offen</th><th>Fehler</th></tr>' +
+  return '<div class="rolle"><table class="tab"><tr><th>Gerät</th><th>Bediener</th><th>Aufgabe</th><th>Zuletzt verbunden</th><th>Offen</th><th>Fehler</th><th></th></tr>' +
     liste.map(function (g) {
       var mir = g.id === db.geraet;
       var on = mir ? sync.online === true : g.online;
       return '<tr><td><b>' + esc(g.id) + '</b> ' + esc(g.name || "") + (mir ? ' (dieses)' : '') + '</td><td>' + esc(g.bediener || "–") + '</td><td>' + esc(g.aufgabe || "") + '</td><td>' +
         (g.zuletzt ? esc(zeitpunkt(Date.parse(g.zuletzt))) : "–") + ' <span class="' + (on ? "s-ok" : "s-offline") + '">' + (on ? "● online" : "○ zuletzt") + '</span></td><td>' + (mir ? ausstehende().length : g.ausstehend) +
-        '</td><td>' + esc(mir ? (sync.fehler || sync.serverFehler || "") : g.fehler || "") + '</td></tr>';
+        '</td><td>' + esc(mir ? (sync.fehler || sync.serverFehler || "") : g.fehler || "") + '</td><td><button class="knopf klein" data-gentf="' + esc(g.id) + '">entfernen</button></td></tr>';
     }).join("") + '</table></div>';
 }
 
@@ -5037,6 +5037,7 @@ function v2Verwaltung(e) {
   if (knopf.getAttribute("data-gesehen")) { db.abgelehnt.forEach(function (x) { x.gesehen = true; }); sichern(); zeichneVerwaltung(); zeichneMeine(); zeichneStatus(); return; }
   if (knopf.getAttribute("data-modus")) { db.modus = knopf.getAttribute("data-modus"); sichern(); zeichneEinstellungen(); return; }
   if (knopf.getAttribute("data-tm")) { trinkModusSetzen(knopf.getAttribute("data-tm")); return; }
+  if (knopf.getAttribute("data-gentf")) { geraetEntfernen(knopf.getAttribute("data-gentf")); return; }
   if (knopf.getAttribute("data-wiederher")) { wiederherstellen(knopf.getAttribute("data-wiederher")); return; }
   if (!id) return;
   var ab = function (p) { p.then(null, function (f) { vMeld("Keine Verbindung: " + (f && f.message || f)); }); };
@@ -5091,8 +5092,9 @@ function einstSpeichern() {
     if (a.ok) { db.einst = a.einst; sichern(); vMeld("Gespeichert"); zeichneEinstellungen(); } else vMeld(a.fehler || "?");
   }).then(null, function (f) { vMeld("Keine Verbindung: " + f.message); });
 }
-function geraetEntfernen() {
-  var b = prompt("Welches Gerät aus der Liste entfernen? (Buchstabe)"); if (!b) return;
+function geraetEntfernen(buchstabe) {
+  var b = buchstabe || prompt("Welches Gerät aus der Liste entfernen? (Buchstabe)"); if (!b) return;
+  if (!confirm("Gerät " + b.toUpperCase() + " aus der Liste entfernen?\n\nSeine bisherigen Buchungen bleiben erhalten. Der Buchstabe wird frei und kann von einem Gerät neu belegt werden. Hat das Gerät seinen Speicher verloren, besser einen neuen Buchstaben wählen (sonst meldet die Prüfung doppelte Nummern).")) return;
   var w = adminWort("Gerät " + b.toUpperCase() + " entfernen"); if (!w) return;
   rufeAblage({ aktion: "geraete", was: "entfernen", id: b.toUpperCase() }, w).then(function (a) { vMeld(a.ok ? "Entfernt" : (a.fehler || "?")); return syncJetzt(10000); }).then(zeichneVerwaltung).then(null, function () {});
 }

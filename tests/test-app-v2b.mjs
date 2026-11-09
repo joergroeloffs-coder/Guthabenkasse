@@ -72,4 +72,10 @@ const e = await erg(V);
 t('Langsame Ablage: genau eine Buchung', holen().buchungen.length === nVor + 1, String(holen().buchungen.length - nVor));
 t('Langsame Ablage: kein "Unklar" am Ende', !e.includes('Unklar'), e);
 t('Langsame Ablage: nichts bleibt offen', await V.evaluate(() => ausstehende().length) === 0);
+// Gerät entfernen über die Oberfläche (Administrator-Wort) und Buchstabe wieder belegen
+await T.evaluate(() => { window.confirm = () => true; window.prompt = () => 'ad'; reiterZeigen('verwaltung'); });
+await T.evaluate(() => syncJetzt(5000)); await w(T, 400); await T.evaluate(() => zeichneVerwaltung());
+t('Entfernen-Knopf in der Geräteliste', await T.evaluate(() => !!document.querySelector('[data-gentf="V"]')));
+await T.evaluate(() => document.querySelector('[data-gentf="V"]').click()); await w(T, 1500);
+t('Gerät V entfernt', !A.srv.post('ad', { aktion: 'geraete' }).geraete.some(g => g.id === 'V'));
 console.log('Seitenfehler:', A.steuer.log.length ? A.steuer.log : 'keine'); console.log(ok + ' ok, ' + bad + ' Fehler'); await A.ende();
