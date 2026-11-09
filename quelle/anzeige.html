@@ -46,7 +46,7 @@ html,body{margin:0;height:100%;background:var(--kopf);color:var(--papier);font-f
 #einricht .reihe{display:flex;gap:8px;margin-top:6px}
 #einricht button{flex:1;padding:12px;font-size:16px;border-radius:8px;border:1px solid var(--watt);background:var(--watt);color:#fff;cursor:pointer}
 #einricht button.zu{background:transparent;color:var(--watt)}
-#einrichtMeldung{font-size:13px;color:var(--ziegel);min-height:1.2em}
+#einrichtMeldung{font-size:13px;color:var(--ziegel);min-height:1.2em;line-height:1.35}
 #kamerafehler{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;font-size:20px;background:#111}
 </style>
 </head>
@@ -220,6 +220,7 @@ $("einrichtForm").addEventListener("submit", function (e) {
     .then(function (r) { return r.text(); }).then(function (x) {
       var j = null; try { j = JSON.parse(x); } catch (f) {}
       if (j && j.ok) { $("einricht").classList.remove("zeigt"); zuruecksetzen(); }
+      else if (j && j.fehler && /Zugangswort/.test(j.fehler)) $("einrichtMeldung").textContent = "Die Ablage kennt dieses Wort nicht. Prüfen: (1) Ist es dieselbe Adresse wie im Terminal und stammt sie von der Bereitstellung mit dem neuen Skript? (2) Steht im Skript var WORT_ANZEIGE = \"…\" mit genau diesem Wort? (3) Wurde danach eine NEUE VERSION bereitgestellt (Bereitstellen → Bereitstellungen verwalten → Stift → Neue Version)?";
       else $("einrichtMeldung").textContent = (j && j.fehler) ? "Die Ablage lehnt ab: " + j.fehler : "Keine gültige Antwort der Ablage.";
     }).catch(function () { $("einrichtMeldung").textContent = "Die Ablage ist nicht erreichbar."; });
 });
