@@ -78,4 +78,13 @@ await T.evaluate(() => syncJetzt(5000)); await w(T, 400); await T.evaluate(() =>
 t('Entfernen-Knopf in der Geräteliste', await T.evaluate(() => !!document.querySelector('[data-gentf="V"]')));
 await T.evaluate(() => document.querySelector('[data-gentf="V"]').click()); await w(T, 1500);
 t('Gerät V entfernt', !A.srv.post('ad', { aktion: 'geraete' }).geraete.some(g => g.id === 'V'));
+// Neues Fest: Beschriftung der Karten (Anlass, Verein) ist danach leer – auf beiden Geräten
+A.srv.post('ka', { aktion: 'karten', was: 'name', nr: 'A0100', name: 'Anna' });
+await T.evaluate(() => { db.anlass = { name: 'Sommerfest', verein: 'Verein', zusatz: 'Zusatz', ts: Date.now() }; sichern(); });
+await T.evaluate(() => { window.confirm = () => true; window.prompt = () => 'ad'; $("nummernNeu").checked = false; document.getElementById('kNamen').value = 'Alt Name'; betriebAufNull(); }); await w(T, 3000);
+t('Neues Fest: Anlass am Terminal leer', await T.evaluate(() => !db.anlass.name && !db.anlass.verein && !db.anlass.zusatz));
+t('Neues Fest: Namensfeld leer', await T.evaluate(() => document.getElementById('kNamen').value === ''));
+t('Neues Fest: Ablage-Anlass leer', !holen().anlass.name);
+await V.evaluate(() => { db.anlass = { name: 'Sommerfest', verein: 'Verein', zusatz: '', ts: 1 }; sichern(); syncJetzt(5000); }); await w(V, 2500);
+t('Neues Fest: Verkaufsgerät übernimmt leere Beschriftung', await V.evaluate(() => !db.anlass.name && !db.anlass.verein && db.karten && Object.keys(db.karten).length === 0));
 console.log('Seitenfehler:', A.steuer.log.length ? A.steuer.log : 'keine'); console.log(ok + ' ok, ' + bad + ' Fehler'); await A.ende();

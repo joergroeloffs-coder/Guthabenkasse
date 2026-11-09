@@ -797,7 +797,7 @@ function neubeginn(inhalt, ctx, a) {
   Object.keys(st).forEach(function (g) { basis[g] = st[g].n; basisK[g] = st[g].k; });
   var d = leerDaten();
   d.epoche = ep; d.nummernNeu = !!a.nummernNeu;
-  if (inhalt.daten.anlass) d.anlass = inhalt.daten.anlass;
+  /* Die Beschriftung der Karten (Anlass, Verein, Zusatz) beginnt leer: besser nichts als etwas Altes. Das Archiv hat sie. */
   var geraete = {};
   Object.keys(inhalt.geraete).forEach(function (id) { var g = inhalt.geraete[id]; geraete[id] = { schluessel: g.schluessel, name: g.name, erstmals: g.erstmals }; });
   var chronik = inhalt.chronik.concat([{ zeit: new Date().toISOString(), art: "neuesFest", text: "Neues Fest begonnen, Archiv: " + name }]);

@@ -4512,6 +4512,14 @@ function syncEinmal(ms) {
   return Promise.race([arbeit, frist]);
 }
 
+/* Nach einem neuen Fest: nichts Altes auf Karten und Formularen */
+function beschriftungLeeren() {
+  db.anlass = { name: "", verein: "", zusatz: "", ts: Date.now() };
+  try { $("kNamen").value = ""; $("kAnzahl").value = ""; $("gaesteDatei").value = ""; } catch (e) {}
+  gaeste = null; try { zeichneGaeste(); } catch (e) {}
+  try { $("kVorschau").textContent = ""; } catch (e) {}
+}
+
 function verarbeiteSync(a, gesendet) {
   var angenommen = 0, idx = {};
   /* neues Fest von einem anderen Gerät */
@@ -4519,6 +4527,7 @@ function verarbeiteSync(a, gesendet) {
     var verloren = db.buchungen.filter(function (b) { return !b.s; });
     verloren.forEach(function (b) { db.abgelehnt.push({ id: b.id, karte: b.karte, cent: b.cent, art: b.art, zeit: b.zeit, grund: "aus einem früheren Fest", gesehen: false }); });
     db.buchungen = []; db.cursor = 0; db.kv = 0; db.epoche = a.epoche; db.karten = {}; db.geloescht = {};
+    beschriftungLeeren(); db.anlass = a.anlass && (a.anlass.name || a.anlass.verein || a.anlass.zusatz) ? a.anlass : db.anlass;
     if (a.cursor && a.buchungen && a.buchungen.length === 0) db.cursor = 0;
     melden("Neues Fest übernommen");
   }
@@ -5316,7 +5325,7 @@ betriebAufNull = function () {
   }).then(function (a) {
     if (!a.ok) { melden(a.fehler || "Nicht möglich"); return; }
     db.buchungen = []; db.karten = {}; db.geloescht = {}; db.cursor = 0; db.kv = 0; db.epoche = a.epoche; db.abgelehnt = []; db.ops = [];
-    db.nummernNeu = $("nummernNeu").checked; db.aufBetrag = ""; sichern(); zeichneAlles(); melden("Neues Fest begonnen");
+    db.nummernNeu = $("nummernNeu").checked; db.aufBetrag = ""; beschriftungLeeren(); sichern(); zeichneAlles(); zeichneEinstellungen(); urteilBereit("auf"); urteilBereit("ab"); melden("Neues Fest begonnen – Beschriftung leer");
     syncJetzt(10000);
   }).then(null, function (f) { melden("Keine Verbindung: " + f.message); });
 };
