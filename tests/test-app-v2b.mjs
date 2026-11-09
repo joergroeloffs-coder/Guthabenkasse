@@ -87,4 +87,17 @@ t('Neues Fest: Namensfeld leer', await T.evaluate(() => document.getElementById(
 t('Neues Fest: Ablage-Anlass leer', !holen().anlass.name);
 await V.evaluate(() => { db.anlass = { name: 'Sommerfest', verein: 'Verein', zusatz: '', ts: 1 }; sichern(); syncJetzt(5000); }); await w(V, 2500);
 t('Neues Fest: Verkaufsgerät übernimmt leere Beschriftung', await V.evaluate(() => !db.anlass.name && !db.anlass.verein && db.karten && Object.keys(db.karten).length === 0));
+// Neues Gerät mit belegtem Buchstaben: Druck gesperrt, Neu-Laden holt den Stand
+A.srv.post('ka', { aktion: 'karten', was: 'anlegen', karten: [{ nr: 'A0500', code: 'ABCD' }, { nr: 'A0501', code: 'EFGH' }] });
+A.srv.post('ka', { aktion: 'sync', geraet: { id: 'T', schluessel: await T.evaluate(() => db.schluessel) }, cursor: 0, kv: 0, neu: [{ id: 'x500', karte: 'A0500', cent: 500, art: 'auf', zeit: Date.now(), geraet: 'T', n: 9000, k: 'k' }] });
+const T3 = await A.seite('terminal', 'T', 'ka', 'Neu');   // gleicher Buchstabe, neuer Browser = fremder Schlüssel
+await T3.evaluate(() => syncJetzt(5000)); await w(T3, 800);
+t('Buchstabe belegt: Fehler sichtbar', await T3.evaluate(() => /Gerätebuchstabe/.test(statusText())));
+await T3.evaluate(() => { window.__m = []; melden = function (x) { window.__m.push(x); }; kartenDrucken(); });
+t('Druck ohne Abgleich gesperrt', (await T3.evaluate(() => window.__m.join('|'))).includes('abgleichen'));
+await T3.evaluate(() => { db.geraet = 'Q'; sichern(); window.confirm = () => true; });
+await T3.evaluate(() => { reiterZeigen('verwaltung'); }); await w(T3, 300);
+await T3.evaluate(() => document.getElementById('vNeuLaden').click()); await w(T3, 2500);
+t('Neu laden holt Karten', await T3.evaluate(() => Object.keys(db.karten).length) >= 2);
+t('Neu laden: Guthaben sichtbar', await T3.evaluate(() => Object.keys(salden()).some(k => salden()[k] > 0)));
 console.log('Seitenfehler:', A.steuer.log.length ? A.steuer.log : 'keine'); console.log(ok + ' ok, ' + bad + ' Fehler'); await A.ende();

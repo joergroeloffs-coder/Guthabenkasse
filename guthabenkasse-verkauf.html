@@ -4431,7 +4431,7 @@ wolkeSagen = function () { zeichneWolke(); };
 function statusText() {
   var n = ausstehende().length;
   if (!wolkeBereit()) return "Keine Ablage eingetragen.";
-  if (sync.serverFehler) return "Die Ablage lehnt ab: " + sync.serverFehler;
+  if (sync.serverFehler) return "Die Ablage lehnt ab: " + sync.serverFehler + (/Gerätebuchstabe/.test(sync.serverFehler) ? " – Lösung: unter Optionen einen anderen Buchstaben wählen, oder das alte Gerät im Terminal unter Verwaltung entfernen." : "");
   var z = db.letzterAbgleich ? "Letzter Abgleich " + uhrzeit(db.letzterAbgleich) + " Uhr" : "Noch nicht abgeglichen";
   if (sync.online === false) return "Keine Verbindung · " + z + (n ? " · " + n + " Buchung(en) warten" : "");
   return z + (n ? " · " + n + " noch nicht übertragen" : " · alles übertragen");
@@ -4495,6 +4495,16 @@ kartenBlatt = function (nrs) {
   nrs.forEach(codeSichern);
   sichern(); opsSenden();
   return _kartenBlatt(nrs);
+};
+var _kartenDrucken = kartenDrucken;
+kartenDrucken = function () {
+  /* Ein Gerät, das noch nie mit der Ablage gesprochen hat, kennt die vergebenen Nummern nicht und
+     würde sie noch einmal vergeben. */
+  if (wolkeBereit() && (sync.serverFehler || !db.letzterAbgleich)) {
+    melden("Erst muss das Gerät sich mit der Ablage abgleichen" + (sync.serverFehler ? " (" + sync.serverFehler + ")" : "") + " – sonst werden Kartennummern doppelt vergeben.");
+    return;
+  }
+  _kartenDrucken();
 };
 var _namen = nameSetzen;
 nameSetzen = function (nr, text) {
@@ -4989,7 +4999,8 @@ function zeichneVerwaltung() {
       '<div class="feldTitel" style="margin-top:14px">Für alle Geräte (Administrator-Wort)</div>' +
       '<label style="display:flex;gap:8px;align-items:center;margin:6px 0;font-size:14px"><input type="checkbox" id="eAnschreiben" style="width:auto;height:auto"' + (db.einst && db.einst.anschreiben ? ' checked' : '') + '> Anschreiben (negatives Guthaben) erlauben, bis ' + eur((db.einst && db.einst.anschreibenGrenze) || 5000) + ' €</label>' +
       '<div class="reihe umbruch" style="align-items:flex-end"><label class="feld" style="width:180px"><span>Offline-Limit je Karte und Gerät €</span><input id="eOffline" class="mono" inputmode="decimal" value="' + eur((db.einst && db.einst.offlineLimit) || 2000).replace(/\.(?=\d{3})/g, "") + '"></label><button class="knopf" id="eSpeichern">Speichern</button></div>' +
-      '<div class="reihe umbruch" style="margin-top:10px"><button class="knopf" id="gEntfernen">Gerät aus der Liste entfernen</button></div>' +
+      '<div class="reihe umbruch" style="margin-top:10px"><button class="knopf" id="gEntfernen">Gerät aus der Liste entfernen</button><button class="knopf" id="vNeuLaden">Karten und Stand neu von der Ablage laden</button></div>' +
+      '<p class="muted">„Neu laden“ verwirft wartende Kartenänderungen dieses Geräts und holt Karten und Buchungen frisch aus der Ablage. Noch nicht übertragene Buchungen bleiben erhalten.</p>' +
     '</div></div>';
   zeichneEinstellungen();
 }
@@ -5072,6 +5083,10 @@ function v2Verwaltung(e) {
     case "pinBtn": var p = document.getElementById("pinNeu").value.trim(); db.pin = p ? kettenHash("pin|" + p) : ""; sichern(); vMeld(p ? "PIN gesetzt" : "PIN entfernt"); break;
     case "eSpeichern": einstSpeichern(); break;
     case "gEntfernen": geraetEntfernen(); break;
+    case "vNeuLaden":
+      if (!confirm("Karten und Stand neu von der Ablage laden? Wartende Kartenänderungen dieses Geräts (" + db.ops.length + ") werden verworfen.")) break;
+      db.ops = []; db.opsFehler = ""; db.karten = {}; db.geloescht = {}; db.cursor = 0; db.kv = 0; sichern();
+      vMeld("Lädt neu …"); ab(syncJetzt(15000).then(function (a) { vMeld(a && a.ok ? "Neu geladen: " + Object.keys(db.karten).length + " Karten" : "Nicht möglich: " + (a && a.fehler)); zeichneAlles(); zeichneVerwaltung(); })); break;
   }
 }
 function kassenEintrag(art, feld) {
