@@ -45,3 +45,11 @@ Drei Szenen mit dem Logo des Ual Fering Wiartshüs, Oldsum / Föhr, Unterzeile �
 Je Szene: `Szene-X-….png` (88 × 57 mm mit Anschnitt, 1039 × 673 px – im Terminal unter Karten → Rückseite der Karten wählen), `.svg` und `Szene-X-…-Rueckseite-A4.pdf` (druckfertiger A4-Bogen, 8 Karten im Raster der Vorderseite). Neu erzeugen: `node docs/kartenrueckseite/szenen/szenen.mjs`.
 
 **Logo:** Die Vorlage (`logo-original-234x26.png`) hat nur 234 × 26 Pixel. Sie wird weich hochgerechnet; die Schrift wirkt deshalb bei 300 dpi leicht pixelig. „OLDSUM / FÖHR“ ist neu als Text gesetzt. Für beste Druckqualität bitte das Logo als **SVG, PDF oder PNG ab 2000 Pixel Breite** nachliefern; dann wird es ausgetauscht.
+
+## Rückseite mit kurzer Gebrauchsanleitung (`szenen/Gebrauch-…`)
+Oben ein schmales Bild mit Logo, unten auf cremefarbenem Grund drei Schritte, deutsch und englisch, gut lesbar (Schrift 3,0 mm fett / 2,6 mm):
+1. An der Kasse aufladen · Top up at the till
+2. Karte zeigen – der QR-Code wird gescannt · Show your card – the QR code is scanned
+3. Restguthaben wird an der Kasse ausgezahlt · Unspent balance is paid out at the till
+
+Dateien: `Gebrauch-A-Watt`, `Gebrauch-B-Reetdach`, `Gebrauch-C-Abendrot` (`.png` für das Terminal, `.svg`, `…-Rueckseite-A4.pdf` als druckfertiger Bogen) und `Gebrauch-Mix-Rueckseite-A4.pdf` (gemischt). Neu erzeugen: `node docs/kartenrueckseite/szenen/gebrauch.mjs`.
