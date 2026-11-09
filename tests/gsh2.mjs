@@ -2,7 +2,7 @@ import vm from 'node:vm'; import { readFileSync } from 'node:fs';
 export function server2(opt={}){
   let code=readFileSync(new URL('../ablage.gs',import.meta.url).pathname,'utf8');
   const setze=(n,w)=>{ code=code.replace(new RegExp('var '+n+'\\s*=\\s*[^;]*;'),'var '+n+' = '+JSON.stringify(w)+';'); };
-  setze('WORT_VERKAUF','vk'); setze('WORT_KASSE','ka'); setze('WORT_ADMIN','ad');
+  setze('WORT_VERKAUF','vk'); setze('WORT_ANZEIGE','an'); setze('WORT_KASSE','ka'); setze('WORT_ADMIN','ad');
   setze('BERICHT_AN','a@example.org'); if(opt.prozent!==undefined) setze('GEBUEHR_PROZENT',opt.prozent);
   const dateien=[], mails=[], cache={}; let uhr=opt.start||1700000000000;
   const mk=(name,inhalt)=>({name,inhalt,papier:false,t:new Date(uhr),getBlob(){return{getDataAsString:()=>this.inhalt};},setContent(s){this.inhalt=s;},isTrashed(){return this.papier;},getName(){return this.name;},setTrashed(b){this.papier=b;},getSize(){return this.inhalt.length;},getDateCreated(){return this.t;}});

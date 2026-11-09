@@ -108,4 +108,22 @@ r=s.post('ad',{aktion:'neubeginn'}); t('neubeginn admin',r.ok);
   const X=dev(s5,'D','fremd'); for(let i=0;i<4;i++) X.sync('ka',[]);
   t('Konflikt-Vermerk nicht im Minutentakt',s5.post('ad',{aktion:'bericht'}).bericht.vermerke.filter(v=>/abgewiesen/.test(v.text)).length===1);
 }
+// Anzeigegerät: nur Bestand, nichts sonst
+{ const s6=server2(); const D=dev(s6,'D','kd');
+  s6.post('ka',{aktion:'karten',was:'anlegen',karten:[{nr:'A0001',code:'K7Q2'}]});
+  D.sync('ka',[D.buche('A0001',1250,'auf')]); D.sync('ka',[D.buche('A0100',500,'auf')]);
+  let r=s6.post('an',{aktion:'bestand',karte:'GK-A0001-K7Q2'}); t('Anzeige: Bestand mit Prüfnummer',r.ok&&r.st==='ok'&&r.cent===1250);
+  t('Anzeige: Prüfnummer fehlt → unbekannt',s6.post('an',{aktion:'bestand',karte:'GK-A0001'}).st==='unbekannt');
+  t('Anzeige: falsche Prüfnummer → unbekannt',s6.post('an',{aktion:'bestand',karte:'GK-A0001-ZZZZ'}).st==='unbekannt');
+  t('Anzeige: Altkarte ohne Prüfnummer',s6.post('an',{aktion:'bestand',karte:'GK-A0100'}).cent===500);
+  t('Anzeige: Unsinn → unbekannt',s6.post('an',{aktion:'bestand',karte:'hallo'}).st==='unbekannt');
+  for(const aktion of ['holen','sync','legen','bericht','karten','sicherung','geraete','neubeginn','quittieren']) if(!s6.post('an',{aktion,geraet:{id:'X',schluessel:'x'}}).verweigert) t('Anzeige darf nichts: '+aktion,false);
+  t('Anzeige: verweigert Rest (Sammelprüfung)',true);
+  const st0=s6.post('ka',{aktion:'holen'}).stand; for(let i=0;i<5;i++) s6.post('an',{aktion:'bestand',karte:'GK-A0100'});
+  t('Anzeige schreibt nichts',s6.post('ka',{aktion:'holen'}).stand===st0);
+  s6.post('ka',{aktion:'karten',was:'sperren',nr:'A0001',grund:'x',geraet:{id:'D'}});
+  t('Anzeige: gesperrte Karte',s6.post('an',{aktion:'bestand',karte:'GK-A0001-K7Q2'}).st==='gesperrt');
+  let limit=false; for(let i=0;i<40;i++){ if(s6.post('an',{aktion:'bestand',karte:'GK-A0100'}).zuviele) limit=true; } t('Anzeige: Begrenzung je Minute',limit);
+  t('Verkauf/Kasse dürfen auch abfragen',s6.post('vk',{aktion:'bestand',karte:'GK-A0100'}).cent===500);
+}
 console.log(ok+' ok, '+bad+' Fehler');

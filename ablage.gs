@@ -30,7 +30,9 @@
      WORT_KASSE     für das Terminal (Kassenleitung). Darf zusätzlich aufbuchen,
                     Karten anlegen/sperren/ersetzen, zurücknehmen und korrigieren,
                     das Kassenbuch führen, Abschlüsse erstellen, sichern.
-     WORT_ADMIN     Administrator. Darf zusätzlich Geräte, Einstellungen,
+     WORT_ANZEIGE   Anzeigegerät für Gäste: darf nur den Bestand einer vorgehaltenen Karte
+                  ansehen, sonst nichts (zählt nicht zu den drei Geräten).
+   WORT_ADMIN     Administrator. Darf zusätzlich Geräte, Einstellungen,
                     Wiederherstellung und ein neues Fest.
 
    Die alte Einstellung ZUGANGSWORT gilt weiter als Kassenwort, solange
@@ -56,6 +58,7 @@
 var WORT_VERKAUF = "";
 var WORT_KASSE   = "";
 var WORT_ADMIN   = "";
+var WORT_ANZEIGE = "";   /* für das Anzeigegerät: darf nur den Bestand einer gescannten Karte abfragen */
 var ZUGANGSWORT  = "hier-ein-eigenes-wort-eintragen";   /* alt: gilt als Kassenwort */
 var DATEINAME    = "guthabenkasse-ablage.json";
 
@@ -90,6 +93,7 @@ function rolleVon(wort) {
   if (WORT_ADMIN && wort === WORT_ADMIN) return "admin";
   if (WORT_KASSE ? wort === WORT_KASSE : wort === ZUGANGSWORT) return "kasse";
   if (WORT_VERKAUF && wort === WORT_VERKAUF) return "verkauf";
+  if (WORT_ANZEIGE && wort === WORT_ANZEIGE) return "anzeige";
   return "";
 }
 function darf(rolle, was) {
@@ -144,6 +148,9 @@ function verarbeiten(e) {
 
 function aktion(inhalt, ctx, a) {
   var r = ctx.rolle;
+  /* Das Anzeigegerät darf genau eine Sache: den Bestand einer gescannten Karte ansehen. */
+  if (r === "anzeige" && a.aktion !== "bestand") return NEIN("Anzeigegerät");
+  if (a.aktion === "bestand") return bestandAbfrage(inhalt, ctx, a);
   switch (a.aktion) {
     case "holen":
       return { ok: true, stand: inhalt.stand, daten: inhalt.daten, treuhand: true, v: 2 };
@@ -395,6 +402,26 @@ function kartenFuer(inhalt, rolle) {
     var k = Object.assign({}, inhalt.daten.karten[nr]); delete k.code; k.hatCode = !!inhalt.daten.karten[nr].code; aus[nr] = k;
   });
   return aus;
+}
+
+/* Bestand einer Karte für das Anzeigegerät. Nichts wird geschrieben und nichts verraten: eine falsche
+   Prüfnummer sieht aus wie eine unbekannte Karte, und die Zahl der Abfragen je Minute ist begrenzt. */
+function bestandAbfrage(inhalt, ctx, a) {
+  if (ctx.rolle === "anzeige") {
+    try {
+      var cache = CacheService.getScriptCache(), key = "rate-" + Math.floor(ctx.jetzt / 60000), n = Number(cache.get(key)) || 0;
+      if (n >= 30) return { fehler: "Zu viele Abfragen, bitte einen Moment warten.", zuviele: true };
+      cache.put(key, String(n + 1), 120);
+    } catch (e) {}
+  }
+  var m = /^(?:GK-?)?([A-Z])(\d{4,6})(?:-([A-Z0-9]{4}))?$/.exec(String(a.karte || "").trim().toUpperCase().replace(/\s+/g, ""));
+  if (!m) return { ok: true, st: "unbekannt" };
+  var nr = m[1] + m[2], k = inhalt.daten.karten[nr];
+  if (!k || (inhalt.daten.geloescht[nr] || 0) > 0) return { ok: true, st: "unbekannt" };
+  if (k.code && m[3] !== k.code) return { ok: true, st: "unbekannt" };
+  if (k.status === "gesperrt") return { ok: true, st: "gesperrt", ersetzt: !!k.ersetztDurch };
+  var saldo = salden(inhalt)[nr] || 0;
+  return { ok: true, st: saldo < 0 ? "offen" : "ok", cent: saldo, karte: nr };
 }
 
 function statusVon(inhalt, ids) {

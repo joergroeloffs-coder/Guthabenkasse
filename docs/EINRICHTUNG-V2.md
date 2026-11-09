@@ -13,6 +13,8 @@ Aus der einen Datei sind zwei Programme geworden, die denselben Bestand nutzen:
 
 Die Ablage (`ablage.gs`, Google Apps Script) ist jetzt der Wächter über das Guthaben: Sie nimmt jede Buchung an oder lehnt sie ab. Die Geräte zeigen „gebucht“ erst nach Bestätigung der Ablage – oder, wenn die Verbindung fehlt, ausdrücklich als **Offline-Buchung**.
 
+| **Anzeige** | `guthabenkasse-anzeige.html` | Ein Gerät ohne Personal: Der Gast hält seine Karte vor die Kamera und sieht sein Guthaben (Deutsch, Türkisch, English). Zeigt nur den Bestand, bucht nichts, zählt nicht zu den drei Geräten. |
+
 Weitere Dateien: `quelle/` (Kern + gemeinsame Schicht), `bauen/bauen.mjs` (erzeugt die beiden Programme), `sw.js` (Service Worker, hält beide Programme offline bereit), `manifest-terminal.webmanifest`, `manifest-verkauf.webmanifest`, Symbole (`icon-*.png` für das Terminal, `icon-verkauf-*.png` für Verkauf), `index.html` (Startseite mit zwei Links), `tests/`.
 
 Neu bauen nach einer Änderung in `quelle/`: `node bauen/bauen.mjs`.
@@ -87,3 +89,10 @@ Siehe `docs/TESTBERICHT-V2.md` (ehrlich getrennt: tatsächlich getestet / nur th
 * Der Programmcode des Verkaufsgeräts enthält noch den gesamten Kern; gesperrt sind die Bedienelemente und – maßgeblich – die Rechte in der Ablage.
 * Die PIN schützt nur die Oberfläche eines Geräts. Das Wort steht im Gerät gespeichert.
 * Gerätekennung: Die Ablage bindet einen Buchstaben beim ersten Kontakt an einen Schlüssel; wer den Gerätespeicher löscht, braucht den Eintrag in der Geräteliste „entfernen“.
+
+## Anzeigegerät für Gäste
+1. Im Skript `WORT_ANZEIGE` eintragen (ein viertes, eigenes Wort), neue Version veröffentlichen.
+2. Ein Tablet oder Handy am Tresen aufstellen (Kamera zum Gast), `guthabenkasse-anzeige.html` über https öffnen und installieren, Kamera erlauben.
+3. **Fünf schnelle Tipps auf die Überschrift** öffnen die Einrichtung: Adresse der Ablage, Anzeige-Wort, Standardsprache, Kamera (vorn/hinten), Hinweis zur Rückgabe.
+4. Der Gast hält die Karte vor, sieht das Guthaben 9 Sekunden lang und kann die Sprache wechseln (springt nach 45 Sekunden zurück).
+Die Ablage erlaubt diesem Wort nur die Abfrage `bestand`: Nichts wird geschrieben, nichts anderes erlaubt, höchstens 30 Abfragen je Minute. Karten mit Prüfnummer lassen sich nur mit vollständigem QR-Inhalt abfragen. **Grenze:** Alte Karten ohne Prüfnummer fragt die Ablage allein über die Nummer ab; jemand, der das Anzeigegerät aufbricht und das Wort ausliest, könnte so (langsam) Nummern durchprobieren.

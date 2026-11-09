@@ -99,9 +99,19 @@ for (const m of ['terminal', 'verkauf']) {
   mf.description = m === 'terminal' ? 'Aufbuchen, Abbuchen, Karten und Verwaltung' : 'Nur Abbuchen und Abfragen';
   writeFileSync(wurzel + 'manifest-' + m + '.webmanifest', JSON.stringify(mf, null, 2) + '\n');
 }
+// Anzeigegerät für Gäste (eigenständige kleine Seite, nur Bestand)
+{
+  const a = kern.indexOf('<script>\n(function(y,g)'); const e = kern.indexOf('</script>', a);
+  const jsqr = kern.slice(a + 9, e);
+  writeFileSync(wurzel + 'guthabenkasse-anzeige.html', lies('quelle/anzeige.html').replace('/*JSQR*/', () => jsqr));
+  const mf = JSON.parse(lies('manifest.webmanifest'));
+  mf.name = 'Guthaben abfragen'; mf.short_name = 'Guthaben'; mf.start_url = './guthabenkasse-anzeige.html'; mf.id = './guthabenkasse-anzeige.html';
+  mf.description = 'Anzeigegerät für Gäste: Karte vorhalten, Guthaben sehen'; mf.orientation = 'any';
+  writeFileSync(wurzel + 'manifest-anzeige.webmanifest', JSON.stringify(mf, null, 2) + '\n');
+}
 const sw = `// Service Worker: hält die zwei Programme offline bereit. Seiten: erst Netz, sonst Zwischenspeicher.
 const NAME = 'guthabenkasse-${VERSION}';
-const DATEIEN = ['guthabenkasse-terminal.html','guthabenkasse-verkauf.html','manifest-terminal.webmanifest','manifest-verkauf.webmanifest','icon-192.png','icon-512.png','icon-verkauf-192.png','icon-verkauf-512.png','favicon.svg'];
+const DATEIEN = ['guthabenkasse-terminal.html','guthabenkasse-verkauf.html','guthabenkasse-anzeige.html','manifest-anzeige.webmanifest','manifest-terminal.webmanifest','manifest-verkauf.webmanifest','icon-192.png','icon-512.png','icon-verkauf-192.png','icon-verkauf-512.png','favicon.svg'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(NAME).then(c => c.addAll(DATEIEN).catch(() => {})).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== NAME).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {
