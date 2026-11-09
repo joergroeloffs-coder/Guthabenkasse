@@ -3,7 +3,7 @@
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
 import { readFileSync, writeFileSync } from 'node:fs';
 const HIER = new URL('./', import.meta.url).pathname, WURZEL = HIER + '../../';
-const ORT = process.argv[2] || '', ZEIT = process.argv[3] || '';
+const ORT = process.argv[2] ?? '', ZEIT = process.argv[3] ?? '';
 const stil = readFileSync(HIER + 'stil-anleitung.css', 'utf8') + `
 @page{margin:12mm 14mm}
 body{font-size:11pt}
@@ -29,14 +29,14 @@ body{font-size:11pt}
 const T = {
  de: {
   titel: 'Ihre Guthabenkarte', unter: 'So funktioniert es – und so bekommen Sie Ihr Restgeld zurück',
-  gross: 'Was Sie nicht ausgeben, bekommen Sie am Ende des Abends zurück.', gross2: 'Bringen Sie dazu Ihre Karte an die Rückgabestelle: Das Restguthaben wird Ihnen ausgezahlt.',
-  ort: 'Rückgabe', zeit: 'Zeit',
+  gross: 'Was Sie nicht ausgeben, bekommen Sie am Ende des Abends zurück.', gross2: 'Bringen Sie dazu Ihre Karte zur Kasse am Tresen: Das Restguthaben wird Ihnen ausgezahlt.',
+  ort: 'Rückgabe', ortStandard: 'An der Kasse am Tresen', zeit: 'Zeit',
   schritte: [
    ['Karte holen und aufladen', 'An der Kasse zahlen Sie einen Betrag Ihrer Wahl. Er wird auf Ihre Karte gebucht, und Sie sehen sofort Ihr Guthaben. Aufladen können Sie jederzeit wieder.'],
    ['Mit der Karte bezahlen', 'Bestellen Sie wie gewohnt und halten Sie die Karte an der Theke hin. Das Personal scannt den QR-Code, und auf dem Bildschirm sehen Sie oben, was abgebucht wurde, und unten, was noch auf der Karte ist.'],
    ['Guthaben ansehen', 'Fragen Sie jederzeit an der Theke nach Ihrem Stand. Das Scannen allein kostet nichts; es wird nichts gebucht.'],
    ['Trinkgeld – freiwillig', 'Nach dem Bezahlen kann das Personal auf Wunsch ein Trinkgeld von der Karte abbuchen (zum Beispiel 5 % oder 10 %, auf 0,50 € gerundet).'],
-   ['Restgeld zurück', 'Am Ende des Abends geben Sie Ihre Karte an der Rückgabestelle ab. Was noch darauf ist, wird Ihnen ausgezahlt.'],
+   ['Restgeld zurück', 'Am Ende des Abends geben Sie Ihre Karte an der Kasse am Tresen ab. Was noch darauf ist, wird Ihnen ausgezahlt.'],
   ],
   bildunterschrift: 'So sieht es an der Theke aus: oben abgebucht, unten noch auf der Karte.',
   gut: [
@@ -48,14 +48,14 @@ const T = {
  },
  tr: {
   titel: 'Bakiye Kartınız', unter: 'Nasıl çalışır – ve kalan paranızı nasıl geri alırsınız',
-  gross: 'Harcamadığınız para akşamın sonunda size iade edilir.', gross2: 'Bunun için kartınızı iade noktasına getirin: Kartta kalan bakiye size ödenir.',
-  ort: 'İade yeri', zeit: 'Saat',
+  gross: 'Harcamadığınız para akşamın sonunda size iade edilir.', gross2: 'Bunun için kartınızı tezgâhtaki kasaya getirin: Kartta kalan bakiye size ödenir.',
+  ort: 'İade yeri', ortStandard: 'Tezgâhtaki kasada', zeit: 'Saat',
   schritte: [
    ['Kartı alın ve yükleyin', 'Kasada istediğiniz tutarı ödersiniz. Tutar kartınıza yüklenir ve bakiyenizi hemen görürsünüz. İstediğiniz zaman tekrar yükleyebilirsiniz.'],
    ['Kartla ödeyin', 'Her zamanki gibi sipariş verin ve kartı tezgâhta gösterin. Görevli QR kodu okutur; ekranda üstte düşülen tutarı, altta kartta kalanı görürsünüz.'],
    ['Bakiyenize bakın', 'Tezgâhta istediğiniz zaman bakiyenizi sorabilirsiniz. Yalnızca okutmak hiçbir şey düşmez; işlem yapılmaz.'],
    ['Bahşiş – isteğe bağlı', 'Ödemeden sonra isterseniz görevli karttan bahşiş düşebilir (örneğin %5 veya %10, 0,50 €’ya yuvarlanır).'],
-   ['Kalan paranız iade edilir', 'Akşamın sonunda kartınızı iade noktasına verirsiniz. Üzerinde kalan tutar size ödenir.'],
+   ['Kalan paranız iade edilir', 'Akşamın sonunda kartınızı tezgâhtaki kasaya verirsiniz. Üzerinde kalan tutar size ödenir.'],
   ],
   bildunterschrift: 'Tezgâhta böyle görünür: üstte düşülen, altta kartta kalan.',
   gut: [
@@ -73,7 +73,7 @@ function seite(l) {
   return `<section class="blatt">
    <div class="kopf"><img src="${icon}" alt=""><div><h1>${t.titel}</h1><div class="u">${t.unter}</div></div></div>
    <div class="gross"><b>${t.gross}</b><p>${t.gross2}</p>
-     <div class="zeile"><span><i>${t.ort}</i>${ORT}</span><span><i>${t.zeit}</i>${ZEIT}</span></div></div>
+     <div class="zeile"><span><i>${t.ort}</i>${ORT || t.ortStandard}</span><span><i>${t.zeit}</i>${ZEIT}</span></div></div>
    <div class="zw"><div><div class="schritte">${t.schritte.map(([a, b]) => `<div class="schritt"><div class="zahl"></div><div class="was"><b>${a}</b><p>${b}</p></div></div>`).join('')}</div></div>
      <div class="bildkasten"><figure><img src="${bild}" alt=""><figcaption>${t.bildunterschrift}</figcaption></figure></div></div>
    <div class="gut">${t.gut.map(([a, b], i) => `<div class="${['f-gruen', 'f-ziegel', 'f-sand'][i]}"><b>${a}</b>${b}</div>`).join('')}</div>
