@@ -39,4 +39,6 @@ await p.waitForTimeout(7000);
 t('kehrt nach Ablauf zurück', !(await p.evaluate(() => document.getElementById('ergebnis').classList.contains('zeigt'))));
 t('Kamera läuft (Testkamera)', await p.evaluate(() => !!document.getElementById('video').srcObject));
 t('Ablage nichts geschrieben', srv.post('ka', { aktion: 'holen' }).stand === srv.post('ka', { aktion: 'holen' }).stand);
+await p.click('#kam'); await p.waitForTimeout(500);
+t('Kamera wechselbar (gespeichert)', (await p.evaluate(() => JSON.parse(localStorage.getItem(KEY)).kamera)) === 'user');
 console.log('Seitenfehler:', log.length ? log : 'keine'); console.log(ok + ' ok, ' + bad + ' Fehler'); await b.close();

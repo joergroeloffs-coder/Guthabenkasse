@@ -37,7 +37,7 @@ html,body{margin:0;height:100%;background:var(--kopf);color:var(--papier);font-f
 #balken{position:absolute;left:0;bottom:0;height:8px;background:var(--gold);width:100%;transform-origin:left;display:none}
 #ergebnis.zeigt #balken{display:block}
 #fuss{flex:0 0 auto;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#7d9486;min-height:22px}
-#voll{border:1px solid #3d5a49;background:transparent;color:#9fb3a6;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer}
+#kam,#voll{border:1px solid #3d5a49;background:transparent;color:#9fb3a6;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer}
 #einricht{position:fixed;inset:0;background:rgba(5,12,8,.94);display:none;align-items:center;justify-content:center;z-index:5;padding:20px}
 #einricht.zeigt{display:flex}
 #einricht form{background:var(--papier);color:var(--tinte);border-radius:12px;padding:20px;width:min(94vw,440px);display:flex;flex-direction:column;gap:10px}
@@ -60,7 +60,7 @@ html,body{margin:0;height:100%;background:var(--kopf);color:var(--papier);font-f
     </div>
   </div>
   <div id="hinweis"></div>
-  <div id="fuss"><span id="stand"></span><button id="voll" type="button">⛶</button></div>
+  <div id="fuss"><span id="stand"></span><span><button id="kam" type="button" title="Kamera wechseln">⟲ Kamera</button> <button id="voll" type="button">⛶</button></span></div>
 </div>
 
 <div id="einricht"><form id="einrichtForm" autocomplete="off">
@@ -68,7 +68,7 @@ html,body{margin:0;height:100%;background:var(--kopf);color:var(--papier);font-f
   <label>Adresse der Ablage<input id="eAdresse" placeholder="https://script.google.com/macros/s/…/exec" spellcheck="false"></label>
   <label>Zugangswort (Anzeige)<input id="eWort" spellcheck="false"></label>
   <label>Standardsprache<select id="eSprache"><option value="de">Deutsch</option><option value="tr">Türkçe</option><option value="en">English</option></select></label>
-  <label>Kamera<select id="eKamera"><option value="user">vorn (zum Kunden gerichtet)</option><option value="environment">hinten</option></select></label>
+  <label>Kamera<select id="eKamera"><option value="environment">hinten</option><option value="user">vorn (Selfie-Kamera)</option></select></label>
   <label>Hinweis zur Rückgabe (freiwillig)<input id="eRueck" maxlength="120" placeholder="z. B. Rückgabe an der Kasse am Tresen"></label>
   <div id="einrichtMeldung"></div>
   <div class="reihe"><button type="button" class="zu" id="eZu">Schließen</button><button type="submit">Speichern</button></div>
@@ -83,7 +83,7 @@ html,body{margin:0;height:100%;background:var(--kopf);color:var(--papier);font-f
 "use strict";
 var KEY = "guthabenkasse.anzeige.v1";
 var VERSION = "2.0.0";
-var cfg = {adresse: "", wort: "", sprache: "de", rueck: "", kamera: "user"};
+var cfg = {adresse: "", wort: "", sprache: "de", rueck: "", kamera: "environment"};
 try { var gespeichert = JSON.parse(localStorage.getItem(KEY) || "{}"); for (var k in gespeichert) cfg[k] = gespeichert[k]; } catch (e) {}
 function sichern() { try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch (e) {} }
 function $(id) { return document.getElementById(id); }
@@ -171,7 +171,7 @@ function abfragen(roh) {
 var strom = null, leser = null;
 function kameraStart() {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { kameraFehler(); return; }
-  navigator.mediaDevices.getUserMedia({video: {facingMode: cfg.kamera || "user"}}).then(function (s) { kameraMit(s); }, function () {
+  navigator.mediaDevices.getUserMedia({video: {facingMode: cfg.kamera || "environment"}}).then(function (s) { kameraMit(s); }, function () {
     return navigator.mediaDevices.getUserMedia({video: true}).then(kameraMit);
   }).catch(kameraFehler);
 }
@@ -204,7 +204,7 @@ $("titel").addEventListener("click", function () {
   if (tipps.length >= 5) { tipps = []; einrichtungOeffnen(); }
 });
 function einrichtungOeffnen() {
-  $("eAdresse").value = cfg.adresse || ""; $("eWort").value = cfg.wort || ""; $("eSprache").value = cfg.sprache || "de"; $("eRueck").value = cfg.rueck || ""; $("eKamera").value = cfg.kamera || "user";
+  $("eAdresse").value = cfg.adresse || ""; $("eWort").value = cfg.wort || ""; $("eSprache").value = cfg.sprache || "de"; $("eRueck").value = cfg.rueck || ""; $("eKamera").value = cfg.kamera || "environment";
   $("einrichtMeldung").textContent = ""; $("einricht").classList.add("zeigt");
 }
 $("eZu").addEventListener("click", function () { $("einricht").classList.remove("zeigt"); });
@@ -213,7 +213,7 @@ $("einrichtForm").addEventListener("submit", function (e) {
   var a = $("eAdresse").value.trim(), w = $("eWort").value.trim();
   if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(a)) { $("einrichtMeldung").textContent = "Die Adresse muss mit https://script.google.com/ beginnen und auf /exec enden."; return; }
   if (!w) { $("einrichtMeldung").textContent = "Das Zugangswort fehlt."; return; }
-  cfg.adresse = a; cfg.wort = w; cfg.sprache = $("eSprache").value; cfg.rueck = $("eRueck").value.trim(); var neueKamera = $("eKamera").value; var kameraGewechselt = neueKamera !== (cfg.kamera || "user"); cfg.kamera = neueKamera; sichern();
+  cfg.adresse = a; cfg.wort = w; cfg.sprache = $("eSprache").value; cfg.rueck = $("eRueck").value.trim(); var neueKamera = $("eKamera").value; var kameraGewechselt = neueKamera !== (cfg.kamera || "environment"); cfg.kamera = neueKamera; sichern();
   if (kameraGewechselt) { try { if (strom) strom.getTracks().forEach(function (x) { x.stop(); }); } catch (f) {} strom = null; kameraStart(); }
   $("einrichtMeldung").textContent = "…prüft";
   fetch(a, {method: "POST", headers: {"Content-Type": "text/plain;charset=utf-8"}, redirect: "follow", body: JSON.stringify({aktion: "bestand", wort: w, karte: "GK-X0000"})})
@@ -227,6 +227,10 @@ $("einrichtForm").addEventListener("submit", function (e) {
 /* ---- Verdrahtung ---- */
 Array.prototype.forEach.call(document.querySelectorAll("#sprachen button"), function (b) {
   b.addEventListener("click", function () { sprachSetzen(b.getAttribute("data-s"), true); if (!$("ergebnis").classList.contains("zeigt")) $("hinweis").textContent = bereit() ? t("halten") : t("einricht"); });
+});
+$("kam").addEventListener("click", function () {
+  cfg.kamera = (cfg.kamera || "environment") === "user" ? "environment" : "user"; sichern();
+  try { if (strom) strom.getTracks().forEach(function (x) { x.stop(); }); } catch (e) {} strom = null; kameraStart();
 });
 $("voll").addEventListener("click", function () {
   var el = document.documentElement;
