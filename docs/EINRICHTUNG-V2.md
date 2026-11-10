@@ -81,6 +81,16 @@ Am Terminal: Karten → Karte antippen → „Karte ersetzen“ (neue Nummer + P
 Bewusst einfach: **Terminal → Verwaltung → Auswerten** zeigt die aktuellen Zahlen aus der Ablage (Umsatz netto, Trinkgeld, noch auf Karten, aufgebucht, abgebucht, zurückgenommen, Auszahlungen, Korrekturen, je Gerät und je Bediener) und, falls Geräte noch Buchungen nicht übertragen haben, einen Hinweis. Dazu **Drucken** und **Per Mail senden**. Es gibt keinen Abschluss mit Freigabe, keinen Kassensturz und keine Quittierungen; was in der Kasse liegt, wird nicht gegengerechnet. (Die Ablage kann das technisch noch – Kassenbuch, Geräte-Meldungen, Prüfung –, die Oberfläche bietet es nicht mehr an.)
 **Verkauf → Abrechnung:** Anzahl, Betrag, Rücknahmen, Trinkgeld des eigenen Geräts, Verbindungsstatus, drucken.
 
+## Abend abschließen (Karten und Guthaben bleiben)
+**Terminal → Optionen → Abend abschließen.** Für Feste über mehrere Abende. Die Ablage archiviert die Buchungen des Abends (Archiv `…-abend.json`) und beginnt eine neue Abrechnung. Karten (Nummern, Prüfnummern, Sperren, Namen), Anlass und Geräte bleiben; jedes **Guthaben bleibt** als *Übertrag vom Vorabend* auf der Karte. Ein Übertrag zählt weder als Aufbuchung noch als Umsatz.
+- **Minusstände** (nur auf Karten mit Namen möglich) bleiben auf der Karte, der Kunde schuldet sie weiter. Die Abrechnung zeigt sie als *Offene Posten*; sie werden als negativer Übertrag mitgenommen.
+- **Ablauf:** Vorprüfung (Restguthaben, Minusstände, Geräte mit offenen Buchungen), Bestätigung, dann **ABEND ABSCHLIESSEN** eintippen, Administrator-Wort, danach auf Wunsch die Abrechnung drucken und/oder per Mail senden. Der Abschluss geht auch, wenn Geräte nicht alles übertragen haben: spät eintreffende Buchungen werden auf die Karten angewendet und in der neuen Abrechnung als *nachgereicht vom Vorabend* ausgewiesen.
+- **Neues Fest (Betrieb auf Null)** löscht weiterhin alles einschließlich der Karten.
+- Eine zeitliche Gültigkeit der Karten gibt es noch nicht (unbefristet).
+
+## Karte einziehen (Fundkarte)
+**Karten → Karte antippen → Karte einziehen (Fundkarte)**, nur mit Verbindung. Das Guthaben der Karte wird als Trinkgeld verbucht (Karte danach 0, bleibt gültig, doppeltes Antippen bucht nur einmal). Der Betrag wird **zu gleichen Teilen auf alle Vornamen verteilt, die in diesem Abend gebucht haben**; Cent-Reste bekommen die Namen der Reihe nach alphabetisch je einen Cent. Die Abrechnung zeigt Summe, Anteil und die Liste je Name. Fundkarten sind kein Umsatz.
+
 ## Rollen
 Die Rolle ergibt sich aus dem Zugangswort und wird **in der Ablage** geprüft, nicht nur in den Menüs: Verkauf darf abbuchen/abfragen/eigene letzte Buchung zurücknehmen; Kasse zusätzlich aufbuchen, Karten verwalten, Kassenbuch, Abschluss, Sicherung; Administrator zusätzlich Geräte, Einstellungen (Anschreiben, Offline-Limit), Wiederherstellen, neues Fest.
 

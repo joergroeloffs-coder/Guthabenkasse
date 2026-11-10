@@ -294,8 +294,8 @@ function kettenText(b, vor) {
   return [b.id, b.karte, b.cent, b.art, b.zeit, b.geraet, b.wer || "", b.ref || "", b.stapel || "", b.n, vor].join("|");
 }
 
-var ARTEN = { auf: 1, ab: 1, storno: 1, auszahlung: 1, korrektur: 1, trinkgeld: 1, ersatz: 1 };
-var NUR_KASSE = { auf: 1, auszahlung: 1, korrektur: 1, ersatz: 1 };
+var ARTEN = { auf: 1, ab: 1, storno: 1, auszahlung: 1, korrektur: 1, trinkgeld: 1, ersatz: 1, uebertrag: 1, fundkarte: 1 };
+var NUR_KASSE = { auf: 1, auszahlung: 1, korrektur: 1, ersatz: 1, uebertrag: 1, fundkarte: 1 };
 
 function buchungFehler(x) {
   if (!x || typeof x !== "object") return "keine Buchung";
@@ -377,6 +377,7 @@ function sync(inhalt, ctx, a) {
     if (!alt || alt.n !== mn || alt.k !== mk) { inhalt.meldungen[g] = { n: mn, k: mk, zeit: new Date(ctx.jetzt).toISOString() }; ctx.geaendert = true; }
   }
   var neu = Array.isArray(a.neu) ? a.neu : [];
+  if (a.epoche !== undefined && Number(a.epoche) < (inhalt.daten.epoche || 0)) neu.forEach(function (x) { if (x && typeof x === "object") x.nach = 1; });
   neu.sort(function (x, y) { return (x.n || 0) - (y.n || 0) || (x.zeit || 0) - (y.zeit || 0); });
   for (var i = 0; i < neu.length; i++) {
     var res = buchungAnnehmen(inhalt, ctx, neu[i], g);
@@ -403,6 +404,7 @@ function sync(inhalt, ctx, a) {
   if (a.zustand) { antwort.salden = null; }
   if (ctx.rolle !== "verkauf") antwort.geraete = geraeteListe(inhalt, ctx);
   antwort.nummernNeu = inhalt.daten.nummernNeu;
+  antwort.epocheArt = inhalt.daten.epocheArt || "fest";
   return antwort;
 }
 
@@ -465,6 +467,8 @@ function buchungAnnehmen(inhalt, ctx, x, geraetId) {
     return { st: "doppelt", s: da.s, ueber: !!da.ueber, saldo: salden(inhalt)[da.karte] || 0 };
   }
 
+  /* Übertrag und Fundkarte entstehen nur in der Ablage selbst (Abend abschließen, Karte einziehen) */
+  if (x.art === "uebertrag" || x.art === "fundkarte") return { st: "abgelehnt", grund: "Diese Buchungsart kann nur die Ablage selbst anlegen", code: "recht" };
   /* Berechtigung je Art */
   var r = ctx.rolle;
   if (NUR_KASSE[x.art] && !darf(r, "aufbuchen")) {
@@ -517,7 +521,7 @@ function buchungAnnehmen(inhalt, ctx, x, geraetId) {
 
 function annehmen(inhalt, ctx, x, extra) {
   var b = {};
-  var felder = ["id", "karte", "cent", "art", "zeit", "geraet", "wer", "ref", "stapel", "zu", "n", "k", "off", "an", "mig"];
+  var felder = ["id", "karte", "cent", "art", "zeit", "geraet", "wer", "ref", "stapel", "zu", "n", "k", "off", "an", "mig", "nach"];
   felder.forEach(function (f) { if (x[f] !== undefined) b[f] = x[f]; });
   if (extra) for (var k in extra) b[k] = extra[k];
   b.s = ++inhalt.seq;
@@ -646,6 +650,22 @@ function kartenAktion(inhalt, ctx, a) {
     });
     if (gel) { inhalt.kv++; ctx.geaendert = true; }
     return fehl.length ? { fehler: "Karten mit Guthaben werden nicht gelöscht.", nicht: fehl, geloescht: gel } : { ok: true, geloescht: gel, kv: inhalt.kv };
+  }
+  if (was === "einziehen") {
+    /* Fundkarte: Das Guthaben wird als Trinkgeld für alle Beteiligten verbucht, die Karte steht danach auf 0 und bleibt gültig. */
+    var idFk = String(a.id || "");
+    if (!idFk || idFk.length > 60) return { fehler: "Einziehen ohne Kennung" };
+    if (!k) return { fehler: "Karte unbekannt" };
+    var vorhanden = inhalt.daten.buchungen.filter(function (b) { return b.id === idFk; })[0];
+    if (vorhanden) return { ok: true, schon: true, betrag: -vorhanden.cent, kv: inhalt.kv, seq: inhalt.seq };
+    var gu = salden(inhalt)[a.nr] || 0;
+    if (!(gu > 0)) return { fehler: "Auf dieser Karte liegt kein Guthaben." };
+    var fk = { id: idFk, karte: a.nr, cent: -gu, art: "fundkarte", zeit: jetzt, geraet: geraetVon(a) };
+    var werFk = String(a.wer || "").slice(0, 30); if (werFk) fk.wer = werFk;
+    annehmen(inhalt, ctx, fk, null);
+    vermerk(inhalt, "einstellung", geraetVon(a), "Fundkarte " + a.nr + " eingezogen (" + gu + " Cent als Trinkgeld)");
+    ctx.geaendert = true;
+    return { ok: true, betrag: gu, kv: inhalt.kv, seq: inhalt.seq };
   }
   if (was === "ersetzen") {
     var idRef = String(a.id || "");
@@ -846,24 +866,43 @@ function ketteStand(inhalt) {
 }
 
 function neubeginn(inhalt, ctx, a) {
-  var name = sicherungMachen(inhalt, "fest");
+  var behalten = !!a.behalten;   /* Abend abschließen: Karten und Guthaben bleiben */
+  var name = sicherungMachen(inhalt, behalten ? "abend" : "fest");
+  var salden0 = behalten ? salden(inhalt) : null, alteD = inhalt.daten;
   var ep = Math.max(ctx.jetzt, (inhalt.daten.epoche || 0) + 1);
   var st = ketteStand(inhalt), basis = {}, basisK = {};
   Object.keys(st).forEach(function (g) { basis[g] = st[g].n; basisK[g] = st[g].k; });
   var d = leerDaten();
-  d.epoche = ep; d.nummernNeu = !!a.nummernNeu;
+  d.epoche = ep; d.nummernNeu = !!a.nummernNeu; d.epocheArt = behalten ? "abend" : "fest";
+  var uebertragen = 0, uebertragMinus = 0, uebertragKarten = 0;
+  if (behalten) {
+    d.karten = alteD.karten; d.geloescht = alteD.geloescht; d.anlass = alteD.anlass; d.nummernNeu = alteD.nummernNeu;
+    var ug = geraetVon(a);
+    Object.keys(salden0).sort().forEach(function (nr) {
+      var c = salden0[nr];
+      if (!c || alteD.geloescht[nr]) return;
+      d.buchungen.push({ id: "ue-" + ep + "-" + nr, karte: nr, cent: c, art: "uebertrag", zeit: ctx.jetzt, geraet: ug, s: 0, sz: ctx.jetzt });
+      uebertragKarten++;
+      if (c > 0) uebertragen += c; else uebertragMinus += -c;
+    });
+  }
   /* Die Beschriftung der Karten (Anlass, Verein, Zusatz) beginnt leer: besser nichts als etwas Altes. Das Archiv hat sie. */
   var geraete = {};
   Object.keys(inhalt.geraete).forEach(function (id) { var g = inhalt.geraete[id]; geraete[id] = { schluessel: g.schluessel, name: g.name, erstmals: g.erstmals }; });
-  var chronik = inhalt.chronik.concat([{ zeit: new Date().toISOString(), art: "neuesFest", text: "Neues Fest begonnen, Archiv: " + name }]);
+  var chronik = inhalt.chronik.concat([{ zeit: new Date().toISOString(), art: behalten ? "abendAbgeschlossen" : "neuesFest", text: (behalten ? "Abend abgeschlossen, Karten und Guthaben bleiben, Archiv: " : "Neues Fest begonnen, Archiv: ") + name }]);
   var berichte = inhalt.berichte, seq = inhalt.seq, kv = inhalt.kv + 1, einst = inhalt.einst, stand = inhalt.stand;
   Object.keys(inhalt).forEach(function (k) { delete inhalt[k]; });
   inhalt.version = 2; inhalt.stand = stand; inhalt.seq = seq; inhalt.kv = kv; inhalt.daten = d; inhalt.geraete = geraete;
   inhalt.basis = basis; inhalt.basisK = basisK; inhalt.meldungen = {}; inhalt.vermerke = []; inhalt.berichte = berichte;
   inhalt.chronik = chronik; inhalt.kassenbuch = []; inhalt.quittiert = { ueber: {}, befund: 0 }; inhalt.einst = einst; inhalt.verworfen = {};
   inhalt.epochenwechsel = 1;
+  if (behalten) {
+    /* Die Übertragsbuchungen bekommen ihre laufende Nummer in der Ablage */
+    d.buchungen.forEach(function (b) { b.s = ++inhalt.seq; });
+  }
   ctx.geaendert = true;
-  return { ok: true, epoche: ep, archiv: name, seq: seq, treuhand: true };
+  return { ok: true, epoche: ep, archiv: name, seq: inhalt.seq, treuhand: true, behalten: behalten, epocheArt: d.epocheArt,
+           uebertrag: { karten: uebertragKarten, guthaben: uebertragen, minus: uebertragMinus } };
 }
 
 
@@ -884,7 +923,7 @@ function pruefen(inhalt) {
       if (vn > maxN) maxN = vn;
     });
     liste.forEach(function (b) {
-      if (typeof b.n !== "number") { if (b.art !== "ersatz" && b.art !== "storno") res.ohneNummer++; return; }
+      if (typeof b.n !== "number") { if (b.art !== "ersatz" && b.art !== "storno" && b.art !== "uebertrag" && b.art !== "fundkarte") res.ohneNummer++; return; }
       (nm[b.n] = nm[b.n] || []).push(b);
       if (b.n > maxN) maxN = b.n;
     });
@@ -936,10 +975,14 @@ function ueberziehungen(inhalt) {
 
 function berichtRechnen(inhalt, ctx, nurGeraet) {
   var d = inhalt.daten, B = d.buchungen, idx = indexAus(B);
-  var u = { aufgebucht: 0, aufStorno: 0, abgebucht: 0, abZurueck: 0, trinkgeld: 0, trinkgeldZurueck: 0, ausgezahlt: 0, korrektur: 0, stornos: 0, summeStorno: 0, ersatz: 0 };
-  var pro = {}, proGeraet = {};
+  var u = { aufgebucht: 0, aufStorno: 0, abgebucht: 0, abZurueck: 0, trinkgeld: 0, trinkgeldZurueck: 0, ausgezahlt: 0, korrektur: 0, stornos: 0, summeStorno: 0, ersatz: 0, uebertrag: 0, fund: 0 };
+  var pro = {}, proGeraet = {}, nachAnz = 0, nachSumme = 0, beteiligte = {};
   function zeile(map, key, name) { return map[key] || (map[key] = { name: name, ab: 0, abZurueck: 0, trinkgeld: 0, anzahl: 0 }); }
   B.forEach(function (b) {
+    if (b.art === "uebertrag") { u.uebertrag += b.cent; return; }
+    if (b.art === "fundkarte") { u.fund += -b.cent; return; }
+    if (b.nach) { nachAnz++; if (b.art === "ab") nachSumme += -b.cent; }
+    if (b.wer && (b.art === "ab" || b.art === "trinkgeld")) beteiligte[b.wer] = 1;
     var wer = b.wer || ("Gerät " + b.geraet);
     var z = zeile(pro, wer, wer), zg = zeile(proGeraet, b.geraet, (inhalt.geraete[b.geraet] && inhalt.geraete[b.geraet].name) || ("Gerät " + b.geraet));
     z.anzahl++; zg.anzahl++;
@@ -952,7 +995,8 @@ function berichtRechnen(inhalt, ctx, nurGeraet) {
     else if (b.art === "storno") {
       u.stornos++; u.summeStorno += b.cent;
       var o = idx[b.ref];
-      if (o && o.art === "ab") { u.abZurueck += b.cent; zeile(pro, o.wer || ("Gerät " + o.geraet), "").abZurueck += b.cent; zeile(proGeraet, o.geraet, "").abZurueck += b.cent; }
+      if (o && o.art === "fundkarte") u.fund -= b.cent;   /* eingezogene Karte wieder freigegeben */
+      else if (o && o.art === "ab") { u.abZurueck += b.cent; zeile(pro, o.wer || ("Gerät " + o.geraet), "").abZurueck += b.cent; zeile(proGeraet, o.geraet, "").abZurueck += b.cent; }
       else if (o && o.art === "trinkgeld") { u.trinkgeldZurueck += b.cent; }
       else if (o && o.art === "auf") u.aufStorno += -b.cent;
     }
@@ -960,6 +1004,14 @@ function berichtRechnen(inhalt, ctx, nurGeraet) {
   var netto = u.abgebucht - u.abZurueck, prozent = Number(GEBUEHR_PROZENT) || 0;
   var rest = 0, minus = 0; var S = salden(inhalt);
   Object.keys(S).forEach(function (nr) { rest += S[nr]; if (S[nr] < 0) minus += -S[nr]; });
+  var minusKarten = 0, minusSumme = 0;
+  Object.keys(S).forEach(function (nr) { if (S[nr] < 0 && !d.geloescht[nr]) { minusKarten++; minusSumme += -S[nr]; } });
+  var namen = Object.keys(beteiligte).sort();
+  var fundVerteilung = [];
+  if (u.fund > 0 && namen.length) {
+    var anteil = Math.floor(u.fund / namen.length), restC = u.fund - anteil * namen.length;
+    namen.forEach(function (nm, i) { fundVerteilung.push({ name: nm, cent: anteil + (i < restC ? 1 : 0) }); });
+  }
   var p = pruefen(inhalt), ueber = ueberziehungen(inhalt);
   var offeneUeber = ueber.filter(function (x) { return !x.quittiert; });
   var gl = geraeteListe(inhalt, ctx);
@@ -977,6 +1029,10 @@ function berichtRechnen(inhalt, ctx, nurGeraet) {
     aufgebucht: u.aufgebucht - u.aufStorno, ausgezahlt: u.ausgezahlt, korrekturen: u.korrektur, ersatz: u.ersatz,
     stornos: { anzahl: u.stornos, summe: u.summeStorno },
     nochAufKarten: rest, minus: minus,
+    epocheArt: d.epocheArt || "fest",
+    uebertrag: u.uebertrag, minusKarten: { anzahl: minusKarten, summe: minusSumme },
+    fundkarte: { summe: u.fund, beteiligte: namen, verteilung: fundVerteilung, anteil: namen.length ? Math.floor(u.fund / namen.length) : 0, rest: namen.length ? u.fund % namen.length : u.fund },
+    nachgereicht: { anzahl: nachAnz, summe: nachSumme },
     gebuehr: { prozent: prozent, betrag: prozent > 0 ? Math.round(netto * prozent / 100) : 0 },
     proBedienung: Object.keys(pro).sort().map(function (k) { var z = pro[k]; return { name: z.name || k, abgebucht: z.ab - z.abZurueck, trinkgeld: z.trinkgeld, buchungen: z.anzahl }; }),
     proGeraet: Object.keys(proGeraet).sort().map(function (k) { var z = proGeraet[k]; return { geraet: k, name: z.name, abgebucht: z.ab - z.abZurueck, trinkgeld: z.trinkgeld, buchungen: z.anzahl }; }),
@@ -1093,6 +1149,13 @@ function berichtText(b) {
   t.push("Aufgebucht:                " + euroText(b.aufgebucht));
   t.push("Ausgezahlt (Restbeträge):  " + euroText(b.ausgezahlt) + "  – ändert den Umsatz nicht");
   t.push("Noch auf Karten (netto):   " + euroText(b.nochAufKarten));
+  if (b.uebertrag) t.push("Übertrag vom Vorabend:     " + euroText(b.uebertrag) + "  – kein Umsatz, nicht neu aufgebucht");
+  if (b.minusKarten && b.minusKarten.anzahl) t.push("Offene Posten (Minusstände): " + euroText(b.minusKarten.summe) + " auf " + b.minusKarten.anzahl + " Karte(n)");
+  if (b.nachgereicht && b.nachgereicht.anzahl) t.push("Nachgereicht vom Vorabend: " + b.nachgereicht.anzahl + " Buchung(en), Abbuchungen " + euroText(b.nachgereicht.summe));
+  if (b.fundkarte && b.fundkarte.summe) {
+    t.push("Trinkgeld aus Fundkarten: " + euroText(b.fundkarte.summe) + (b.fundkarte.beteiligte.length ? ", bei " + b.fundkarte.beteiligte.length + " Beteiligten je " + euroText(b.fundkarte.anteil) + (b.fundkarte.rest ? ", Rest " + b.fundkarte.rest + " Cent" : "") : ", keine Beteiligten"));
+    b.fundkarte.verteilung.forEach(function (v) { t.push("  " + v.name + ": " + euroText(v.cent)); });
+  }
   t.push(""); t.push("Je Bedienung:");
   b.proBedienung.forEach(function (z) { t.push("  " + z.name + ": " + euroText(z.abgebucht) + ", Trinkgeld " + euroText(z.trinkgeld)); });
   if (b.ausstehend) { t.push(""); t.push("Hinweis: " + b.ausstehend + " Buchung(en) waren auf Geräten noch nicht übertragen."); }
@@ -1112,7 +1175,12 @@ function berichtHtml(b) {
     "<tr><td>Trinkgeld</td><td style=\"text-align:right;padding-left:18px\">" + euroText(b.trinkgeld) + "</td></tr>" +
     "<tr><td>Aufgebucht</td><td style=\"text-align:right;padding-left:18px\">" + euroText(b.aufgebucht) + "</td></tr>" +
     "<tr><td>Ausgezahlt (Restbeträge)</td><td style=\"text-align:right;padding-left:18px\">" + euroText(b.ausgezahlt) + "</td></tr>" +
-    "<tr><td>Noch auf Karten</td><td style=\"text-align:right;padding-left:18px\">" + euroText(b.nochAufKarten) + "</td></tr></table>" +
+    "<tr><td>Noch auf Karten</td><td style=\"text-align:right;padding-left:18px\">" + euroText(b.nochAufKarten) + "</td></tr>" +
+    (b.uebertrag ? "<tr><td>Übertrag vom Vorabend</td><td style=\"text-align:right;padding-left:18px\">" + euroText(b.uebertrag) + "</td></tr>" : "") +
+    (b.minusKarten && b.minusKarten.anzahl ? "<tr><td>Offene Posten (Minusstände)</td><td style=\"text-align:right;padding-left:18px\">" + euroText(b.minusKarten.summe) + " auf " + b.minusKarten.anzahl + " Karte(n)</td></tr>" : "") +
+    (b.nachgereicht && b.nachgereicht.anzahl ? "<tr><td>Nachgereicht vom Vorabend</td><td style=\"text-align:right;padding-left:18px\">" + b.nachgereicht.anzahl + " Buchung(en), " + euroText(b.nachgereicht.summe) + "</td></tr>" : "") +
+    (b.fundkarte && b.fundkarte.summe ? "<tr><td>Trinkgeld aus Fundkarten</td><td style=\"text-align:right;padding-left:18px\">" + euroText(b.fundkarte.summe) + "</td></tr>" + b.fundkarte.verteilung.map(function (v) { return "<tr><td style=\"padding-left:14px\">" + htmlSicher(v.name) + "</td><td style=\"text-align:right;padding-left:18px\">" + euroText(v.cent) + "</td></tr>"; }).join("") : "") +
+    "</table>" +
     (b.ausstehend ? "<p style=\"font-size:12px\">Hinweis: " + b.ausstehend + " Buchung(en) waren auf Geräten noch nicht übertragen.</p>" : "") + "</div>";
 }
 

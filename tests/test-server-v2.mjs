@@ -127,4 +127,56 @@ r=s.post('ad',{aktion:'neubeginn'}); t('neubeginn admin',r.ok);
   t('Verkauf/Kasse dürfen auch abfragen',s6.post('vk',{aktion:'bestand',karte:'GK-A0100'}).cent===500);
 }
 { const g=server2().sb.doGet().text; t('Browser-Seite nennt Fassung und Wörter',/Skriptfassung/.test(g)&&/Anzeige:\s+ja/.test(g)&&!/\bvk\b|\bka\b|\bad\b/.test(g.replace(/Verkauf|Kasse|Admin|Anzeige/g,''))); }
+// Abend abschließen / Fundkarte
+{ const s7=server2(); const T=dev(s7,'T','kt','Anna'), V=dev(s7,'V','kv','Ben');
+  s7.post('ka',{aktion:'karten',was:'anlegen',karten:[{nr:'A0001',code:'K7Q2'},{nr:'A0002',code:'ABCD'},{nr:'A0003',code:'EFGH'},{nr:'A0004',code:'JJJJ'}]});
+  T.sync('ka',[T.buche('A0001',2000,'auf',{kc:'K7Q2'}),T.buche('A0002',1000,'auf',{kc:'ABCD'}),T.buche('A0003',1250,'auf',{kc:'EFGH'})]);
+  V.sync('vk',[V.buche('A0001',-500,'ab',{kc:'K7Q2',wer:'Ben'})]);
+  V.sync('vk',[V.buche('A0002',-300,'ab',{kc:'ABCD',wer:'Anna'})]);
+  const ber=()=>s7.post('ka',{aktion:'bericht'}).bericht;
+  t('verkauf darf keinen Übertrag senden',V.sync('vk',[V.buche('A0001',999,'uebertrag')]).ergebnisse['bV3'].code==='recht');
+  t('Kasse darf keinen Übertrag senden',T.sync('ka',[T.buche('A0001',999,'fundkarte')]).ergebnisse['bT4'].st==='abgelehnt');
+  // Fundkarte
+  t('Einziehen: verkauf verboten',s7.post('vk',{aktion:'karten',was:'einziehen',nr:'A0003',id:'fk1',geraet:{id:'V'}}).verweigert);
+  t('Einziehen: ohne Guthaben',!!s7.post('ka',{aktion:'karten',was:'einziehen',nr:'A0004',id:'fk0',geraet:{id:'T'}}).fehler);
+  let r=s7.post('ka',{aktion:'karten',was:'einziehen',nr:'A0003',id:'fk1',wer:'Anna',geraet:{id:'T'}}); t('Einziehen ok',r.ok&&r.betrag===1250);
+  r=s7.post('ka',{aktion:'karten',was:'einziehen',nr:'A0003',id:'fk1',geraet:{id:'T'}}); t('Einziehen idempotent',r.ok&&r.schon&&r.betrag===1250);
+  let b=ber();
+  t('Fundkarte: Summe',b.fundkarte.summe===1250);
+  t('Fundkarte: Beteiligte alphabetisch',b.fundkarte.beteiligte.join()==='Anna,Ben');
+  t('Fundkarte: Verteilung',b.fundkarte.verteilung.map(v=>v.name+v.cent).join()==='Anna625,Ben625');
+  t('Fundkarte ist kein Umsatz',b.umsatz.netto===800);
+  t('Fundkarte nicht in Aufgebucht/Auszahlung',b.aufgebucht===4250&&b.ausgezahlt===0);
+  // Rest-Cents alphabetisch
+  s7.post('ka',{aktion:'karten',was:'anlegen',karten:[{nr:'A0005',code:'QQQQ'}]});
+  T.sync('ka',[T.buche('A0005',1,'auf',{kc:'QQQQ'})]); r=s7.post('ka',{aktion:'karten',was:'einziehen',nr:'A0005',id:'fk2',geraet:{id:'T'}});
+  b=ber(); t('Cent-Rest alphabetisch',b.fundkarte.summe===1251&&b.fundkarte.verteilung[0].cent===626&&b.fundkarte.verteilung[1].cent===625);
+  // Minusstand: Offline-Überziehung
+  const o=V.buche('A0002',-900,'ab',{kc:'ABCD',off:1,wer:'Ben'}); V.sync('vk',[o]);
+  b=ber(); t('Minusstand erkannt',b.minusKarten.anzahl===1&&b.minusKarten.summe===200);
+  // Abend abschließen
+  t('Abend: kasse verboten',s7.post('ka',{aktion:'neubeginn',behalten:true}).verweigert);
+  r=s7.post('ad',{aktion:'neubeginn',behalten:true,geraet:{id:'T'}});
+  t('Abend ok',r.ok&&r.behalten&&r.epocheArt==='abend');
+  t('Übertrag-Zähler',r.uebertrag.karten===2&&r.uebertrag.minus===200);
+  const h=s7.post('ka',{aktion:'holen'}).daten;
+  t('Karten bleiben',Object.keys(h.karten).length===5);
+  const sal={}; h.buchungen.forEach(x=>sal[x.karte]=(sal[x.karte]||0)+x.cent);
+  t('Guthaben bleibt (A0001)',sal.A0001===1500); t('Minus bleibt (A0002)',sal.A0002===-200); t('Fundkarte bleibt 0',!sal.A0003);
+  t('nur Übertrag in neuer Epoche',h.buchungen.every(x=>x.art==='uebertrag'));
+  t('Archiv angelegt',s7.post('ad',{aktion:'sicherung',was:'liste'}).liste.some(x=>/abend/.test(x.name)));
+  b=ber();
+  t('Übertrag ist kein Umsatz/Aufbuchung',b.umsatz.netto===0&&b.aufgebucht===0&&b.uebertrag===1300);
+  t('Nach Abschluss keine Fundkarten-Summe',b.fundkarte.summe===0);
+  r=V.sync('vk',[V.buche('A0001',-400,'ab',{kc:'K7Q2',wer:'Ben'})]); t('Neuer Abend: mit Übertrag buchen',Object.values(r.ergebnisse)[0].st==='ok');
+  // Nachzügler vom Vorabend
+  r=V.sync('vk',[Object.assign(V.buche('A0001',-100,'ab',{kc:'K7Q2',wer:'Ben',off:1}),{})],{epoche:1});
+  b=ber(); t('Nachgereicht gezählt',b.nachgereicht.anzahl===1&&b.nachgereicht.summe===100);
+  // zweiter Abschluss: Übertrag aus Übertrag
+  r=s7.post('ad',{aktion:'neubeginn',behalten:true,geraet:{id:'T'}}); const h2=s7.post('ka',{aktion:'holen'}).daten; const sal2={}; h2.buchungen.forEach(x=>sal2[x.karte]=(sal2[x.karte]||0)+x.cent);
+  t('Zweiter Abend: Guthaben unverändert',sal2.A0001===1000&&sal2.A0002===-200);
+  // Neues Fest löscht weiterhin alles
+  r=s7.post('ad',{aktion:'neubeginn',geraet:{id:'T'}}); const h3=s7.post('ka',{aktion:'holen'}).daten;
+  t('Neues Fest löscht Karten',Object.keys(h3.karten).length===0&&h3.buchungen.length===0);
+}
 console.log(ok+' ok, '+bad+' Fehler');

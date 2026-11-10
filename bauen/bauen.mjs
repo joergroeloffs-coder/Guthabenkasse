@@ -3,7 +3,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 const wurzel = new URL('../', import.meta.url).pathname;
 const lies = p => readFileSync(wurzel + p, 'utf8');
-const VERSION = '2.5.0';
+const VERSION = '2.6.0';
 const kern = lies('quelle/kern.html');
 const schicht = lies('quelle/v2-schicht.js');
 
@@ -87,6 +87,8 @@ function bau(modus) {
   if (rolle1 < 0 || rolle2 < 0) throw new Error('Rollenblock nicht gefunden');
   h = h.slice(0, rolle1) + h.slice(rolle2);
   // "Weitere Einstellungen" einklappen: von Licht bis vor Trinkgeld
+  if (modus === 'terminal') ersetze('<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--linieFein)">\n        <div class="feldTitel">Betrieb auf Null setzen</div>',
+    '<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--linieFein)">\n        <div class="feldTitel">Abend abschließen</div>\n        <p class="muted" style="margin:0 0 10px">Die Abbuchungen des Abends werden archiviert, die Abrechnung beginnt neu. <b>Karten und Guthaben bleiben</b> (auch Minusstände), die Karten sind weiter gültig. Vorher kann die Abrechnung gedruckt oder per Mail gesendet werden.</p>\n        <button class="knopf" id="btnAbend">Abend abschließen</button>\n      </div>\n      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--linieFein)">\n        <div class="feldTitel">Neues Fest: Betrieb auf Null setzen</div>');
   ersetze('<div class="reihe" style="margin-top:14px">\n        <label class="feld grow"><span>Licht beim Scannen', '<details class="mehr"><summary>Weitere Geräteeinstellungen (Kamera, Licht, Ton, Vollbild)</summary>\n      <div class="reihe" style="margin-top:14px">\n        <label class="feld grow"><span>Kamera (zum Beispiel ein Handy als Webcam)</span><select id="kameraWahl"></select></label>\n      </div>\n      <div class="reihe umbruch" style="margin-top:8px"><button class="knopf" id="kameraSuchen" type="button">Kameras suchen</button></div>\n      <p class="muted" style="margin:6px 0 0" id="kameraInfo"></p>\n      <div class="reihe" style="margin-top:14px">\n        <label class="feld grow"><span>Licht beim Scannen');
   const t1 = h.indexOf('<div class="reihe" style="margin-top:14px">\n        <label class="feld grow"><span>Trinkgeld-Tasten nach dem Abbuchen');
   const t2 = h.indexOf('<div class="reihe" style="margin-top:14px">\n        <label class="feld grow"><span>Anschreiben: höchstens');

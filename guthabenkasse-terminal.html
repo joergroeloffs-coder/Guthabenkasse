@@ -900,7 +900,12 @@ details.mehr{margin-top:14px}details.mehr>summary{cursor:pointer;font-weight:600
           <input type="file" id="btnImport" accept=".json,application/json" class="hide"></label>
       </div>
       <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--linieFein)">
-        <div class="feldTitel">Betrieb auf Null setzen</div>
+        <div class="feldTitel">Abend abschließen</div>
+        <p class="muted" style="margin:0 0 10px">Die Abbuchungen des Abends werden archiviert, die Abrechnung beginnt neu. <b>Karten und Guthaben bleiben</b> (auch Minusstände), die Karten sind weiter gültig. Vorher kann die Abrechnung gedruckt oder per Mail gesendet werden.</p>
+        <button class="knopf" id="btnAbend">Abend abschließen</button>
+      </div>
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--linieFein)">
+        <div class="feldTitel">Neues Fest: Betrieb auf Null setzen</div>
         <p class="muted" style="margin:0 0 10px">Für ein neues Fest: alle Karten, alle Buchungen, alle
           Summen werden gelöscht — <b>auf allen Geräten</b>, auch in der Ablage. Es bleiben das Gerät
           (Zeichen, Rolle), der Anlass und der Zugang zur Ablage. Vorher wird automatisch eine
@@ -1264,7 +1269,7 @@ function qrSvg(text){
 /* Die Nummer steht oben in der Kopfzeile und ist dazu da, zwei Geräte
    nebeneinanderlegen zu können. Bei jeder Änderung, die man merkt,
    weiterdrehen. */
-var VERSION = "2.5.0";
+var VERSION = "2.6.0";
 
 /* ============================== Daten ==============================
 
@@ -4614,7 +4619,7 @@ function syncEinmal(ms) {
   if (!wolkeBereit()) return Promise.resolve({ keine: true, ergebnisse: {} });
   var neu = ausstehende().slice(0, 150).map(function (b) { var c = {}; for (var k in b) c[k] = b[k]; return c; });
   var kz = (db.kette && db.kette[db.geraet]) || { n: 0, k: "" };
-  var req = { aktion: "sync", wort: db.ablage.wort, geraet: geraetInfo(), neu: neu, cursor: db.cursor || 0, kv: db.kv || 0, meldung: { n: kz.n, k: kz.k } };
+  var req = { aktion: "sync", wort: db.ablage.wort, geraet: geraetInfo(), neu: neu, cursor: db.cursor || 0, kv: db.kv || 0, epoche: db.epoche || 0, meldung: { n: kz.n, k: kz.k } };
   sync.laeuft = true; zeichneStatus();
   /* Die Verarbeitung hängt an der Anfrage selbst, nicht am Warten: kommt die Antwort nach der
      Wartezeit doch noch, wird sie trotzdem verbucht (die Kennungen machen das gefahrlos). */
@@ -4660,7 +4665,13 @@ function beschriftungLeeren() {
 function verarbeiteSync(a, gesendet) {
   var angenommen = 0, idx = {};
   /* neues Fest von einem anderen Gerät */
-  if ((a.epoche || 0) > (db.epoche || 0)) {
+  if ((a.epoche || 0) > (db.epoche || 0) && a.epocheArt === "abend") {
+    /* Abend abgeschlossen: Karten bleiben, Guthaben kommt als Übertrag; noch nicht übertragene Buchungen werden nachgereicht */
+    db.buchungen = db.buchungen.filter(function (b) { return !b.s; });
+    db.buchungen.forEach(function (b) { b.nach = 1; });
+    db.cursor = 0; db.epoche = a.epoche;
+    melden("Der Abend wurde abgeschlossen – neue Abrechnung");
+  } else if ((a.epoche || 0) > (db.epoche || 0)) {
     var verloren = db.buchungen.filter(function (b) { return !b.s; });
     verloren.forEach(function (b) { db.abgelehnt.push({ id: b.id, karte: b.karte, cent: b.cent, art: b.art, zeit: b.zeit, grund: "aus einem früheren Fest", gesehen: false }); });
     db.buchungen = []; db.cursor = 0; db.kv = 0; db.epoche = a.epoche; db.karten = {}; db.geloescht = {};
@@ -5377,7 +5388,13 @@ function berichtHtmlV2(b) {
   return '<div class="zahlen"><div><b>' + eur(b.umsatz.netto) + '</b><span>Umsatz (netto)</span></div><div><b>' + eur(b.trinkgeld) + '</b><span>Trinkgeld</span></div><div><b>' + eur(b.nochAufKarten) + '</b><span>noch auf Karten</span></div></div>' +
     (b.ausstehend ? '<p class="muted" style="margin:8px 0">Hinweis: ' + b.ausstehend + ' Buchung(en) sind auf Geräten noch nicht übertragen und fehlen hier noch.</p>' : '') +
     '<table class="tab" style="margin-top:10px"><tr><td>Aufgebucht</td><td class="n">' + eur(b.aufgebucht) + '</td></tr><tr><td>Abgebucht gesamt</td><td class="n">' + eur(b.umsatz.brutto) + '</td></tr><tr><td>Zurückgenommen (' + b.stornos.anzahl + ')</td><td class="n">' + eur(b.umsatz.zurueckgenommen) + '</td></tr>' +
-    '<tr><td>Ausgezahlte Restbeträge</td><td class="n">' + eur(b.ausgezahlt) + '</td></tr><tr><td>Korrekturen am Guthaben</td><td class="n">' + eur(b.korrekturen) + '</td></tr><tr><td>Auf Karten im Minus</td><td class="n">' + eur(b.minus) + '</td></tr></table>' +
+    '<tr><td>Ausgezahlte Restbeträge</td><td class="n">' + eur(b.ausgezahlt) + '</td></tr><tr><td>Korrekturen am Guthaben</td><td class="n">' + eur(b.korrekturen) + '</td></tr><tr><td>Auf Karten im Minus</td><td class="n">' + eur(b.minus) + '</td></tr>' +
+    (b.uebertrag ? '<tr><td>Übertrag vom Vorabend</td><td class="n">' + eur(b.uebertrag) + '</td></tr>' : '') +
+    (b.minusKarten && b.minusKarten.anzahl ? '<tr><td>Offene Posten (Minusstände)</td><td class="n">' + eur(b.minusKarten.summe) + ' · ' + b.minusKarten.anzahl + ' Karte(n)</td></tr>' : '') +
+    (b.nachgereicht && b.nachgereicht.anzahl ? '<tr><td>Nachgereicht vom Vorabend</td><td class="n">' + b.nachgereicht.anzahl + ' · ' + eur(b.nachgereicht.summe) + '</td></tr>' : '') + '</table>' +
+    (b.fundkarte && b.fundkarte.summe ? '<div class="feldTitel" style="margin-top:10px">Trinkgeld aus Fundkarten: ' + eur(b.fundkarte.summe) + '</div>' +
+      (b.fundkarte.beteiligte.length ? '<p class="muted" style="margin:0 0 4px">Bei ' + b.fundkarte.beteiligte.length + ' Beteiligten je ' + eur(b.fundkarte.anteil) + (b.fundkarte.rest ? ', Rest ' + b.fundkarte.rest + ' Cent der Reihe nach' : '') + '</p><table class="tab">' +
+        b.fundkarte.verteilung.map(function (v) { return '<tr><td>' + esc(v.name) + '</td><td class="n">' + eur(v.cent) + '</td></tr>'; }).join("") + '</table>' : '<p class="muted">Keine Beteiligten gebucht – noch nicht verteilbar.</p>') : '') +
     '<div class="feldTitel" style="margin-top:10px">Je Gerät</div><table class="tab">' + b.proGeraet.map(function (g) { return '<tr><td>' + esc(g.geraet + " " + g.name) + '</td><td class="n">' + eur(g.abgebucht) + '</td><td class="n">TG ' + eur(g.trinkgeld) + '</td></tr>'; }).join("") + '</table>' +
     '<div class="feldTitel" style="margin-top:10px">Je Bediener</div><table class="tab">' + b.proBedienung.map(function (g) { return '<tr><td>' + esc(g.name) + '</td><td class="n">' + eur(g.abgebucht) + '</td><td class="n">TG ' + eur(g.trinkgeld) + '</td></tr>'; }).join("") + '</table>' +
     '<p class="muted">Stand ' + esc(zeitpunkt(Date.parse(b.zeit))) + '</p>';
@@ -5424,6 +5441,7 @@ function v2Verwaltung(e) {
     case "vJetzt": vMeld("Gleicht ab …"); ab(syncJetzt(15000).then(function (a) { vMeld(a && a.ok ? "Abgeglichen" : "Nicht abgeglichen: " + (a && a.fehler)); zeichneVerwaltung(); })); break;
     case "btnWolkeJetzt": ab(syncJetzt(15000).then(function () { zeichneWolke(); })); break;
     case "vPruefen": ab(rufeAblage({ aktion: "pruefen", ids: [] }).then(function (a) { vMeld(a.ok ? "Die Ablage antwortet richtig (Folgenummer " + a.seq + ")" : "Ablage: " + (a.fehler || "?")); })); break;
+    case "btnAbend": abendAbschliessen(); break;
     case "vAuswerten": ab(berichtHolen(false)); break;
     case "vAbschlussMail": ab(berichtHolen(true)); break;
     case "vAbschlussDruck": if (verwaltungStand.bericht) berichtDruckenV2(verwaltungStand.bericht); else vMeld("Erst auswerten"); break;
@@ -5480,6 +5498,7 @@ detailHtml = function (nr) {
   var zusatz = '<div class="reihe umbruch" style="margin:0 0 10px">' +
     (status ? '<span class="hinweis" style="margin:0">' + esc(status) + '</span>' : '') +
     (!k.ersetztDurch ? '<button class="knopf" data-tat="ersetzen">Karte ersetzen</button>' : '') +
+    (saldo(nr) > 0 && !k.ersetztDurch ? '<button class="knopf" data-tat="einziehen">Karte einziehen (Fundkarte)</button>' : '') +
     (k.status === "gesperrt" ? (k.ersetztDurch ? '' : '<button class="knopf" data-tat="freigeben">Freigeben</button>') : '<button class="knopf" data-tat="sperren">Sperren</button>') + '</div>';
   return h.replace('<div class="reihe umbruch">', zusatz + '<div class="reihe umbruch">');
 };
@@ -5492,6 +5511,17 @@ function kartenAktion(was, nr) {
   } else if (was === "freigeben") {
     var w = adminWort("Karte " + nr + " wieder freigeben"); if (!w) return;
     rufeAblage({ aktion: "karten", was: "freigeben", nr: nr }, w).then(function (a) { melden(a.ok ? "Freigegeben" : (a.fehler || "?")); return syncJetzt(10000); }).then(function () { zeichneAlles(); });
+  } else if (was === "einziehen") {
+    var gu = saldo(nr);
+    if (!(gu > 0)) { melden("Auf dieser Karte liegt kein Guthaben"); return; }
+    if (!confirm("Karte " + nr + " einziehen?\n\n" + euro(gu) + " werden als Trinkgeld auf alle Beteiligten des Abends verteilt (gleiche Teile, alle, die gebucht haben). Die Karte steht danach auf 0 und bleibt gültig.")) return;
+    var idF = "fk-" + neueId();
+    syncJetzt(10000).then(function () {
+      return rufeAblage({ aktion: "karten", was: "einziehen", nr: nr, id: idF, wer: db.bediener || "" });
+    }).then(function (a) {
+      if (!a.ok) { melden(a.fehler || "Nicht eingezogen"); return; }
+      return syncJetzt(10000).then(function () { zeichneAlles(); melden("Karte eingezogen – " + euro(a.betrag) + " als Trinkgeld verbucht"); });
+    }).then(null, function (f) { melden("Keine Verbindung: " + f.message); });
   } else if (was === "ersetzen") {
     var neu = nummerSchreiben(naechsteKartenNummer()), g = saldo(nr);
     if (g < 0) { melden("Eine Karte im Minus wird nicht ersetzt – erst begleichen"); return; }
@@ -5516,7 +5546,7 @@ function v2Detail(e) {
   var t = e.target.closest ? e.target.closest("[data-tat]") : null;
   if (!t) return;
   var was = t.getAttribute("data-tat");
-  if (was !== "ersetzen" && was !== "sperren" && was !== "freigeben") return;
+  if (was !== "ersetzen" && was !== "sperren" && was !== "freigeben" && was !== "einziehen") return;
   var nr = offeneKarte; if (!nr) return;
   e.stopPropagation(); kartenAktion(was, nr);
 }
@@ -5728,6 +5758,40 @@ betriebAufNull = function () {
   }).then(null, function (f) { melden("Keine Verbindung: " + f.message); });
 };
 
+/* ======================= Abend abschließen ======================= */
+function abendAbschliessen() {
+  if (!wolkeBereit()) { melden("Das geht nur mit Verbindung zur Ablage"); return; }
+  var bericht0 = null, mailen = false;
+  melden("Prüft den Stand …");
+  syncJetzt(15000).then(function () { return rufeAblage({ aktion: "bericht" }); }).then(function (a) {
+    if (!a.ok) { melden(a.fehler || "Nicht möglich"); return; }
+    var b = bericht0 = a.bericht, offen = (b.geraete || []).filter(function (g) { return g.ausstehend > 0 || g.offline; });
+    var plus = Math.max(0, b.nochAufKarten + (b.minusKarten ? b.minusKarten.summe : 0));
+    var text = "Abend abschließen?\n\n" +
+      "Restguthaben auf den Karten (bleibt): " + euro(plus) + "\n" +
+      "Minusstände (bleiben auf den Karten): " + (b.minusKarten && b.minusKarten.anzahl ? euro(b.minusKarten.summe) + " auf " + b.minusKarten.anzahl + " Karte(n)" : "keine") + "\n" +
+      (b.fundkarte && b.fundkarte.summe ? "Trinkgeld aus Fundkarten: " + euro(b.fundkarte.summe) + "\n" : "") +
+      (offen.length ? "\nACHTUNG – nicht alles übertragen: " + offen.map(function (g) { return "Gerät " + g.id + (g.ausstehend ? " (" + g.ausstehend + " offen)" : "") + (g.offline ? " ohne Verbindung" : ""); }).join(", ") + ". Nachträgliche Buchungen werden dem neuen Abend als „nachgereicht“ zugerechnet.\n" : "") +
+      "\nKarten und Guthaben bleiben, die Abrechnung beginnt neu.";
+    if (!confirm(text)) return;
+    var tipp = prompt("Zur Bestätigung ABEND ABSCHLIESSEN eintippen:");
+    if (!tipp || tipp.trim().toUpperCase() !== "ABEND ABSCHLIESSEN") { melden("Nicht abgeschlossen – Text stimmte nicht"); return; }
+    var w = adminWort("Abend abschließen"); if (!w) return;
+    if (confirm("Abrechnung des Abends jetzt ausdrucken?")) berichtDruckenV2(b);
+    mailen = confirm("Abrechnung des Abends per Mail senden?");
+    var vorher = mailen ? rufeAblage({ aktion: "bericht", mailen: true }).then(function (m) {
+      vMeld(m.mail && m.mail.gesendet ? "Mail an " + m.mail.an + " gesendet" : "Mail nicht gesendet" + (m.mail && m.mail.fehler ? ": " + m.mail.fehler : ""));
+    }) : Promise.resolve();
+    return vorher.then(function () { return rufeAblage({ aktion: "neubeginn", behalten: true }, w); }).then(function (r) {
+      if (!r.ok) { melden(r.fehler || "Nicht möglich"); return; }
+      db.buchungen = []; db.cursor = 0; db.kv = 0; db.epoche = r.epoche; db.aufBetrag = "";
+      verwaltungStand.bericht = null; sichern(); zeichneAlles(); zeichneVerwaltung();
+      melden("Abend abgeschlossen – Karten und Guthaben bleiben");
+      return syncJetzt(10000).then(function () { zeichneAlles(); zeichneVerwaltung(); });
+    });
+  }).then(null, function (f) { melden("Keine Verbindung: " + (f && f.message || f)); });
+}
+
 /* ======================= Tabellenimport: nur die gebräuchlichen Formate ======================= */
 var _gaesteLaden = gaesteLaden;
 gaesteLaden = function (datei) {
@@ -5740,6 +5804,7 @@ gaesteLaden = function (datei) {
 
 /* ======================= Start ======================= */
 function v2Start() {
+  NAMEN.uebertrag = "Übertrag vom Vorabend"; NAMEN.fundkarte = "Fundkarte (Trinkgeld)"; NAMEN.ersatz = NAMEN.ersatz || "Kartenersatz";
   if (v2Meldung) setTimeout(function () { melden(v2Meldung); }, 800);
   document.addEventListener("click", v2Klick);
   document.addEventListener("click", azKlick);
