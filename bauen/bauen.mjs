@@ -3,7 +3,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 const wurzel = new URL('../', import.meta.url).pathname;
 const lies = p => readFileSync(wurzel + p, 'utf8');
-const VERSION = '2.3.0';
+const VERSION = '2.4.0';
 const kern = lies('quelle/kern.html');
 const schicht = lies('quelle/v2-schicht.js');
 
@@ -85,7 +85,7 @@ function bau(modus) {
   if (rolle1 < 0 || rolle2 < 0) throw new Error('Rollenblock nicht gefunden');
   h = h.slice(0, rolle1) + h.slice(rolle2);
   // "Weitere Einstellungen" einklappen: von Licht bis vor Trinkgeld
-  ersetze('<div class="reihe" style="margin-top:14px">\n        <label class="feld grow"><span>Licht beim Scannen', '<details class="mehr"><summary>Weitere Geräteeinstellungen (Licht, Ton, Vollbild)</summary>\n      <div class="reihe" style="margin-top:14px">\n        <label class="feld grow"><span>Licht beim Scannen');
+  ersetze('<div class="reihe" style="margin-top:14px">\n        <label class="feld grow"><span>Licht beim Scannen', '<details class="mehr"><summary>Weitere Geräteeinstellungen (Kamera, Licht, Ton, Vollbild)</summary>\n      <div class="reihe" style="margin-top:14px">\n        <label class="feld grow"><span>Kamera (zum Beispiel ein Handy als Webcam)</span><select id="kameraWahl"></select></label>\n      </div>\n      <div class="reihe umbruch" style="margin-top:8px"><button class="knopf" id="kameraSuchen" type="button">Kameras suchen</button></div>\n      <p class="muted" style="margin:6px 0 0" id="kameraInfo"></p>\n      <div class="reihe" style="margin-top:14px">\n        <label class="feld grow"><span>Licht beim Scannen');
   const t1 = h.indexOf('<div class="reihe" style="margin-top:14px">\n        <label class="feld grow"><span>Trinkgeld-Tasten nach dem Abbuchen');
   const t2 = h.indexOf('<div class="reihe" style="margin-top:14px">\n        <label class="feld grow"><span>Anschreiben: höchstens');
   const t3 = h.indexOf('<div class="reihe" style="margin-top:14px">\n        <label class="feld grow"><span>Trinkgeld-Tasten rechnen in');

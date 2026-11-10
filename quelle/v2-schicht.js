@@ -161,6 +161,72 @@ deckelCent = function () {
   return Math.max(0, Number(db.deckel) || 0);
 };
 
+/* ======================= Kamera wählen (zum Beispiel ein Handy als Webcam am Rechner) =======================
+   Die Wahl wird gemerkt (db.kameraId). Ohne Wahl nimmt der Browser die hintere Kamera bzw. seine Standardkamera. */
+(function () {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+  var roh = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+  navigator.mediaDevices.getUserMedia = function (c) {
+    if (c && c.video && typeof db !== "undefined" && db.kameraId) {
+      var v = typeof c.video === "object" ? Object.assign({}, c.video) : {};
+      delete v.facingMode; v.deviceId = { ideal: db.kameraId };
+      var neu = Object.assign({}, c, { video: v });
+      return roh(neu).catch(function () { return roh(c); });      /* Kamera nicht mehr da: wie ohne Wahl */
+    }
+    return roh(c);
+  };
+})();
+function kameraGeraete(freigeben) {
+  var md = navigator.mediaDevices;
+  if (!md || !md.enumerateDevices) return Promise.resolve([]);
+  function lesen() { return md.enumerateDevices().then(function (l) { return l.filter(function (d) { return d.kind === "videoinput"; }); }); }
+  return lesen().then(function (l) {
+    if (l.length && l.every(function (d) { return !d.label; }) && freigeben) {
+      /* ohne Freigabe nennt der Browser keine Namen: einmal kurz öffnen */
+      return md.getUserMedia({ video: true }).then(function (st) { st.getTracks().forEach(function (t) { t.stop(); }); return lesen(); }, function () { return l; });
+    }
+    return l;
+  });
+}
+function kameraWahlZeichnen(freigeben) {
+  var sel = document.getElementById("kameraWahl"); if (!sel) return Promise.resolve();
+  return kameraGeraete(freigeben).then(function (l) {
+    var h = '<option value="">Automatisch (hintere bzw. Standardkamera)</option>';
+    l.forEach(function (d, i) { h += '<option value="' + esc(d.deviceId) + '">' + esc(d.label || ("Kamera " + (i + 1))) + '</option>'; });
+    sel.innerHTML = h; sel.value = db.kameraId || "";
+    if (db.kameraId && sel.value !== db.kameraId) { sel.value = ""; }
+    var i = document.getElementById("kameraInfo");
+    if (i) i.textContent = l.length ? (l.length + (l.length === 1 ? " Kamera gefunden." : " Kameras gefunden.") + (l.every(function (d) { return !d.label; }) ? " Namen erscheinen nach „Kameras suchen“ (die Kamera wird dafür kurz freigegeben)." : "")) : "Keine Kamera gefunden.";
+  });
+}
+function kameraNeuStarten() {
+  var lief = liest, tab = kameraTab;
+  if (liest) kameraAus();
+  if (lief) setTimeout(function () { kameraUmschalten(tab); }, 250);
+}
+function kameraSetzen(id) { db.kameraId = id || ""; sichern(); kameraNeuStarten(); }
+/* Die nächste Kamera der Reihe (Knopf ⟲ neben „Kamera“) */
+function kameraWechseln() {
+  kameraGeraete(true).then(function (l) {
+    if (l.length < 2) { melden(l.length ? "Es ist nur eine Kamera angeschlossen." : "Keine Kamera gefunden."); return; }
+    var i = -1; l.forEach(function (d, k) { if (d.deviceId === db.kameraId) i = k; });
+    var n = l[(i + 1) % l.length];
+    db.kameraId = n.deviceId; sichern(); kameraWahlZeichnen(false);
+    melden("Kamera: " + (n.label || ("Nr. " + ((i + 1) % l.length + 1))));
+    var lief = liest, tab = kameraTab;
+    if (liest) kameraAus();
+    setTimeout(function () { kameraUmschalten(lief ? tab : (document.getElementById("reiter-ab") && !document.getElementById("reiter-ab").classList.contains("hide") ? "ab" : "auf")); }, 250);
+  });
+}
+function kameraKnoepfe() {
+  ["btnKamera", "btnKamera2", "btnKamera3"].forEach(function (id) {
+    var k = document.getElementById(id); if (!k || document.getElementById(id + "W")) return;
+    var w = document.createElement("button"); w.type = "button"; w.id = id + "W"; w.className = "knopf"; w.title = "Andere Kamera wählen"; w.textContent = "⟲ Kamera";
+    k.parentNode.insertBefore(w, k.nextSibling);
+    w.addEventListener("click", function () { kameraWechseln(); });
+  });
+}
+
 /* ======================= Verbindung und Abgleich ======================= */
 var sync = { kette: Promise.resolve(), laeuft: false, letzter: 0, fehler: "", online: null, serverFehler: "" };
 
@@ -812,6 +878,7 @@ zeichneEinstellungen = function () {
   document.querySelectorAll("#wahlModus button").forEach(function (b) {
     b.setAttribute("aria-pressed", b.getAttribute("data-modus") === (db.modus || "auto") ? "true" : "false");
   });
+  var kw = document.getElementById("kameraWahl"); if (kw && !kw.options.length) kameraWahlZeichnen(false);
   var gn = document.getElementById("geraetName"); if (gn && document.activeElement !== gn) gn.value = db.geraetName || "";
   var mi = document.getElementById("modusInfo");
   if (mi) mi.textContent = "Jetzt gilt: " + (aktuellerModus() === "schnell" ? "Schnellmodus" : "Sicherheitsmodus") +
@@ -1321,6 +1388,10 @@ function v2Start() {
   if (v2Meldung) setTimeout(function () { melden(v2Meldung); }, 800);
   document.addEventListener("click", v2Klick);
   document.addEventListener("click", azKlick);
+  kameraKnoepfe();
+  document.addEventListener("change", function (e) { if (e.target && e.target.id === "kameraWahl") { kameraSetzen(e.target.value); } });
+  document.addEventListener("click", function (e) { var t = e.target.closest ? e.target.closest("button") : null; if (t && t.id === "kameraSuchen") kameraWahlZeichnen(true); });
+  if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) navigator.mediaDevices.addEventListener("devicechange", function () { kameraWahlZeichnen(false); });
   document.addEventListener("input", function (e) { if (e.target && e.target.id === "azFilter") azListeZeichnen(); });
   document.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target && e.target.id === "azCode") { var c = e.target; if (c.value.trim()) { auszahlungKarte(c.value); c.select(); } } });
   document.addEventListener("click", v2Verwaltung);

@@ -83,7 +83,7 @@ html,body{margin:0;height:100%;background:var(--kopf);color:var(--papier);font-f
 <script>
 "use strict";
 var KEY = "guthabenkasse.anzeige.v1";
-var VERSION = "2.3.0";
+var VERSION = "2.4.0";
 var cfg = {adresse: "", wort: "", sprache: "de", rueck: "", kamera: "environment"};
 try { var gespeichert = JSON.parse(localStorage.getItem(KEY) || "{}"); for (var k in gespeichert) cfg[k] = gespeichert[k]; } catch (e) {}
 function sichern() { try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch (e) {} }
@@ -172,12 +172,13 @@ function abfragen(roh) {
 var strom = null, leser = null;
 function kameraStart() {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { kameraFehler(); return; }
-  navigator.mediaDevices.getUserMedia({video: {facingMode: cfg.kamera || "environment"}}).then(function (s) { kameraMit(s); }, function () {
+  navigator.mediaDevices.getUserMedia({video: cfg.kameraId ? {deviceId: {ideal: cfg.kameraId}} : {facingMode: cfg.kamera || "environment"}}).then(function (s) { kameraMit(s); }, function () {
     return navigator.mediaDevices.getUserMedia({video: true}).then(kameraMit);
   }).catch(kameraFehler);
 }
 function kameraMit(s) {
-  strom = s; var v = $("video"); v.srcObject = s; v.muted = true;
+  strom = s;
+  try { $("stand").textContent = "v" + VERSION + " · " + (s.getVideoTracks()[0].label || "Kamera"); } catch (e) {} var v = $("video"); v.srcObject = s; v.muted = true;
   var l = v.play(); if (l && l.catch) l.catch(function () {});
   leser = ("BarcodeDetector" in window) ? new window.BarcodeDetector({formats: ["qr_code"]}) : null;
   $("kamerafehler").style.display = "none"; takt();
@@ -231,8 +232,18 @@ Array.prototype.forEach.call(document.querySelectorAll("#sprachen button"), func
   b.addEventListener("click", function () { sprachSetzen(b.getAttribute("data-s"), true); if (!$("ergebnis").classList.contains("zeigt")) $("hinweis").textContent = bereit() ? t("halten") : t("einricht"); });
 });
 $("kam").addEventListener("click", function () {
-  cfg.kamera = (cfg.kamera || "environment") === "user" ? "environment" : "user"; sichern();
-  try { if (strom) strom.getTracks().forEach(function (x) { x.stop(); }); } catch (e) {} strom = null; kameraStart();
+  /* Mehrere Kameras (zum Beispiel ein Handy als Webcam am Rechner): die nächste der Reihe; sonst vorn/hinten wechseln */
+  var md = navigator.mediaDevices;
+  var neustart = function () { try { if (strom) strom.getTracks().forEach(function (x) { x.stop(); }); } catch (e) {} strom = null; kameraStart(); };
+  if (!md || !md.enumerateDevices) { cfg.kamera = (cfg.kamera || "environment") === "user" ? "environment" : "user"; cfg.kameraId = ""; sichern(); neustart(); return; }
+  md.enumerateDevices().then(function (l) {
+    l = l.filter(function (d) { return d.kind === "videoinput"; });
+    if (l.length >= 2) {
+      var i = -1; l.forEach(function (d, k) { if (d.deviceId === cfg.kameraId) i = k; });
+      cfg.kameraId = l[(i + 1) % l.length].deviceId;
+    } else { cfg.kamera = (cfg.kamera || "environment") === "user" ? "environment" : "user"; cfg.kameraId = ""; }
+    sichern(); neustart();
+  }, function () { cfg.kamera = (cfg.kamera || "environment") === "user" ? "environment" : "user"; sichern(); neustart(); });
 });
 $("voll").addEventListener("click", function () {
   var el = document.documentElement;

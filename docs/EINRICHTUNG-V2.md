@@ -1,6 +1,6 @@
 # Guthabenkasse 2.0 – Terminal und Verkauf
 
-Stand: Fassung 2.3.0. Steuerliche und rechtliche Fragen sind ausdrücklich nicht Gegenstand dieser Überarbeitung.
+Stand: Fassung 2.4.0. Steuerliche und rechtliche Fragen sind ausdrücklich nicht Gegenstand dieser Überarbeitung.
 
 ## Was neu ist
 
@@ -108,3 +108,7 @@ Siehe `docs/TESTBERICHT-V2.md` (ehrlich getrennt: tatsächlich getestet / nur th
 3. **Fünf schnelle Tipps auf die Überschrift** öffnen die Einrichtung: Adresse der Ablage, Anzeige-Wort, Standardsprache, Kamera (vorn/hinten), Hinweis zur Rückgabe.
 4. Der Gast hält die Karte vor, sieht das Guthaben 9 Sekunden lang und kann die Sprache wechseln (springt nach 45 Sekunden zurück).
 Die Ablage erlaubt diesem Wort nur die Abfrage `bestand`: Nichts wird geschrieben, nichts anderes erlaubt, höchstens 30 Abfragen je Minute. Karten mit Prüfnummer lassen sich nur mit vollständigem QR-Inhalt abfragen. **Grenze:** Alte Karten ohne Prüfnummer fragt die Ablage allein über die Nummer ab; jemand, der das Anzeigegerät aufbricht und das Wort ausliest, könnte so (langsam) Nummern durchprobieren.
+
+## Kamera wählen (Handy als Webcam am Rechner)
+Terminal und Verkauf: Optionen → Weitere Geräteeinstellungen → **Kamera** (Liste der angeschlossenen Kameras, „Kameras suchen“ gibt die Kamera kurz frei, damit die Namen erscheinen). Neben jeder Kamera-Taste gibt es **⟲ Kamera**: wählt die nächste Kamera der Reihe. Die Wahl wird je Gerät gemerkt; ist die Kamera nicht mehr da, nimmt der Browser seine Standardkamera. Anzeige: **⟲ Kamera** unten rechts wechselt durch alle Kameras (bei nur einer: vorn/hinten); der Name steht neben der Versionsnummer.
+Ein Handy wird am Rechner zur Kamera über den Webcam-Modus von Android 14 (USB-Einstellungen → Webcam) oder Apps wie DroidCam/Iriun/Camo (USB-Verbindung). Der Blitz des Handys ist darüber nicht nutzbar.
