@@ -3,7 +3,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 const wurzel = new URL('../', import.meta.url).pathname;
 const lies = p => readFileSync(wurzel + p, 'utf8');
-const VERSION = '2.0.0';
+const VERSION = '2.3.0';
 const kern = lies('quelle/kern.html');
 const schicht = lies('quelle/v2-schicht.js');
 

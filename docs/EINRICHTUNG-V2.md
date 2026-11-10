@@ -1,6 +1,6 @@
 # Guthabenkasse 2.0 – Terminal und Verkauf
 
-Stand: Fassung 2.0.0. Steuerliche und rechtliche Fragen sind ausdrücklich nicht Gegenstand dieser Überarbeitung.
+Stand: Fassung 2.3.0. Steuerliche und rechtliche Fragen sind ausdrücklich nicht Gegenstand dieser Überarbeitung.
 
 ## Was neu ist
 
