@@ -91,6 +91,9 @@ Bewusst einfach: **Terminal → Verwaltung → Auswerten** zeigt die aktuellen Z
 ## Karte einziehen (Fundkarte)
 **Karten → Karte antippen → Karte einziehen (Fundkarte)**, nur mit Verbindung. Das Guthaben der Karte wird als Trinkgeld verbucht (Karte danach 0, bleibt gültig, doppeltes Antippen bucht nur einmal). Der Betrag wird **zu gleichen Teilen auf alle Vornamen verteilt, die in diesem Abend gebucht haben**; Cent-Reste bekommen die Namen der Reihe nach alphabetisch je einen Cent. Die Abrechnung zeigt Summe, Anteil und die Liste je Name. Fundkarten sind kein Umsatz.
 
+## Startseite und Anzeige (2.7.0)
+Die Startseite (`index.html`) bietet **Terminal, Verkauf und Anzeige** zur Auswahl; ein Gerät öffnet die Adresse einmal, wählt seine Aufgabe und bekommt dort wie bisher seine eigene App (die zuletzt gewählte Aufgabe ist hervorgehoben). Die Anzeige zeigt das Ergebnis jetzt groß über die ganze Fläche (das Kamerafenster bleibt unverändert). Nach dem Scannen läuft 3,6 Sekunden lang eine kleine Suchanimation (Männchen am Aktenschrank, „Ich suche Ihr Guthaben …“ in Deutsch, Türkisch, Englisch); erst danach erscheint der Betrag. Das überbrückt die Antwortzeit der Ablage.
+
 ## Rollen
 Die Rolle ergibt sich aus dem Zugangswort und wird **in der Ablage** geprüft, nicht nur in den Menüs: Verkauf darf abbuchen/abfragen/eigene letzte Buchung zurücknehmen; Kasse zusätzlich aufbuchen, Karten verwalten, Kassenbuch, Abschluss, Sicherung; Administrator zusätzlich Geräte, Einstellungen (Anschreiben, Offline-Limit), Wiederherstellen, neues Fest.
 

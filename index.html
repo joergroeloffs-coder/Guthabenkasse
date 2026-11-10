@@ -8,9 +8,27 @@ main{max-width:460px;padding:24px;width:100%;box-sizing:border-box}
 h1{font-weight:400;margin:0 0 6px}p{color:#B9C7BC;font:14px/1.5 system-ui,sans-serif}
 a{display:block;margin:14px 0;padding:20px;border-radius:10px;text-decoration:none;color:#0C1D14;background:#F3EEDD;font:600 20px system-ui,sans-serif}
 a small{display:block;font:400 14px system-ui,sans-serif;margin-top:4px;color:#3b4a40}
-a.v{background:#C9A24A}
+a.v{background:#C9A24A}a.a{background:#8FB09E}a.zuletzt{outline:4px solid #F3EEDD;outline-offset:3px}
 </style></head><body><main>
-<h1>Guthabenkasse</h1><p>Zwei Programme mit gemeinsamem Bestand. Jedes Gerät installiert genau eines.</p>
+<h1>Guthabenkasse</h1><p>Drei Programme mit gemeinsamem Bestand. Jedes Gerät bekommt genau eine Aufgabe: bitte auswählen.</p><p id="zuletzt" style="display:none"></p>
 <a href="guthabenkasse-terminal.html">Terminal<small>Aufbuchen, Abbuchen, Karten, Abschluss, Verwaltung</small></a>
 <a class="v" href="guthabenkasse-verkauf.html">Verkauf<small>Nur abbuchen und Guthaben ansehen</small></a>
-</main></body></html>
+<a class="a" href="guthabenkasse-anzeige.html">Anzeige<small>Für Gäste: Karte vorhalten, Guthaben sehen</small></a>
+</main>
+<script>
+(function () {
+  var KEY = "guthabenkasse.start", namen = { terminal: "Terminal", verkauf: "Verkauf", anzeige: "Anzeige" };
+  var links = document.querySelectorAll("a[href^=guthabenkasse-]");
+  Array.prototype.forEach.call(links, function (a) {
+    var r = a.getAttribute("href").replace("guthabenkasse-", "").replace(".html", "");
+    a.addEventListener("click", function () { try { localStorage.setItem(KEY, r); } catch (e) {} });
+  });
+  try {
+    var z = localStorage.getItem(KEY);
+    if (namen[z]) {
+      var p = document.getElementById("zuletzt"); p.style.display = ""; p.textContent = "Dieses Gerät war zuletzt: " + namen[z] + ".";
+      Array.prototype.forEach.call(links, function (a) { if (a.getAttribute("href") === "guthabenkasse-" + z + ".html") a.className += " zuletzt"; });
+    }
+  } catch (e) {}
+})();
+</script></body></html>
