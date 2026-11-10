@@ -544,6 +544,8 @@ nav button{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   main{padding-top:12px}
 }
 
+.azKarte{border-radius:8px;padding:14px;text-align:center;background:#F7F0DC}.azKarte:empty{display:none}.azKarte.az-bereit{background:#E5EFE8}.azKarte.az-fertig{background:#D6EADB}.azKarte.az-nein{background:#F7E7E2}.azGross{font-family:'Newsreader',Georgia,serif;font-size:44px;line-height:1.1;margin:2px 0}.azNr{font-size:20px;font-weight:600}.azKnopf{width:100%;margin-top:10px;font-size:22px;padding:16px}
+#reiter-auszahlung video{width:100%;max-height:46vh;border-radius:8px;background:#000}
 .syncChip{display:inline-block;font-size:12px;padding:3px 9px;border-radius:99px;background:rgba(255,255,255,.12);color:#fff;white-space:nowrap;font-weight:600}
 .syncChip.s-ok{background:#2f6b44}.syncChip.s-warte{background:#8a6a12}.syncChip.s-offline{background:#8a4a12}.syncChip.s-fehler{background:#9a2b22}.syncChip.s-aus{background:#555}.syncChip.s-ok,.syncChip.s-warte,.syncChip.s-offline,.syncChip.s-fehler,.syncChip.s-aus{color:#fff}
 .s-ok{color:#1f6b3f}.s-warte{color:#8a6a12}.s-offline{color:#a0560f}.s-fehler{color:#9a2b22}
@@ -573,6 +575,7 @@ details.mehr{margin-top:14px}details.mehr>summary{cursor:pointer;font-weight:600
   <nav class="seitenBreite" id="reiterLeiste">
     <button data-reiter="auf" aria-current="true">Aufbuchen</button>
     <button data-reiter="ab">Abbuchen</button>
+    <button data-reiter="auszahlung"><span class="lang">Auszahlung</span><span class="kurz">Auszahl.</span></button>
     <button data-reiter="karten">Karten</button>
     <button data-reiter="verwaltung">Verwaltung</button>
     <button data-reiter="einstellungen"><span class="lang">Einstellungen</span><span class="kurz">Optionen</span></button>
@@ -904,6 +907,17 @@ details.mehr{margin-top:14px}details.mehr>summary{cursor:pointer;font-weight:600
     </div></div>
 </section>
 
+<section id="reiter-auszahlung" class="hide"><div class="karte"><div class="titel"><h2>Auszahlung am Ende</h2></div><div class="inhalt">
+      <div id="azSumme"></div>
+      <div class="bild" style="margin-top:10px"><video id="video3" class="hide" playsinline muted></video><div class="hinweis hide" id="kameraHinweis3"></div>
+        <div class="kamerareihe"><button class="knopf" id="btnKamera3">Kamera</button></div></div>
+      <div class="eingabe"><input id="azCode" placeholder="Nummer eintippen" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="knopf voll" id="azSuchen">Suchen</button></div>
+      <div id="azKarte" style="margin-top:10px"></div>
+      <div class="feldTitel" style="margin-top:16px">Karten mit Restguthaben</div>
+      <input id="azFilter" placeholder="Nach Nummer oder Name filtern …" autocomplete="off" style="margin:6px 0 4px">
+      <div class="verlauf" id="azListe"></div>
+      <p class="muted">Ablauf: Karte scannen (oder Nummer tippen) → der Stand wird frisch abgeglichen → den großen Knopf antippen → den Betrag bar auszahlen. Ändert sich das Guthaben dazwischen, zeigt das Terminal den neuen Betrag und fragt noch einmal.</p>
+    </div></div></section>
 <section id="reiter-verwaltung" class="hide"><div id="verwaltungInhalt"></div></section>
 </main>
 
@@ -5077,15 +5091,16 @@ var _reiterZeigen = reiterZeigen;
 reiterZeigen = function (name) {
   if (MODUS === "terminal" && (name === "karten" || name === "verwaltung" || name === "einstellungen") && !pinPruefen()) return;
   _reiterZeigen(name);
-  ["verwaltung", "meine"].forEach(function (r) {
+  ["verwaltung", "meine", "auszahlung"].forEach(function (r) {
     var e = document.getElementById("reiter-" + r); if (e) e.classList.toggle("hide", r !== name);
   });
   if (name === "verwaltung") zeichneVerwaltung();
   if (name === "meine") zeichneMeine();
+  if (name === "auszahlung") zeichneAuszahlung();
 };
 rolleAnwenden = function () {
   var zeigen = MODUS === "verkauf" ? { ab: true, meine: true, einstellungen: true }
-                                   : { auf: true, ab: true, karten: true, verwaltung: true, einstellungen: true };
+                                   : { auf: true, ab: true, auszahlung: true, karten: true, verwaltung: true, einstellungen: true };
   document.querySelectorAll("nav button").forEach(function (b) { b.classList.toggle("hide", !zeigen[b.getAttribute("data-reiter")]); });
   var jetzt = document.querySelector('nav button[aria-current="true"]');
   var name = jetzt && jetzt.getAttribute("data-reiter");
@@ -5485,6 +5500,111 @@ function rueckDrucken(passprobe) {
   drucken(seiten);
 }
 
+/* ======================= Auszahlung am Ende des Festes (nur Terminal) =======================
+   Karte scannen oder Nummer tippen → der Stand wird frisch abgeglichen → ein großer Knopf zahlt aus.
+   Darunter die Liste aller Karten mit Restguthaben und die Summe, die noch auszuzahlen ist. */
+var azLaeuft = false, azAktuell = null;
+var _kameraIds = kameraIds;
+kameraIds = function (t) { return t === "aus" ? { video: "video3", hinweis: "kameraHinweis3", knopf: "btnKamera3" } : _kameraIds(t); };
+var _kameraAus = kameraAus;
+kameraAus = function () { _kameraAus(); var v = document.getElementById("video3"); if (v) v.classList.add("hide"); var k = document.getElementById("btnKamera3"); if (k) k.textContent = _t("Kamera"); };
+phase.aus = "scan";
+var _treffer = treffer;
+treffer = function (text) {
+  if (kameraTab !== "aus") { _treffer(text); return; }
+  if (!text) return;
+  var j = Date.now();
+  if (text === letzterCode && j - letzterTreffer < 4000) { letzterTreffer = j; return; }
+  letzterCode = text; letzterTreffer = j;
+  auszahlungKarte(text);
+};
+
+function azSummen() {
+  var s = salden(), offen = 0, n = 0, aus = 0, nAus = 0, rueck = {};
+  db.buchungen.forEach(function (b) { if (b.art === "storno") rueck[b.ref] = true; });
+  Object.keys(s).forEach(function (nr) { if (!istGeloescht(nr) && s[nr] > 0) { offen += s[nr]; n++; } });
+  db.buchungen.forEach(function (b) { if (b.art === "auszahlung" && !rueck[b.id]) { aus += -b.cent; nAus++; } });
+  return { offen: offen, n: n, aus: aus, nAus: nAus };
+}
+function azStandText() {
+  if (!wolkeBereit()) return "";
+  if (sync.online === false) return "Ohne Verbindung – Stand von " + (db.letzterAbgleich ? uhrzeit(db.letzterAbgleich) + " Uhr" : "?") + ". Vor dem Auszahlen möglichst Verbindung herstellen.";
+  return "";
+}
+function zeichneAuszahlung() {
+  var e = document.getElementById("azSumme"); if (!e) return;
+  var z = azSummen();
+  e.innerHTML = '<div class="zahlen"><div><b>' + eur(z.offen) + '</b><span>noch auszuzahlen</span></div><div><b>' + z.n + '</b><span>Karten mit Guthaben</span></div><div><b>' + eur(z.aus) + '</b><span>schon ausgezahlt (' + z.nAus + ')</span></div></div>' +
+    (azStandText() ? '<p class="hinweis" style="margin:8px 0 0">' + esc(azStandText()) + '</p>' : '');
+  azListeZeichnen();
+}
+function azListeZeichnen() {
+  var l = document.getElementById("azListe"); if (!l) return;
+  var f = String((document.getElementById("azFilter") || {}).value || "").trim().toLowerCase(), s = salden();
+  var nrs = Object.keys(s).filter(function (nr) { return s[nr] > 0 && !istGeloescht(nr) && (!f || nr.toLowerCase().indexOf(f) >= 0 || kartenName(nr).toLowerCase().indexOf(f) >= 0); });
+  nrs.sort(function (a, b) { var na = kartenName(a), nb = kartenName(b); return na && nb ? na.localeCompare(nb) : (na ? -1 : nb ? 1 : (a < b ? -1 : 1)); });
+  l.innerHTML = nrs.length ? nrs.slice(0, 300).map(function (nr) {
+    var k = db.karten[nr] || {};
+    return '<div class="zeile"><span class="grow"><b class="mono">' + esc(nr) + '</b>' + (kartenName(nr) ? ' · ' + esc(kartenName(nr)) : '') + (k.status === "gesperrt" ? ' <span class="muted">(gesperrt)</span>' : '') + '</span><span class="betrag">' + euro(s[nr]) + '</span><button class="knopf klein" data-az="' + esc(nr) + '">auszahlen</button></div>';
+  }).join("") : '<p class="muted" style="margin:6px 0 0">' + (f ? 'Keine passende Karte mit Guthaben.' : 'Keine Karte hat noch Guthaben.') + '</p>';
+}
+function azKarteZeigen(html, klasse) {
+  var k = document.getElementById("azKarte"); if (!k) return;
+  k.className = "azKarte " + (klasse || ""); k.innerHTML = html;
+  try { k.scrollIntoView({ block: "nearest" }); } catch (e) {}
+}
+/* Karte finden, Stand frisch holen, dann den Auszahlungsknopf zeigen */
+function auszahlungKarte(roh) {
+  var nr = kartenNummer(roh) || stapelNummer(String(roh || ""));
+  if (!nr) { azKarteZeigen('<div class="azGross">Keine Guthabenkarte</div><div class="muted">Gelesen: ' + esc(String(roh || "").slice(0, 40)) + '</div>', "az-nein"); klingen("nein"); return; }
+  azKarteZeigen('<div class="azGross">…</div><div class="muted">Stand wird geholt</div>', "az-warte");
+  var vorbereitung = wolkeBereit() ? syncJetzt(6000) : Promise.resolve();
+  vorbereitung.then(function () { azKarteAnzeigen(nr); });
+}
+function azKarteAnzeigen(nr) {
+  var s = saldo(nr), k = db.karten[nr], stand = azStandText();
+  azAktuell = { nr: nr, cent: s };
+  if (!k) { azKarteZeigen('<div class="azGross">Karte unbekannt</div><div class="muted">' + esc(kartenCode(nr)) + ' – hier nicht bekannt, vielleicht fehlt ein Abgleich.</div>', "az-nein"); klingen("nein"); return; }
+  var kopf = '<div class="muted">Karte</div><div class="azNr">' + esc(nr) + (kartenName(nr) ? ' · ' + esc(kartenName(nr)) : '') + (k.status === "gesperrt" ? ' <span class="muted">(gesperrt)</span>' : '') + '</div>';
+  if (s > 0) {
+    azKarteZeigen(kopf + '<div class="muted" style="margin-top:6px">Guthaben</div><div class="azGross">' + euro(s) + '</div>' + (stand ? '<p class="hinweis">' + esc(stand) + '</p>' : '') +
+      '<button class="knopf voll azKnopf" id="azZahlen" data-azzahlen="' + esc(nr) + '" data-azcent="' + s + '">' + euro(s) + ' auszahlen</button><button class="knopf" data-azzu="1" style="width:100%;margin-top:8px">Abbrechen</button>', "az-bereit");
+    klingen("auf");
+  } else if (s < 0) azKarteZeigen(kopf + '<div class="azGross">Offen ' + euro(-s) + '</div><div class="muted">Die Karte steht im Minus – nichts auszuzahlen.</div>', "az-nein");
+  else azKarteZeigen(kopf + '<div class="azGross">0,00 €</div><div class="muted">Nichts auszuzahlen (schon ausgezahlt oder leer).</div>', "az-nein");
+}
+function auszahlungBuchen(nr, gezeigt) {
+  if (azLaeuft) return; azLaeuft = true;
+  var vorbereitung = wolkeBereit() ? syncJetzt(5000) : Promise.resolve();
+  vorbereitung.then(function () {
+    var g = saldo(nr);
+    if (g !== gezeigt) {
+      /* der Stand hat sich geändert (zum Beispiel eine Abbuchung am Tresen): neu zeigen, noch einmal bestätigen */
+      azLaeuft = false; melden("Das Guthaben hat sich geändert: jetzt " + euro(g)); azKarteAnzeigen(nr); zeichneAuszahlung(); return;
+    }
+    if (!(g > 0)) { azLaeuft = false; azKarteAnzeigen(nr); return; }
+    var b = buchen(nr, -g, "auszahlung", null, null, true);
+    if (wolkeBereit()) b.off = 1;
+    sichernBestaetigt().then(function (ok) {
+      azLaeuft = false;
+      if (!ok) { db.buchungen = db.buchungen.filter(function (x) { return x !== b; }); azKarteZeigen('<div class="azGross">Nicht ausgezahlt</div><div class="muted">Das Gerät kann gerade nicht speichern.</div>', "az-nein"); klingen("nein"); return; }
+      azAktuell = null;
+      azKarteZeigen('<div class="muted">Ausgezahlt – bar übergeben</div><div class="azGross">' + euro(g) + '</div><div class="muted">Karte ' + esc(nr) + (kartenName(nr) ? ' · ' + esc(kartenName(nr)) : '') + ' steht jetzt auf 0,00 €</div>' +
+        '<button class="knopf" data-azzu="1" style="width:100%;margin-top:10px">Nächste Karte</button>', "az-fertig");
+      klingen("ab"); if (navigator.vibrate) navigator.vibrate(60);
+      zeichneAlles(); zeichneAuszahlung(); wolkeVormerken();
+    });
+  });
+}
+function azKlick(e) {
+  var t = e.target.closest ? e.target.closest("button") : null; if (!t) return;
+  if (t.getAttribute("data-azzahlen")) { auszahlungBuchen(t.getAttribute("data-azzahlen"), Number(t.getAttribute("data-azcent"))); return; }
+  if (t.getAttribute("data-azzu")) { azKarteZeigen("", ""); azAktuell = null; var c = document.getElementById("azCode"); if (c) { c.value = ""; } return; }
+  if (t.getAttribute("data-az")) { auszahlungKarte(t.getAttribute("data-az")); return; }
+  if (t.id === "azSuchen") { var cc = document.getElementById("azCode"); if (cc && cc.value.trim()) { auszahlungKarte(cc.value); cc.select(); } return; }
+  if (t.id === "btnKamera3") { klangWecken(); kameraUmschalten("aus"); }
+}
+
 /* ======================= Neues Fest ======================= */
 var _betriebAufNull = betriebAufNull;
 betriebAufNull = function () {
@@ -5515,6 +5635,9 @@ gaesteLaden = function (datei) {
 function v2Start() {
   if (v2Meldung) setTimeout(function () { melden(v2Meldung); }, 800);
   document.addEventListener("click", v2Klick);
+  document.addEventListener("click", azKlick);
+  document.addEventListener("input", function (e) { if (e.target && e.target.id === "azFilter") azListeZeichnen(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target && e.target.id === "azCode") { var c = e.target; if (c.value.trim()) { auszahlungKarte(c.value); c.select(); } } });
   document.addEventListener("click", v2Verwaltung);
   document.addEventListener("click", function (e) {
     var t = e.target.closest ? e.target.closest("button") : null;
@@ -5555,7 +5678,7 @@ function v2Start() {
 
 /* Fassung und Status in der Kopfzeile */
 var _zeichneAlles = zeichneAlles;
-zeichneAlles = function () { _zeichneAlles(); zeichneStatus(); if (MODUS === "verkauf" && aktiverReiter === "meine") zeichneMeine(); };
+zeichneAlles = function () { _zeichneAlles(); zeichneStatus(); if (MODUS === "terminal" && aktiverReiter === "auszahlung") zeichneAuszahlung(); if (MODUS === "verkauf" && aktiverReiter === "meine") zeichneMeine(); };
 
 
 start();

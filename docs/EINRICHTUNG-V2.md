@@ -68,6 +68,9 @@ Terminal → Karten → Anzahl oder Namen/Gästeliste → **Vorschau der Karten*
 ## Bestehende Karten nochmal drucken
 Terminal → Karten → **Bestehende Karten nochmal drucken**: Von/Bis (leer = alle aktiven Karten), optional nur Karten mit Guthaben. Nummer, Name und Prüfnummer bleiben; gesperrte und gelöschte Karten werden ausgelassen. Einzelne Karten: Karte antippen → „Karte nochmal drucken“.
 
+## Auszahlung am Ende des Festes
+Terminal → Reiter **Auszahlung**: Karte scannen oder Nummer tippen → Stand wird frisch abgeglichen → großer Knopf „12,50 € auszahlen“ → Betrag bar übergeben. Ändert sich das Guthaben dazwischen, wird der neue Betrag gezeigt und noch einmal bestätigt. Oben: noch auszuzahlen / Karten mit Guthaben / schon ausgezahlt; darunter die Liste aller Karten mit Restguthaben (filterbar). Ohne Verbindung geht es auch (mit Hinweis auf den alten Stand). Die Auszahlung ist eine Buchung „ausgezahlt“ (Abrechnung: „Ausgezahlte Restbeträge“, ändert den Umsatz nicht), zurücknehmbar, nur mit dem Kassenwort möglich.
+
 ## Rückseite der Karten
 Schablone und Anleitung: `docs/kartenrueckseite/`. Im Terminal unter Karten → **Rückseite der Karten**: **Standard ist die Rückseite mit der Gebrauchsanleitung** (Deutsch/Englisch, ohne Anlass – für jede Veranstaltung nutzbar). Eigenes Bild wählen (optional), Passprobe drucken, Versatz einstellen, achtmal auf A4 drucken (Wenden an der langen Kante). Das Raster ist identisch mit der Vorderseite.
 
