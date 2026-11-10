@@ -1,6 +1,6 @@
 # Guthabenkasse 2.0 – Terminal und Verkauf
 
-Stand: Fassung 2.6.0. Steuerliche und rechtliche Fragen sind ausdrücklich nicht Gegenstand dieser Überarbeitung.
+Stand: Fassung 2.5.0. Steuerliche und rechtliche Fragen sind ausdrücklich nicht Gegenstand dieser Überarbeitung.
 
 ## Was neu ist
 
@@ -115,6 +115,3 @@ Ein Handy wird am Rechner zur Kamera über den Webcam-Modus von Android 14 (USB-
 
 ## Reiter Karten: Aufklappmenüs
 Jede Überschrift im Reiter Karten (Übersicht, Neue Karten drucken, Karten vorab aufladen, Karten löschen, Rückseite der Karten, Bestehende Karten nochmal drucken, Alle Karten) ist ein Aufklappmenü: antippen öffnet den Bereich, nochmal antippen schließt ihn (Pfeil rechts). Zu Beginn ist alles zu; welche Bereiche offen sind, merkt sich das Gerät. Eine Datei auf „Neue Karten drucken“ ziehen oder eine Gästeliste laden öffnet diesen Bereich von selbst. Der Knopf „Abschluss drucken“ in der Übersicht-Zeile bleibt eigenständig.
-
-## Abend abschließen (die Karten bleiben)
-Terminal → Optionen → **Abend abschließen**: Alle Buchungen und Guthaben werden archiviert (Archivdatei `…-abend.json` im Drive) und beginnen bei null. **Karten, Namen, Prüfnummern, Sperren, Anlass und Geräte bleiben**, dieselben Karten gelten am nächsten Abend. Das Terminal warnt vorher, wenn noch Guthaben auf Karten liegt (es verfällt, eine Auszahlung gehört davor) oder Geräte noch Buchungen nicht übertragen haben (deren spätere Buchungen werden verworfen). Bestätigung durch Eintippen von **ABEND ABSCHLIESSEN** und das Administrator-Wort. Die anderen Geräte übernehmen den Abschluss beim nächsten Abgleich. **Betrieb auf Null setzen** (neues Fest) löscht dagegen weiterhin alles einschließlich der Karten.

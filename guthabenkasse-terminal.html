@@ -900,12 +900,7 @@ details.mehr{margin-top:14px}details.mehr>summary{cursor:pointer;font-weight:600
           <input type="file" id="btnImport" accept=".json,application/json" class="hide"></label>
       </div>
       <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--linieFein)">
-        <div class="feldTitel">Abend abschließen (die Karten bleiben)</div>
-        <p class="muted" style="margin:0 0 10px">Für den nächsten Abend mit denselben Karten: alle Buchungen und Guthaben werden archiviert und beginnen bei null. Karten, Namen, Prüfnummern, Sperren, Anlass und Geräte bleiben. <b>Restguthaben verfällt dabei</b> – vorher auszahlen. Administrator-Wort nötig.</p>
-        <button class="knopf" id="btnAbend" type="button">Abend abschließen</button>
-      </div>
-      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--linieFein)">
-        <div class="feldTitel">Betrieb auf Null setzen (neues Fest)</div>
+        <div class="feldTitel">Betrieb auf Null setzen</div>
         <p class="muted" style="margin:0 0 10px">Für ein neues Fest: alle Karten, alle Buchungen, alle
           Summen werden gelöscht — <b>auf allen Geräten</b>, auch in der Ablage. Es bleiben das Gerät
           (Zeichen, Rolle), der Anlass und der Zugang zur Ablage. Vorher wird automatisch eine
@@ -1269,7 +1264,7 @@ function qrSvg(text){
 /* Die Nummer steht oben in der Kopfzeile und ist dazu da, zwei Geräte
    nebeneinanderlegen zu können. Bei jeder Änderung, die man merkt,
    weiterdrehen. */
-var VERSION = "2.6.0";
+var VERSION = "2.5.0";
 
 /* ============================== Daten ==============================
 
@@ -4664,14 +4659,14 @@ function beschriftungLeeren() {
 
 function verarbeiteSync(a, gesendet) {
   var angenommen = 0, idx = {};
-  /* neues Fest oder abgeschlossener Abend von einem anderen Gerät */
+  /* neues Fest von einem anderen Gerät */
   if ((a.epoche || 0) > (db.epoche || 0)) {
-    var behalten = a.epocheArt === "abend";
     var verloren = db.buchungen.filter(function (b) { return !b.s; });
-    verloren.forEach(function (b) { db.abgelehnt.push({ id: b.id, karte: b.karte, cent: b.cent, art: b.art, zeit: b.zeit, grund: behalten ? "aus dem abgeschlossenen Abend" : "aus einem früheren Fest", gesehen: false }); });
-    db.buchungen = []; db.cursor = 0; db.kv = 0; db.epoche = a.epoche;
-    if (!behalten) { db.karten = {}; db.geloescht = {}; beschriftungLeeren(); db.anlass = a.anlass && (a.anlass.name || a.anlass.verein || a.anlass.zusatz) ? a.anlass : db.anlass; }
-    melden(behalten ? "Abend abgeschlossen – die Karten bleiben, die Guthaben beginnen bei null" : "Neues Fest übernommen");
+    verloren.forEach(function (b) { db.abgelehnt.push({ id: b.id, karte: b.karte, cent: b.cent, art: b.art, zeit: b.zeit, grund: "aus einem früheren Fest", gesehen: false }); });
+    db.buchungen = []; db.cursor = 0; db.kv = 0; db.epoche = a.epoche; db.karten = {}; db.geloescht = {};
+    beschriftungLeeren(); db.anlass = a.anlass && (a.anlass.name || a.anlass.verein || a.anlass.zusatz) ? a.anlass : db.anlass;
+    if (a.cursor && a.buchungen && a.buchungen.length === 0) db.cursor = 0;
+    melden("Neues Fest übernommen");
   }
   db.buchungen.forEach(function (b) { idx[b.id] = b; });
   var res = a.ergebnisse || {}, abgelehntVorher = db.abgelehnt.length;
@@ -5438,7 +5433,6 @@ function v2Verwaltung(e) {
     case "pinBtn": var p = document.getElementById("pinNeu").value.trim(); db.pin = p ? kettenHash("pin|" + p) : ""; sichern(); vMeld(p ? "PIN gesetzt" : "PIN entfernt"); break;
     case "eSpeichern": einstSpeichern(); break;
     case "bDruck": bestehendeDrucken(); break;
-    case "btnAbend": abendAbschliessen(); break;
     case "kmAnlegenDrucken": if (kartenPlanMerker) kartenAnlegen(kartenPlanMerker, true); break;
     case "kmAnlegen": if (kartenPlanMerker) kartenAnlegen(kartenPlanMerker, false); break;
     case "kmZu": kartenModalZu(); break;
@@ -5716,29 +5710,6 @@ function azKlick(e) {
   if (t.getAttribute("data-az")) { auszahlungKarte(t.getAttribute("data-az")); return; }
   if (t.id === "azSuchen") { var cc = document.getElementById("azCode"); if (cc && cc.value.trim()) { auszahlungKarte(cc.value); cc.select(); } return; }
   if (t.id === "btnKamera3") { klangWecken(); kameraUmschalten("aus"); }
-}
-
-/* ======================= Abend abschließen (Karten bleiben) =======================
-   Archiviert Buchungen und Guthaben, setzt alle Guthaben auf null. Karten, Namen, Prüfnummern, Sperren,
-   Anlass und Geräte bleiben: dieselben Karten gelten am nächsten Abend. */
-function abendAbschliessen() {
-  if (!wolkeBereit()) { melden("Dafür braucht das Terminal die Verbindung zur Ablage."); return; }
-  var z = azSummen(), offene = (db.geraeteListe || []).filter(function (g) { return g.id !== db.geraet && (g.ausstehend > 0 || !g.online); });
-  var text = "Abend abschließen?\n\nAlle Buchungen und Guthaben werden archiviert und beginnen bei null. Die Karten bleiben gültig.\n\n" +
-    (z.offen > 0 ? "ACHTUNG: Auf " + z.n + " Karten liegen noch " + euro(z.offen) + ". Dieses Guthaben verfällt mit dem Abschluss (keine Auszahlung)!\n\n" : "Auf den Karten liegt kein Guthaben mehr.\n\n") +
-    (ausstehende().length ? "Dieses Gerät hat noch " + ausstehende().length + " nicht übertragene Buchung(en).\n\n" : "") +
-    (offene.length ? "Geräte, die noch offene Buchungen haben oder nicht online sind: " + offene.map(function (g) { return g.id; }).join(", ") + ". Ihre späteren Buchungen werden verworfen.\n\n" : "") +
-    "Zum Bestätigen ABEND ABSCHLIESSEN eintippen:";
-  var e = prompt(text); if (e === null) return;
-  if (String(e).trim().toUpperCase() !== "ABEND ABSCHLIESSEN") { melden("Nicht bestätigt – nichts geändert."); return; }
-  var w = adminWort("Abend abschließen"); if (!w) return;
-  syncJetzt(15000).then(function () { return rufeAblage({ aktion: "neubeginn", behalten: true }, w); }).then(function (a) {
-    if (!a.ok) { melden(a.fehler || "Nicht möglich"); return; }
-    db.buchungen = []; db.cursor = 0; db.kv = 0; db.epoche = a.epoche; db.abgelehnt = []; db.aufBetrag = "";
-    sichern(); zeichneAlles(); zeichneEinstellungen(); urteilBereit("auf"); urteilBereit("ab");
-    melden("Abend abgeschlossen – Archiv: " + a.archiv);
-    syncJetzt(10000).then(function () { zeichneAlles(); });
-  }).then(null, function (f) { melden("Keine Verbindung: " + f.message); });
 }
 
 /* ======================= Neues Fest ======================= */

@@ -127,20 +127,4 @@ r=s.post('ad',{aktion:'neubeginn'}); t('neubeginn admin',r.ok);
   t('Verkauf/Kasse dürfen auch abfragen',s6.post('vk',{aktion:'bestand',karte:'GK-A0100'}).cent===500);
 }
 { const g=server2().sb.doGet().text; t('Browser-Seite nennt Fassung und Wörter',/Skriptfassung/.test(g)&&/Anzeige:\s+ja/.test(g)&&!/\bvk\b|\bka\b|\bad\b/.test(g.replace(/Verkauf|Kasse|Admin|Anzeige/g,''))); }
-// Abend abschließen: Karten bleiben, Guthaben und Buchungen beginnen bei null
-{ const s7=server2(); const D=dev(s7,'D','kd');
-  s7.post('ka',{aktion:'karten',was:'anlegen',karten:[{nr:'A0001',code:'K7Q2',name:'Anna'},{nr:'A0002',code:'ABCD'}]});
-  D.sync('ka',[D.buche('A0001',2000,'auf'),D.buche('A0001',-500,'ab')]);
-  t('Abend: nur Administrator',!!s7.post('ka',{aktion:'neubeginn',behalten:true}).verweigert);
-  const r=s7.post('ad',{aktion:'neubeginn',behalten:true}); t('Abend abgeschlossen',r.ok&&r.behalten);
-  const h=s7.post('ka',{aktion:'holen'}).daten;
-  t('Abend: Buchungen leer, Karten und Namen bleiben',h.buchungen.length===0&&h.karten.A0001.code==='K7Q2'&&h.karten.A0001.name==='Anna'&&!!h.karten.A0002);
-  t('Abend: Archiv angelegt',s7.dateien.some(f=>/-abend\.json$/.test(f.name)));
-  const sy=D.sync('ka',[]); t('Geräte melden Epoche und Art',sy.epocheArt==='abend'&&Object.keys(sy.karten).length===2);
-  const rr=D.sync('vk',[D.buche('A0001',-100,'ab',{kc:'K7Q2'})]); const ergebnis=Object.values(rr.ergebnisse||{})[0]||{};
-  t('Nach dem Abend: Karte hat Guthaben 0, Abbuchung abgelehnt',ergebnis.st==='abgelehnt'&&ergebnis.code==='guthaben');
-  const rA=D.sync('ka',[D.buche('A0001',1000,'auf',{kc:'K7Q2'})]); t('Nach dem Abend: Aufladen mit alter Karte (Prüfnummer) geht',Object.values(rA.ergebnisse)[0].st==='ok');
-  const fest=server2(); fest.post('ka',{aktion:'karten',was:'anlegen',karten:[{nr:'A0001',code:'K7Q2'}]}); fest.post('ad',{aktion:'neubeginn'});
-  t('Neues Fest löscht weiter alle Karten',Object.keys(fest.post('ka',{aktion:'holen'}).daten.karten).length===0);
-}
 console.log(ok+' ok, '+bad+' Fehler');
