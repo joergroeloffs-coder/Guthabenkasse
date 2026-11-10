@@ -83,7 +83,7 @@ html,body{margin:0;height:100%;background:var(--kopf);color:var(--papier);font-f
 <script>
 "use strict";
 var KEY = "guthabenkasse.anzeige.v1";
-var VERSION = "2.5.0";
+var VERSION = "2.6.0";
 var cfg = {adresse: "", wort: "", sprache: "de", rueck: "", kamera: "environment"};
 try { var gespeichert = JSON.parse(localStorage.getItem(KEY) || "{}"); for (var k in gespeichert) cfg[k] = gespeichert[k]; } catch (e) {}
 function sichern() { try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch (e) {} }

@@ -402,7 +402,7 @@ function sync(inhalt, ctx, a) {
   }
   if (a.zustand) { antwort.salden = null; }
   if (ctx.rolle !== "verkauf") antwort.geraete = geraeteListe(inhalt, ctx);
-  antwort.nummernNeu = inhalt.daten.nummernNeu;
+  antwort.nummernNeu = inhalt.daten.nummernNeu; antwort.epocheArt = inhalt.daten.epocheArt || "fest";
   return antwort;
 }
 
@@ -845,17 +845,22 @@ function ketteStand(inhalt) {
   return st;
 }
 
+/* a.behalten = Abend abschließen: Buchungen und Guthaben beginnen bei null, die Karten (Nummern, Prüfnummern, Namen,
+   Sperren), der Anlass und die Geräte bleiben. Sonst „Neues Fest“: alles leer. Beide legen vorher ein Archiv an. */
 function neubeginn(inhalt, ctx, a) {
-  var name = sicherungMachen(inhalt, "fest");
+  var behalten = !!a.behalten;
+  var name = sicherungMachen(inhalt, behalten ? "abend" : "fest");
   var ep = Math.max(ctx.jetzt, (inhalt.daten.epoche || 0) + 1);
   var st = ketteStand(inhalt), basis = {}, basisK = {};
   Object.keys(st).forEach(function (g) { basis[g] = st[g].n; basisK[g] = st[g].k; });
   var d = leerDaten();
-  d.epoche = ep; d.nummernNeu = !!a.nummernNeu;
+  d.epoche = ep; d.nummernNeu = behalten ? !!inhalt.daten.nummernNeu : !!a.nummernNeu;
+  d.epocheArt = behalten ? "abend" : "fest";
+  if (behalten) { d.karten = inhalt.daten.karten; d.geloescht = inhalt.daten.geloescht; d.anlass = inhalt.daten.anlass; }
   /* Die Beschriftung der Karten (Anlass, Verein, Zusatz) beginnt leer: besser nichts als etwas Altes. Das Archiv hat sie. */
   var geraete = {};
   Object.keys(inhalt.geraete).forEach(function (id) { var g = inhalt.geraete[id]; geraete[id] = { schluessel: g.schluessel, name: g.name, erstmals: g.erstmals }; });
-  var chronik = inhalt.chronik.concat([{ zeit: new Date().toISOString(), art: "neuesFest", text: "Neues Fest begonnen, Archiv: " + name }]);
+  var chronik = inhalt.chronik.concat([{ zeit: new Date().toISOString(), art: behalten ? "abendAbgeschlossen" : "neuesFest", text: (behalten ? "Abend abgeschlossen (Karten bleiben), Archiv: " : "Neues Fest begonnen, Archiv: ") + name }]);
   var berichte = inhalt.berichte, seq = inhalt.seq, kv = inhalt.kv + 1, einst = inhalt.einst, stand = inhalt.stand;
   Object.keys(inhalt).forEach(function (k) { delete inhalt[k]; });
   inhalt.version = 2; inhalt.stand = stand; inhalt.seq = seq; inhalt.kv = kv; inhalt.daten = d; inhalt.geraete = geraete;
@@ -863,7 +868,7 @@ function neubeginn(inhalt, ctx, a) {
   inhalt.chronik = chronik; inhalt.kassenbuch = []; inhalt.quittiert = { ueber: {}, befund: 0 }; inhalt.einst = einst; inhalt.verworfen = {};
   inhalt.epochenwechsel = 1;
   ctx.geaendert = true;
-  return { ok: true, epoche: ep, archiv: name, seq: seq, treuhand: true };
+  return { ok: true, epoche: ep, archiv: name, seq: seq, treuhand: true, behalten: behalten };
 }
 
 

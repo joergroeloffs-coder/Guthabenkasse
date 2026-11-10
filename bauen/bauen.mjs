@@ -3,7 +3,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 const wurzel = new URL('../', import.meta.url).pathname;
 const lies = p => readFileSync(wurzel + p, 'utf8');
-const VERSION = '2.5.0';
+const VERSION = '2.6.0';
 const kern = lies('quelle/kern.html');
 const schicht = lies('quelle/v2-schicht.js');
 
@@ -35,6 +35,7 @@ function bau(modus) {
   ersetze('qrSvg(kartenCode(nr))', 'qrSvg(qrText(nr))');
   // „Guthabenkarte“ nicht doppelt: ohne Anlass-Namen steht es nur einmal da
   ersetze("_t('<div class=\"art\">Guthabenkarte</div>')+", "(a.name?_t('<div class=\"art\">Guthabenkarte</div>'):\"\")+");
+  if (modus === 'terminal') ersetze('<div class="feldTitel">Betrieb auf Null setzen</div>', '<div class="feldTitel">Abend abschließen (die Karten bleiben)</div>\n        <p class="muted" style="margin:0 0 10px">Für den nächsten Abend mit denselben Karten: alle Buchungen und Guthaben werden archiviert und beginnen bei null. Karten, Namen, Prüfnummern, Sperren, Anlass und Geräte bleiben. <b>Restguthaben verfällt dabei</b> – vorher auszahlen. Administrator-Wort nötig.</p>\n        <button class="knopf" id="btnAbend" type="button">Abend abschließen</button>\n      </div>\n      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--linieFein)">\n        <div class="feldTitel">Betrieb auf Null setzen (neues Fest)</div>');
   ersetze('id="btnKartenDrucken">Karten drucken</button>', 'id="btnKartenDrucken">Vorschau der Karten</button>');
   ersetze('</style>\n</head>', css + '</style>\n</head>');
   // Statusanzeige in Kopf und schmaler Leiste
