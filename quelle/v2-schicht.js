@@ -227,6 +227,39 @@ function kameraKnoepfe() {
   });
 }
 
+/* ======================= Reiter Karten: jede Überschrift ist ein Aufklappmenü =======================
+   Alles ist zu Beginn zugeklappt; geöffnete Bereiche werden gemerkt. */
+var AKK_KEY = "guthabenkasse.karten.offen";
+var akkOffen = {};
+try { akkOffen = JSON.parse(localStorage.getItem(AKK_KEY) || "{}") || {}; } catch (e) { akkOffen = {}; }
+function akkName(k) { var h = k.querySelector(":scope > .titel h2"); return h ? h.textContent.trim() : ""; }
+function akkSetzen(k, offen, merken) {
+  k.classList.toggle("zu", !offen);
+  var t = k.querySelector(":scope > .titel"); if (t) t.setAttribute("aria-expanded", offen ? "true" : "false");
+  if (merken !== false) { akkOffen[akkName(k)] = !!offen; try { localStorage.setItem(AKK_KEY, JSON.stringify(akkOffen)); } catch (e) {} }
+}
+function akkOeffnen(name) {
+  var sec = document.getElementById("reiter-karten"); if (!sec) return;
+  Array.prototype.forEach.call(sec.querySelectorAll(":scope > .karte"), function (k) { if (akkName(k) === name || k.id === name) akkSetzen(k, true, false); });
+}
+function kartenAkkordeon() {
+  var sec = document.getElementById("reiter-karten"); if (!sec) return;
+  Array.prototype.forEach.call(sec.querySelectorAll(":scope > .karte"), function (k) {
+    var t = k.querySelector(":scope > .titel"), inh = k.querySelector(":scope > .inhalt"); if (!t || !inh || t.getAttribute("data-akk")) return;
+    t.setAttribute("data-akk", "1"); t.setAttribute("role", "button"); t.setAttribute("tabindex", "0");
+    var pfeil = document.createElement("span"); pfeil.className = "akkPfeil"; pfeil.setAttribute("aria-hidden", "true"); pfeil.textContent = "▾"; t.appendChild(pfeil);
+    akkSetzen(k, !!akkOffen[akkName(k)], false);
+    var umschalten = function () { akkSetzen(k, k.classList.contains("zu")); };
+    t.addEventListener("click", function (e) { if (e.target.closest && e.target.closest("button, a, input, select, label") && !e.target.closest(".akkPfeil")) return; umschalten(); });
+    t.addEventListener("keydown", function (e) { if ((e.key === "Enter" || e.key === " ") && e.target === t) { e.preventDefault(); umschalten(); } });
+  });
+  /* eine Datei auf „Neue Karten“ ziehen: dann ist der Bereich gleich offen */
+  var neu = document.getElementById("kartenDrucken");
+  if (neu && !neu.getAttribute("data-akk-ziehen")) { neu.setAttribute("data-akk-ziehen", "1"); neu.addEventListener("dragenter", function () { akkSetzen(neu, true, false); }); }
+}
+var _gaesteSetzen = gaesteSetzen;
+gaesteSetzen = function (name, blaetter) { _gaesteSetzen(name, blaetter); akkOeffnen("Neue Karten drucken"); };
+
 /* ======================= Verbindung und Abgleich ======================= */
 var sync = { kette: Promise.resolve(), laeuft: false, letzter: 0, fehler: "", online: null, serverFehler: "" };
 
@@ -1388,7 +1421,7 @@ function v2Start() {
   if (v2Meldung) setTimeout(function () { melden(v2Meldung); }, 800);
   document.addEventListener("click", v2Klick);
   document.addEventListener("click", azKlick);
-  kameraKnoepfe();
+  kameraKnoepfe(); kartenAkkordeon();
   document.addEventListener("change", function (e) { if (e.target && e.target.id === "kameraWahl") { kameraSetzen(e.target.value); } });
   document.addEventListener("click", function (e) { var t = e.target.closest ? e.target.closest("button") : null; if (t && t.id === "kameraSuchen") kameraWahlZeichnen(true); });
   if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) navigator.mediaDevices.addEventListener("devicechange", function () { kameraWahlZeichnen(false); });

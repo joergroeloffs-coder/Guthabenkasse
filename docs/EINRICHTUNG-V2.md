@@ -1,6 +1,6 @@
 # Guthabenkasse 2.0 – Terminal und Verkauf
 
-Stand: Fassung 2.4.0. Steuerliche und rechtliche Fragen sind ausdrücklich nicht Gegenstand dieser Überarbeitung.
+Stand: Fassung 2.5.0. Steuerliche und rechtliche Fragen sind ausdrücklich nicht Gegenstand dieser Überarbeitung.
 
 ## Was neu ist
 
@@ -112,3 +112,6 @@ Die Ablage erlaubt diesem Wort nur die Abfrage `bestand`: Nichts wird geschriebe
 ## Kamera wählen (Handy als Webcam am Rechner)
 Terminal und Verkauf: Optionen → Weitere Geräteeinstellungen → **Kamera** (Liste der angeschlossenen Kameras, „Kameras suchen“ gibt die Kamera kurz frei, damit die Namen erscheinen). Neben jeder Kamera-Taste gibt es **⟲ Kamera**: wählt die nächste Kamera der Reihe. Die Wahl wird je Gerät gemerkt; ist die Kamera nicht mehr da, nimmt der Browser seine Standardkamera. Anzeige: **⟲ Kamera** unten rechts wechselt durch alle Kameras (bei nur einer: vorn/hinten); der Name steht neben der Versionsnummer.
 Ein Handy wird am Rechner zur Kamera über den Webcam-Modus von Android 14 (USB-Einstellungen → Webcam) oder Apps wie DroidCam/Iriun/Camo (USB-Verbindung). Der Blitz des Handys ist darüber nicht nutzbar.
+
+## Reiter Karten: Aufklappmenüs
+Jede Überschrift im Reiter Karten (Übersicht, Neue Karten drucken, Karten vorab aufladen, Karten löschen, Rückseite der Karten, Bestehende Karten nochmal drucken, Alle Karten) ist ein Aufklappmenü: antippen öffnet den Bereich, nochmal antippen schließt ihn (Pfeil rechts). Zu Beginn ist alles zu; welche Bereiche offen sind, merkt sich das Gerät. Eine Datei auf „Neue Karten drucken“ ziehen oder eine Gästeliste laden öffnet diesen Bereich von selbst. Der Knopf „Abschluss drucken“ in der Übersicht-Zeile bleibt eigenständig.

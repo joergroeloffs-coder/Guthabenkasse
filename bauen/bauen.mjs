@@ -3,11 +3,13 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 const wurzel = new URL('../', import.meta.url).pathname;
 const lies = p => readFileSync(wurzel + p, 'utf8');
-const VERSION = '2.4.0';
+const VERSION = '2.5.0';
 const kern = lies('quelle/kern.html');
 const schicht = lies('quelle/v2-schicht.js');
 
 const css = `
+#reiter-karten>.karte>.titel[data-akk]{cursor:pointer;-webkit-user-select:none;user-select:none}#reiter-karten>.karte>.titel[data-akk]:hover{background:rgba(30,92,62,.05)}.akkPfeil{margin-left:auto;font-size:18px;line-height:1;color:var(--tinteWeich);transition:transform .15s}.karte.zu>.titel .akkPfeil{transform:rotate(-90deg)}.karte.zu>.titel{border-bottom-color:transparent}.karte.zu>.inhalt{display:none}
+#reiter-karten>.karte>.titel:focus-visible{outline:2px solid var(--watt);outline-offset:-2px}
 .azKarte{border-radius:8px;padding:14px;text-align:center;background:#F7F0DC}.azKarte:empty{display:none}.azKarte.az-bereit{background:#E5EFE8}.azKarte.az-fertig{background:#D6EADB}.azKarte.az-nein{background:#F7E7E2}.azGross{font-family:'Newsreader',Georgia,serif;font-size:44px;line-height:1.1;margin:2px 0}.azNr{font-size:20px;font-weight:600}.azKnopf{width:100%;margin-top:10px;font-size:22px;padding:16px}
 #reiter-auszahlung video{width:100%;max-height:46vh;border-radius:8px;background:#000}
 .syncChip{display:inline-block;font-size:12px;padding:3px 9px;border-radius:99px;background:rgba(255,255,255,.12);color:#fff;white-space:nowrap;font-weight:600}
