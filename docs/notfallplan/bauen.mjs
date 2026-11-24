@@ -1,0 +1,38 @@
+// Baut den Notfallplan (A4, zwei Seiten: Anleitung + Strichliste) als HTML und PDF.
+// Aufruf: node docs/notfallplan/bauen.mjs
+import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+import { writeFileSync } from 'node:fs';
+const HIER = new URL('./', import.meta.url).pathname;
+const zeilen = Array.from({ length: 24 }, () => '<tr><td></td><td></td><td></td><td></td><td></td></tr>').join('');
+const html = `<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Notfallplan Guthabenkasse</title><style>
+@page{size:A4;margin:0}
+*{box-sizing:border-box}body{margin:0;font-family:'Liberation Sans',Arial,sans-serif;color:#10251A;font-size:10.5pt;line-height:1.35}
+.seite{width:210mm;height:297mm;padding:13mm 15mm;page-break-after:always;overflow:hidden;position:relative}
+h1{font-family:Georgia,serif;font-size:22pt;margin:0 0 2mm}h1 small{display:block;font-size:10.5pt;font-family:'Liberation Sans',Arial,sans-serif;color:#57685C;font-weight:400;margin-top:1mm}
+.regel{border-left:5mm solid #1E5C3E;background:#F5EEDC;padding:3mm 4mm;margin:3mm 0;border-radius:2mm}
+.regel.rot{border-color:#93382B;background:#F7E7E2}.regel.gold{border-color:#B08D3C}
+.regel h2{margin:0 0 1mm;font-size:12pt}.regel p,.regel ul{margin:0;padding:0}.regel ul{padding-left:5mm}
+.fuss{position:absolute;left:15mm;right:15mm;bottom:10mm;display:flex;justify-content:space-between;font-size:9pt;color:#57685C;border-top:1px solid #CDB77E;padding-top:2mm}
+table{width:100%;border-collapse:collapse;margin-top:3mm}th{font-size:9pt;text-align:left;background:#F5EEDC;padding:2mm;border:1px solid #8a7a52}td{border:1px solid #8a7a52;height:8.3mm}
+.gross{font-size:12pt;font-weight:700}
+</style></head><body>
+<section class="seite"><h1>Notfallplan Guthabenkasse<small>Bitte ausgedruckt neben das Terminal legen. Ruhe bewahren: Das Guthaben geht nicht verloren.</small></h1>
+<div class="regel"><h2>1 · Die Kamera liest eine Karte nicht</h2><ul><li>Die <b>Kartennummer mit Prüfnummer</b> eintippen, so wie sie auf der Karte steht (zum Beispiel A0042 und K7Q2). Ohne Prüfnummer nimmt die Ablage Karten, die eine haben, nicht an.</li><li>Karte schmutzig oder zerkratzt? Abwischen, mit „Licht“ scannen, gerade halten.</li></ul></div>
+<div class="regel"><h2>2 · Das Handy zeigt „Offline“ oder die Verbindung ist weg</h2><ul><li>Weiter wie sonst abbuchen. Kommt „<b>Offline gebucht</b>“, ist alles in Ordnung: Die Buchung wird später übertragen.</li><li>Offline darf jedes Gerät je Karte nur bis <b>20 €</b> abbuchen. Bei mehr kommt „<b>Unklar – nicht noch einmal buchen</b>“: <b>nicht wiederholen</b>, sondern auf die Papierliste (Seite 2) schreiben und zum Terminal gehen.</li><li>Router prüfen: Netzteil, Powerbank, Kabel. Neustart: 10 Sekunden Strom weg, wieder an, 2 Minuten warten.</li></ul></div>
+<div class="regel rot"><h2>3 · Ein Gerät fällt ganz aus (Akku, Absturz, Kamera)</h2><ul><li>Neues Gerät nehmen oder die Seite neu laden. Die Buchungen sind in der Ablage. Offene Buchungen liegen im Gerät und gehen beim nächsten Verbinden raus.</li><li>Gerät lässt sich nicht mehr benutzen? <b>Papierliste (Seite 2)</b> führen: Karte, Betrag, Uhrzeit, Kürzel. Nach dem Fest oder bei Verbindung am Terminal nachbuchen.</li><li>Die Buchung <b>nie doppelt</b> eintragen: erst am Terminal im Verlauf der Karte nachsehen.</li></ul></div>
+<div class="regel gold"><h2>4 · Falsche Buchung</h2><ul><li><b>Verkaufsgerät:</b> im Reiter „Abrechnung“ in der Liste der eigenen Buchungen auf „zurücknehmen“, nur die letzte eigene Buchung, innerhalb von <b>2 Minuten</b>.</li><li><b>Danach nur am Terminal:</b> Karten → Karte antippen → beim Eintrag „zurücknehmen“. Dann richtig neu buchen. Eine Rücknahme lässt sich nicht zurücknehmen.</li></ul></div>
+<div class="regel"><h2>5 · Karte verloren oder defekt</h2><ul><li>Am <b>Terminal</b>: Karte antippen → „Sperren“ (verloren) oder „Karte ersetzen“ (Guthaben zieht auf die neue Karte um). Das braucht Verbindung.</li><li>Eine gefundene Karte: „Karte einziehen“ bucht das Guthaben ab. Fragt vorher den Gastgeber, was damit passieren soll.</li></ul></div>
+<div class="regel"><h2>6 · Stromausfall im ganzen Saal / Totalausfall</h2><ul><li>Geräte laufen auf dem Akku weiter, Offline-Buchungen sind möglich (siehe 2).</li><li>Fällt alles aus: Papierliste (Seite 2) führen. Gäste behalten ihr Guthaben, nichts geht verloren. Die Liste später am Terminal abarbeiten.</li></ul></div>
+<p class="gross" style="margin-top:4mm">Wenn nichts hilft: Ansprechperson __________________ · Telefon __________________</p>
+<div class="fuss"><span>Guthabenkasse · Notfallplan</span><span>Seite 1 von 2</span></div></section>
+<section class="seite"><h1>Papierliste<small>Nur wenn ein Gerät ausfällt. Eintragen, später am Terminal nachbuchen, dann hier abhaken. Nichts doppelt buchen.</small></h1>
+<table><tr><th style="width:26mm">Uhrzeit</th><th style="width:34mm">Karte (Nr.)</th><th style="width:28mm">Betrag €</th><th style="width:22mm">Kürzel</th><th>Nachgebucht ✔</th></tr>${zeilen}</table>
+<div class="fuss"><span>Datum: ____________ · Bedienung: ____________</span><span>Seite 2 von 2</span></div></section>
+</body></html>`;
+writeFileSync(HIER + 'Notfallplan-Guthabenkasse.html', html);
+const b = await chromium.launch(); const p = await b.newPage();
+await p.goto('file://' + HIER + 'Notfallplan-Guthabenkasse.html');
+await p.pdf({ path: HIER + 'Notfallplan-Guthabenkasse.pdf', format: 'A4', printBackground: true, preferCSSPageSize: true });
+const probleme = await p.evaluate(() => [...document.querySelectorAll('.seite')].map(s => s.scrollHeight > s.clientHeight + 1));
+console.log('Seiten laufen über:', probleme.join(', '));
+await b.close();
