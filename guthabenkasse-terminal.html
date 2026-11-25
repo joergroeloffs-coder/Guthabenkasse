@@ -1275,7 +1275,7 @@ function qrSvg(text){
 /* Die Nummer steht oben in der Kopfzeile und ist dazu da, zwei Geräte
    nebeneinanderlegen zu können. Bei jeder Änderung, die man merkt,
    weiterdrehen. */
-var VERSION = "2.11.0";
+var VERSION = "3.0.0";
 
 /* ============================== Daten ==============================
 
@@ -5495,22 +5495,22 @@ bestandZeigen = function (tab, nr) { _bestandZeigen(tab, nr); kartenArtikelZeige
 
 function artikelBearbeitenHtml() {
   return '<div class="karte"><div class="titel"><h2>Artikel und Preise</h2></div><div class="inhalt">' +
-    '<p class="muted" style="margin-top:0">Eine Zeile je Artikel: Name, Strichpunkt, Preis. Zum Beispiel <span class="mono">Bier 0,3 l; 3,80</span>. Höchstens 30. Die Tasten erscheinen auf allen Geräten im Reiter Abbuchen. Leer lassen = nur Beträge eintippen.</p>' +
+    '<p class="muted" style="margin-top:0">Eine Zeile je Artikel: Name; Preis; Gruppe. Zum Beispiel <span class="mono">Bier 0,3 l; 3,80; Getränk</span> oder <span class="mono">Schnitzel; 14,50; Speise</span> (ohne Gruppe gilt Getränk). Höchstens 30. Die Gruppe ordnet die Artikel in der App „Bestellung“ den Reitern Getränke und Speisen zu. Die Tasten erscheinen auf allen Geräten im Reiter Abbuchen. Leer lassen = nur Beträge eintippen.</p>' +
     '<textarea id="artikelText" rows="8" spellcheck="false" style="width:100%;font:14px/1.4 monospace;padding:8px;border:1px solid var(--linie);border-radius:6px"></textarea>' +
     '<div class="reihe umbruch" style="margin-top:8px"><button class="knopf voll" id="artikelSpeichern">Speichern</button></div><div id="artikelMeldung" class="muted" style="margin-top:6px"></div></div></div>';
 }
 function artikelTextFuellen() {
   var f = document.getElementById("artikelText"); if (!f || document.activeElement === f) return;
-  f.value = artikelListe().map(function (x) { return x.n + "; " + eur(x.p).replace(/\./g, ""); }).join("\n");
+  f.value = artikelListe().map(function (x) { return x.n + "; " + eur(x.p).replace(/\./g, "") + "; " + (x.g === "S" ? "Speise" : "Getränk"); }).join("\n");
 }
 function artikelAusText(text) {
   var aus = [], fehler = "";
   String(text || "").split(/\r?\n/).forEach(function (z, i) {
     z = z.trim(); if (!z || fehler) return;
-    var m = /^(.*\S)\s*;\s*([\d.,]+)\s*€?$/.exec(z) || /^(.*\S)\s+(\d+(?:[.,]\d{1,2})?)\s*€?$/.exec(z);
+    var m = /^(.*\S)\s*;\s*([\d.,]+)\s*€?\s*(?:;\s*(\S+)\s*)?$/.exec(z) || /^(.*\S)\s+(\d+(?:[.,]\d{1,2})?)\s*€?$/.exec(z);
     var p = m ? centAus(m[2]) : NaN;
-    if (!m || !(p >= 0)) { fehler = "Zeile " + (i + 1) + " verstehe ich nicht: „" + z + "“. Richtig: Name; Preis"; return; }
-    aus.push({ n: m[1].trim(), p: p });
+    if (!m || !(p >= 0)) { fehler = "Zeile " + (i + 1) + " verstehe ich nicht: „" + z + "“. Richtig: Name; Preis; Getränk oder Speise"; return; }
+    aus.push({ n: m[1].trim(), p: p, g: /^s/i.test(m[3] || "") ? "S" : "G" });
   });
   return { liste: aus, fehler: fehler };
 }

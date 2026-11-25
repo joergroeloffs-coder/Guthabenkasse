@@ -55,11 +55,13 @@
        Änderungen, die letzten 12 bleiben) und auf Wunsch.
 ======================================================================== */
 
-var SKRIPT_VERSION = "2.2";
+var SKRIPT_VERSION = "2.3";
 var WORT_VERKAUF = "";
 var WORT_KASSE   = "";
 var WORT_ADMIN   = "";
 var WORT_ANZEIGE = "";   /* für das Anzeigegerät: darf nur den Bestand einer gescannten Karte abfragen */
+var WORT_ORDER  = "";   /* Bedienung: Bestellungen aufnehmen (App „Bestellung“) */
+var WORT_KUECHE = "";   /* Theke und Küche: Bestellungen sehen und abhaken */
 var ZUGANGSWORT  = "hier-ein-eigenes-wort-eintragen";   /* alt: gilt als Kassenwort */
 var DATEINAME    = "guthabenkasse-ablage.json";
 
@@ -81,7 +83,9 @@ function doGet() {
     "  Verkauf:  " + (WORT_VERKAUF ? "ja (" + WORT_VERKAUF.length + " Zeichen)" : "NEIN") + "\n" +
     "  Kasse:    " + (WORT_KASSE ? "ja (" + WORT_KASSE.length + " Zeichen)" : (ZUGANGSWORT ? "über ZUGANGSWORT (alt)" : "NEIN")) + "\n" +
     "  Admin:    " + (WORT_ADMIN ? "ja (" + WORT_ADMIN.length + " Zeichen)" : "NEIN") + "\n" +
-    "  Anzeige:  " + (WORT_ANZEIGE ? "ja (" + WORT_ANZEIGE.length + " Zeichen)" : "NEIN") + "\n\nDatei: " + DATEINAME + "\n";
+    "  Anzeige:  " + (WORT_ANZEIGE ? "ja (" + WORT_ANZEIGE.length + " Zeichen)" : "NEIN") + "\n" +
+    "  Bestellung aufnehmen: " + (WORT_ORDER ? "ja (" + WORT_ORDER.length + " Zeichen)" : "nein") + "\n" +
+    "  Bestellanzeige (Theke/Küche): " + (WORT_KUECHE ? "ja (" + WORT_KUECHE.length + " Zeichen)" : "nein") + "\n\nDatei: " + DATEINAME + "\n";
   return ContentService.createTextOutput(t).setMimeType(ContentService.MimeType.TEXT);
 }
 
@@ -105,6 +109,8 @@ function rolleVon(wort) {
   if (WORT_KASSE ? wort === WORT_KASSE : wort === ZUGANGSWORT) return "kasse";
   if (WORT_VERKAUF && wort === WORT_VERKAUF) return "verkauf";
   if (WORT_ANZEIGE && wort === WORT_ANZEIGE) return "anzeige";
+  if (WORT_ORDER && wort === WORT_ORDER) return "order";
+  if (WORT_KUECHE && wort === WORT_KUECHE) return "kueche";
   return "";
 }
 function darf(rolle, was) {
@@ -161,6 +167,8 @@ function aktion(inhalt, ctx, a) {
   var r = ctx.rolle;
   /* Das Anzeigegerät darf genau eine Sache: den Bestand einer gescannten Karte ansehen. */
   if (r === "anzeige" && a.aktion !== "bestand") return NEIN("Anzeigegerät");
+  /* Die Bestellgeräte dürfen nur Bestellungen bearbeiten */
+  if ((r === "order" || r === "kueche") && a.aktion !== "bestellung") return NEIN("Bestellgerät");
   if (a.aktion === "bestand") return bestandAbfrage(inhalt, ctx, a);
   switch (a.aktion) {
     case "holen":
@@ -187,6 +195,9 @@ function aktion(inhalt, ctx, a) {
     case "abschluss":
       if (!darf(r, "abschluss")) return NEIN("Abschluss");
       return abschlussSetzen(inhalt, ctx, a);
+    case "bestellung":
+      if (!(r === "order" || r === "kueche" || r === "kasse" || r === "admin")) return NEIN("Bestellung");
+      return bestellung(inhalt, ctx, a);
     case "artikel":
       if (!darf(r, "artikel")) return NEIN("Artikel");
       return artikelSetzen(inhalt, ctx, a);
@@ -233,6 +244,9 @@ function lesen(datei) {
   inhalt.meldungen = inhalt.meldungen || {};
   inhalt.vermerke = inhalt.vermerke || [];
   inhalt.berichte = inhalt.berichte || [];
+  inhalt.bestellungen = inhalt.bestellungen || [];
+  inhalt.bsq = inhalt.bsq || 0;
+  inhalt.bnr = inhalt.bnr || 0;
   inhalt.chronik = inhalt.chronik || [];
   inhalt.kassenbuch = inhalt.kassenbuch || [];
   inhalt.quittiert = inhalt.quittiert || { ueber: {}, befund: 0 };
@@ -554,12 +568,71 @@ function artikelSetzen(inhalt, ctx, a) {
     if (!n) return { fehler: "Ein Artikel hat keinen Namen." };
     if (!(p >= 0 && p <= 1000000) || p !== Math.floor(p)) return { fehler: "Der Preis von „" + n + "“ ist ungültig." };
     if (vorhanden[n.toLowerCase()]) return { fehler: "„" + n + "“ steht doppelt." };
-    vorhanden[n.toLowerCase()] = 1; aus.push({ n: n, p: p });
+    vorhanden[n.toLowerCase()] = 1; aus.push({ n: n, p: p, g: (x && x.g === "S") ? "S" : "G" });
   }
   inhalt.einst.artikel = aus; inhalt.einst.artikelV = (inhalt.einst.artikelV || 0) + 1;
   vermerk(inhalt, "einstellung", geraetVon(a), "Artikelliste geändert (" + aus.length + " Artikel)");
   ctx.geaendert = true;
   return { ok: true, artikel: aus, artikelV: inhalt.einst.artikelV };
+}
+
+/* ============================== Bestellungen ============================== */
+var BEST_GRUPPEN = { G: "Getränke", S: "Speisen" };
+function bestellung(inhalt, ctx, a) {
+  var r = ctx.rolle, B = inhalt.bestellungen, was = a.was, jetzt = ctx.jetzt;
+  var kannAufnehmen = r !== "kueche", kannStatus = r !== "order";
+  function liste(seit, extra) {
+    var out = { ok: true, bestellungen: B.filter(function (o) { return o.s > seit; }), cursor: inhalt.bsq, epoche: inhalt.daten.epoche || 0,
+                artikel: inhalt.einst.artikel || [], serverZeit: jetzt };
+    if (extra) for (var k in extra) out[k] = extra[k];
+    return out;
+  }
+  function finden(id) { for (var i = 0; i < B.length; i++) if (B[i].id === String(id)) return B[i]; return null; }
+  if (was === "liste") {
+    var epoche = inhalt.daten.epoche || 0, seit = Number(a.cursor) || 0, reset = false;
+    if (a.epoche !== undefined && Number(a.epoche) !== epoche) { seit = 0; reset = true; }
+    if (seit > inhalt.bsq) { seit = 0; reset = true; }
+    return liste(seit, reset ? { reset: true } : null);
+  }
+  if (was === "neu") {
+    if (!kannAufnehmen) return NEIN("Bestellung aufnehmen");
+    var id = String(a.id || "");
+    if (!/^[A-Za-z0-9_-]{4,40}$/.test(id)) return { fehler: "Ungültige Bestellkennung" };
+    var alt = finden(id); if (alt) return { ok: true, schon: true, bestellung: alt, cursor: inhalt.bsq };
+    var tisch = String(a.tisch || "").replace(/\s+/g, " ").trim().slice(0, 16);
+    if (!tisch) return { fehler: "Die Bezeichnung (Tisch) fehlt." };
+    var pos = Array.isArray(a.pos) ? a.pos : [];
+    if (!pos.length || pos.length > 40) return { fehler: "Die Bestellung ist leer oder zu lang." };
+    var sauber = [], st = {}, zt = {};
+    for (var i = 0; i < pos.length; i++) {
+      var x = pos[i], g = x && x.g;
+      if (!x || typeof x.n !== "string" || !x.n.trim() || x.n.length > 24 || !(x.a >= 1 && x.a <= 99) || x.a !== Math.floor(x.a) || (g !== "G" && g !== "S")) return { fehler: "Eine Position ist ungültig." };
+      var p = { n: x.n.trim(), a: x.a, g: g }; if (x.w) p.w = String(x.w).slice(0, 40);
+      sauber.push(p); st[g] = "neu"; zt[g] = jetzt;
+    }
+    if (B.length >= 3000) return { fehler: "Zu viele Bestellungen in diesem Abend." };
+    var o = { id: id, nr: ++inhalt.bnr, tisch: tisch, notiz: String(a.notiz || "").slice(0, 60), pos: sauber, zeit: jetzt, wer: String(a.wer || "").slice(0, 30), st: st, zt: zt, s: ++inhalt.bsq };
+    B.push(o); ctx.geaendert = true;
+    return { ok: true, bestellung: o, cursor: inhalt.bsq };
+  }
+  var ziel = finden(a.id);
+  if (was === "status") {
+    if (!ziel) return { fehler: "Bestellung unbekannt" };
+    var gr = a.gruppe, neu = a.status;
+    if (!ziel.st[gr] || !{ neu: 1, arbeit: 1, fertig: 1, serviert: 1 }[neu]) return { fehler: "Ungültiger Status" };
+    if (ziel.x) return { fehler: "Diese Bestellung ist storniert." };
+    if (!kannStatus && !(neu === "serviert" && ziel.st[gr] === "fertig")) return NEIN("Status ändern");
+    if (ziel.st[gr] !== neu) { ziel.st[gr] = neu; ziel.zt[gr] = jetzt; ziel.s = ++inhalt.bsq; ctx.geaendert = true; }
+    return { ok: true, bestellung: ziel, cursor: inhalt.bsq };
+  }
+  if (was === "storno") {
+    if (!ziel) return { fehler: "Bestellung unbekannt" };
+    var unberuehrt = Object.keys(ziel.st).every(function (k) { return ziel.st[k] === "neu"; });
+    if (r === "order" && !unberuehrt) return { fehler: "Die Küche hat schon angefangen. Bitte dort absagen." };
+    if (!ziel.x) { ziel.x = jetzt; ziel.s = ++inhalt.bsq; ctx.geaendert = true; }
+    return { ok: true, bestellung: ziel, cursor: inhalt.bsq };
+  }
+  return { fehler: "Unbekannte Bestellaktion" };
 }
 
 function stornoAnnehmen(inhalt, ctx, x, idx, geraetId) {
@@ -921,12 +994,13 @@ function neubeginn(inhalt, ctx, a) {
   var geraete = {};
   Object.keys(inhalt.geraete).forEach(function (id) { var g = inhalt.geraete[id]; geraete[id] = { schluessel: g.schluessel, name: g.name, erstmals: g.erstmals }; });
   var chronik = inhalt.chronik.concat([{ zeit: new Date().toISOString(), art: behalten ? "abendAbgeschlossen" : "neuesFest", text: (behalten ? "Abend abgeschlossen, Karten und Guthaben bleiben, Archiv: " : "Neues Fest begonnen, Archiv: ") + name }]);
-  var berichte = inhalt.berichte, seq = inhalt.seq, kv = inhalt.kv + 1, einst = inhalt.einst, stand = inhalt.stand;
+  var bsq = inhalt.bsq || 0, berichte = inhalt.berichte, seq = inhalt.seq, kv = inhalt.kv + 1, einst = inhalt.einst, stand = inhalt.stand;
   Object.keys(inhalt).forEach(function (k) { delete inhalt[k]; });
   inhalt.version = 2; inhalt.stand = stand; inhalt.seq = seq; inhalt.kv = kv; inhalt.daten = d; inhalt.geraete = geraete;
   inhalt.basis = basis; inhalt.basisK = basisK; inhalt.meldungen = {}; inhalt.vermerke = []; inhalt.berichte = berichte;
   inhalt.chronik = chronik; inhalt.kassenbuch = []; inhalt.quittiert = { ueber: {}, befund: 0 }; inhalt.einst = einst; inhalt.verworfen = {};
   inhalt.epochenwechsel = 1;
+  inhalt.bestellungen = []; inhalt.bsq = bsq + 1; inhalt.bnr = 0;   /* alte Bestellungen sind mit dem Archiv gesichert */
   if (behalten) {
     /* Die Übertragsbuchungen bekommen ihre laufende Nummer in der Ablage */
     d.buchungen.forEach(function (b) { b.s = ++inhalt.seq; });

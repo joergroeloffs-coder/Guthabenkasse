@@ -30,7 +30,7 @@ function konfigLaden() {
   const std = {
     port_https: 8443, port_http: 8080, https: true,
     datenordner: 'daten', dateiname: 'guthabenkasse-ablage.json',
-    wort_verkauf: '', wort_kasse: '', wort_admin: '', wort_anzeige: '',
+    wort_verkauf: '', wort_kasse: '', wort_admin: '', wort_anzeige: '', wort_order: '', wort_kueche: '',
     bericht_an: '', smtp: { host: '', port: 587, benutzer: '', passwort: '', von: '' },
     konstanten: {}   // zum Beispiel { "OFFLINE_LIMIT": 2000, "MAX_GERAETE": 4, "GEBUEHR_PROZENT": 0 }
   };
@@ -38,7 +38,7 @@ function konfigLaden() {
   if (existsSync(CONFIG_PFAD)) c = JSON.parse(readFileSync(CONFIG_PFAD, 'utf8'));
   else neu = true;
   const k = Object.assign({}, std, c, { smtp: Object.assign({}, std.smtp, c.smtp || {}) });
-  for (const w of ['wort_verkauf', 'wort_kasse', 'wort_admin', 'wort_anzeige']) if (!k[w]) { k[w] = zufallswort(); neu = true; }
+  for (const w of ['wort_verkauf', 'wort_kasse', 'wort_admin', 'wort_anzeige', 'wort_order', 'wort_kueche']) if (!k[w]) { k[w] = zufallswort(); neu = true; }
   if (neu) writeFileSync(CONFIG_PFAD, JSON.stringify(k, null, 2) + '\n');
   return { k, neu };
 }
@@ -59,7 +59,7 @@ const setze = (n, w) => {
   code = code.replace(re, () => 'var ' + n + ' = ' + JSON.stringify(w) + ';');
 };
 setze('WORT_VERKAUF', KONF.wort_verkauf); setze('WORT_KASSE', KONF.wort_kasse); setze('WORT_ADMIN', KONF.wort_admin);
-setze('WORT_ANZEIGE', KONF.wort_anzeige); setze('ZUGANGSWORT', ''); setze('DATEINAME', basename(KONF.dateiname)); setze('BERICHT_AN', KONF.bericht_an);
+setze('WORT_ANZEIGE', KONF.wort_anzeige); setze('WORT_ORDER', KONF.wort_order); setze('WORT_KUECHE', KONF.wort_kueche); setze('ZUGANGSWORT', ''); setze('DATEINAME', basename(KONF.dateiname)); setze('BERICHT_AN', KONF.bericht_an);
 for (const [n, w] of Object.entries(KONF.konstanten || {})) setze(n, w);
 
 /* ---------- Ersatz für die Google-Dienste, auf Dateien im Datenordner ---------- */
@@ -172,7 +172,7 @@ mailHandler.senden = m => {
 export { smtpSenden };
 
 /* ---------- Webserver ---------- */
-const APP_DATEIEN = new Set(['index.html', 'guthabenkasse-terminal.html', 'guthabenkasse-verkauf.html', 'guthabenkasse-anzeige.html',
+const APP_DATEIEN = new Set(['index.html', 'guthabenkasse-terminal.html', 'guthabenkasse-verkauf.html', 'guthabenkasse-anzeige.html', 'guthabenkasse-bestellung.html', 'manifest-bestellung.webmanifest',
   'manifest-terminal.webmanifest', 'manifest-verkauf.webmanifest', 'manifest-anzeige.webmanifest', 'manifest.webmanifest', 'sw.js',
   'favicon.svg', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'icon-verkauf-192.png', 'icon-verkauf-512.png', 'icon-32.png', 'icon-maskable-512.png', 'icon-verkauf-maskable-512.png']);
 const TYPEN = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', webmanifest: 'application/manifest+json', svg: 'image/svg+xml', png: 'image/png' };
@@ -259,7 +259,8 @@ export function starten() {
     }
     if (httpsHinweis) meldungen.push('', 'ACHTUNG: ' + httpsHinweis);
     meldungen.push('', 'Zugangswörter (stehen auch in config.json):',
-      '  Verkauf: ' + KONF.wort_verkauf, '  Kasse:   ' + KONF.wort_kasse, '  Admin:   ' + KONF.wort_admin, '  Anzeige: ' + KONF.wort_anzeige);
+      '  Verkauf: ' + KONF.wort_verkauf, '  Kasse:   ' + KONF.wort_kasse, '  Admin:   ' + KONF.wort_admin, '  Anzeige: ' + KONF.wort_anzeige,
+      '  Bestellung aufnehmen: ' + KONF.wort_order, '  Bestellanzeige (Theke/Küche): ' + KONF.wort_kueche);
     if (ERSTER_START) meldungen.push('', 'Erster Start: Die Wörter wurden eben zufällig vergeben. Bitte notieren oder in config.json ändern.');
     meldungen.push('', 'Beenden mit Strg+C.');
     console.log(meldungen.join('\n'));

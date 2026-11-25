@@ -106,6 +106,15 @@ Die Startseite (`index.html`) bietet **Terminal, Verkauf und Anzeige** zur Auswa
 - Die Liste bleibt bei „Abend abschließen“ und „Neues Fest“ erhalten. Preise ändern sich nur für künftige Buchungen; alte behalten ihren Preis.
 - **Wichtig:** Dafür braucht die Ablage die neue Fassung (Google: `ablage.gs` einfügen, Wörter neu eintragen, „Neue Version“ veröffentlichen; die Infoseite zeigt dann „Skriptfassung 2.2“; lokal: neues Paket).
 
+## App „Bestellung“ (3.0.0, Skriptfassung 2.3)
+Die vierte App `guthabenkasse-bestellung.html` (auf der Startseite „Bestellung“) nimmt Getränke- und Speisebestellungen am Handy auf und zeigt sie auf einem anderen Gerät (Theke/Küche). Sie hat mit den Guthabenkarten nichts zu tun, bezahlt wird wie bisher.
+- **Zwei neue Zugangswörter** in der Ablage: `WORT_ORDER` (Bestellung aufnehmen) und `WORT_KUECHE` (Bestellanzeige: sehen und abhaken). Bei der lokalen Ablage entstehen sie in `config.json` von selbst (`wort_order`, `wort_kueche`). Bei Google in `ablage.gs` eintragen und „Neue Version“ veröffentlichen.
+- **Einrichten:** Seite öffnen, fünfmal auf den Titel tippen. Funktion wählen (**Bestellung aufnehmen** oder **Bestellungen anzeigen**), Adresse (bei der lokalen Ablage vorbelegt), das passende Wort, bei der Bedienung den Namen. Das Wort entscheidet die Rechte: Mit dem Bestellwort kann man nicht abhaken, mit dem Anzeigewort nicht bestellen.
+- **Artikel** kommen aus der Liste „Artikel und Preise“ am Terminal. Jede Zeile bekommt eine **Gruppe**: `Bier 0,3 l; 3,80; Getränk` oder `Schnitzel; 14,50; Speise` (ohne Angabe: Getränk). Die Gruppen sind die Reiter Getränke und Speisen.
+- **Bedienung:** Tisch oder andere Bezeichnung eintragen (die letzten Tische stehen als Knöpfe bereit), Artikel antippen, bei Bedarf **Wunsch** (zum Beispiel „ohne Zwiebeln“), „+ Anderes“ für etwas, das nicht auf der Liste steht, optionaler Hinweis, **Bestellung senden**. Ohne Verbindung wird die Bestellung gemerkt und später gesendet. Im Reiter **Bestellungen** sieht man den Stand je Gruppe (neu, in Arbeit, fertig); bei „fertig“ erscheint **Serviert ✔**. Ein Ton meldet, wenn etwas fertig ist. Unberührte Bestellungen lassen sich stornieren.
+- **Anzeige (Theke/Küche):** Tickets mit Tisch, laufender Nummer, Uhrzeit, Wartezeit (grün, gelb nach 5, rot nach 10 Minuten), Wünschen und Hinweis. Oben der Filter **Alle / Getränke / Speisen**. Je Gruppe ein großer Knopf: **Anfangen → Fertig → Abgeholt**, mit ↶ geht es einen Schritt zurück. Neue Bestellungen kommen mit Ton. Fertige Tickets stehen gedämpft am Ende.
+- Die Geräte fragen die Ablage alle 3 Sekunden. Bei „Abend abschließen“ und „Neues Fest“ beginnt die Nummerierung neu; die alten Bestellungen sind im Archiv der Ablage.
+
 ## Rollen
 Die Rolle ergibt sich aus dem Zugangswort und wird **in der Ablage** geprüft, nicht nur in den Menüs: Verkauf darf abbuchen/abfragen/eigene letzte Buchung zurücknehmen; Kasse zusätzlich aufbuchen, Karten verwalten, Kassenbuch, Abschluss, Sicherung; Administrator zusätzlich Geräte, Einstellungen (Anschreiben, Offline-Limit), Wiederherstellen, neues Fest.
 

@@ -9,7 +9,7 @@ const kopie = (von, nach) => { if (!existsSync(von)) throw new Error('fehlt: ' +
 for (const f of ['ablage-server.mjs', 'start.bat', 'start.sh']) kopie(join(W, 'lokal', f), join(Z, f));
 kopie(join(W, 'ablage.gs'), join(Z, 'ablage.gs'));
 kopie(join(W, 'docs', 'LOKALE-ABLAGE.md'), join(Z, 'ANLEITUNG.md'));
-for (const f of ['index.html', 'guthabenkasse-terminal.html', 'guthabenkasse-verkauf.html', 'guthabenkasse-anzeige.html', 'manifest-terminal.webmanifest', 'manifest-verkauf.webmanifest',
+for (const f of ['index.html', 'guthabenkasse-terminal.html', 'guthabenkasse-verkauf.html', 'guthabenkasse-anzeige.html', 'guthabenkasse-bestellung.html', 'manifest-bestellung.webmanifest', 'manifest-terminal.webmanifest', 'manifest-verkauf.webmanifest',
   'manifest-anzeige.webmanifest', 'manifest.webmanifest', 'sw.js', 'favicon.svg', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'icon-verkauf-192.png', 'icon-verkauf-512.png', 'icon-32.png', 'icon-maskable-512.png', 'icon-verkauf-maskable-512.png']) {
   if (existsSync(join(W, f))) kopie(join(W, f), join(Z, 'app', f));
 }

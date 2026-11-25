@@ -14,7 +14,7 @@ Nachteil: Der Laptop ist die einzige Stelle mit dem Bestand. Er muss laufen, Str
 ## Einrichten (einmal)
 1. Den Ordner `paket` (oder das entpackte ZIP) auf den Laptop kopieren.
 2. Windows: `start.bat` doppelklicken. Mac/Linux: im Ordner `./start.sh`.
-3. Beim ersten Start entsteht `config.json` mit **zufälligen Zugangswörtern** für Verkauf, Kasse, Admin und Anzeige. Sie stehen im Fenster und in `config.json`. Notieren, oder in `config.json` ändern und neu starten.
+3. Beim ersten Start entsteht `config.json` mit **zufälligen Zugangswörtern** für Verkauf, Kasse, Admin, Anzeige sowie Bestellung aufnehmen und Bestellanzeige (App „Bestellung“). Sie stehen im Fenster und in `config.json`. Notieren, oder in `config.json` ändern und neu starten.
 4. Das Fenster zeigt die Adressen, zum Beispiel `https://192.168.8.20:8443/`. Diese auf jedem Gerät im Browser öffnen.
 5. **Zertifikat bestätigen** (einmal je Gerät): Der Browser warnt, weil das Zertifikat selbst erstellt ist. „Erweitert“ → „Weiter zu … (unsicher)“ (iPhone: „Details“ → „Diese Website besuchen“). Der Verkehr bleibt im eigenen WLAN.
 6. Auf der Startseite die Aufgabe wählen (Terminal, Verkauf, Anzeige), das passende Zugangswort eintragen. Die Adresse der Ablage ist schon eingesetzt.

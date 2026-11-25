@@ -24,6 +24,7 @@ ${tab(['Teil', 'Aufgabe'], [
  ['<b>Terminal</b> (1 Gerät)', 'Aufbuchen, Karten drucken, Auszahlung, Abrechnung, Verwaltung. Zugang mit dem <b>Kassenwort</b>.'],
  ['<b>Verkauf</b> (meist 2 Handys)', 'Nur Abbuchen. Zugang mit dem <b>Verkaufswort</b>.'],
  ['<b>Anzeige</b> (1 Tablet)', 'Gäste halten die Karte davor und sehen ihr Guthaben. Zugang mit dem <b>Anzeigewort</b>.'],
+ ['<b>Bestellung</b> (optional)', 'Vierte App: Bedienungen nehmen Bestellungen am Handy auf (<b>Bestellwort</b>), Theke und Küche sehen sie auf einem Tablet und haken ab (<b>Bestellanzeige-Wort</b>).'],
  ['<b>Ablage</b> (Laptop mit Programm)', 'Hier liegt der Bestand. Läuft im WLAN. Zugang als <b>Administrator</b> mit dem <b>Adminwort</b> für heikle Dinge (Gerät entfernen, Abend abschließen, Neues Fest).']])}
 <div class="box"><p><b>Merke:</b> Jedes Gerät braucht sein eigenes <b>Gerätezeichen</b> (ein Buchstabe, siehe unten). Zwei Geräte mit demselben Zeichen verwechselt die Ablage.</p></div>
 <h2>A · Laptop und WLAN am Festtag</h2>
@@ -81,7 +82,7 @@ ${tab(['Du siehst', 'Das hilft'], [
 <section class="seite"><h1>Zugangsdaten und Kontakte<small>Ausfüllen, ausdrucken und an einem sicheren Ort aufbewahren. Nicht im Saal liegen lassen.</small></h1>
 <table class="z"><tr><th style="width:62mm">Was</th><th>Eintrag</th></tr>
 <tr><td>Name des WLAN (Router)</td><td></td></tr><tr><td>WLAN-Passwort</td><td></td></tr><tr><td>Adresse der Ablage (https://…:8443/)</td><td></td></tr>
-<tr><td>Wort Terminal (Kasse)</td><td></td></tr><tr><td>Wort Verkauf</td><td></td></tr><tr><td>Wort Anzeige</td><td></td></tr><tr><td>Wort Administrator</td><td></td></tr>
+<tr><td>Wort Terminal (Kasse)</td><td></td></tr><tr><td>Wort Verkauf</td><td></td></tr><tr><td>Wort Anzeige (Gäste)</td><td></td></tr><tr><td>Wort Bestellung aufnehmen</td><td></td></tr><tr><td>Wort Bestellanzeige (Theke/Küche)</td><td></td></tr><tr><td>Wort Administrator</td><td></td></tr>
 <tr><td>Gerätezeichen Terminal</td><td>T</td></tr><tr><td>Gerätezeichen Verkauf 1 / 2</td><td>V / W</td></tr>
 <tr><td>Ordner mit den Daten (Laptop)</td><td></td></tr><tr><td>Ansprechperson und Telefon</td><td></td></tr><tr><td>Ansprechperson Router/WLAN</td><td></td></tr></table>
 <h2>Vor jedem Fest: Kurzliste für die Betreuung</h2>

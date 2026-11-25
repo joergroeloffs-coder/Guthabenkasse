@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bestellung · Fering Vereinsmanager</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest-bestellung.webmanifest">
+<meta name="theme-color" content="#0C1D14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+:root{--kopf:#0C1D14;--papier:#FAF8F1;--watt:#1E5C3E;--gold:#B08D3C;--ziegel:#93382B;--messing:#80621C;--tinte:#10251A;--hell:#F5EEDC;--linie:#CDB77E;--grau:#57685C}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--papier);color:var(--tinte);font-family:'Inter','Liberation Sans',system-ui,sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+button{font:inherit;cursor:pointer}
+#app{min-height:100%;display:flex;flex-direction:column}
+#kopf{background:var(--kopf);color:var(--papier);padding:max(10px,env(safe-area-inset-top)) 14px 8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:3}
+#kopf h1{font-family:Georgia,serif;font-size:19px;margin:0;font-weight:400;flex:1;min-width:120px}
+.chip{font-size:12px;padding:3px 9px;border-radius:10px;border:1px solid #3d5a49;white-space:nowrap}
+.chip.on{background:#1E5C3E;border-color:#1E5C3E}.chip.off{background:#93382B;border-color:#93382B}
+#reiter{display:flex;gap:0;background:var(--kopf);padding:0 10px 8px;position:sticky;top:46px;z-index:3}
+#reiter button{flex:1;border:1px solid #3d5a49;background:transparent;color:#cfe0d4;padding:9px 6px;font-weight:600}
+#reiter button:first-child{border-radius:8px 0 0 8px}#reiter button:last-child{border-radius:0 8px 8px 0}
+#reiter button[aria-pressed=true]{background:var(--papier);color:var(--kopf)}
+#reiter .zahl{background:var(--ziegel);color:#fff;border-radius:9px;padding:0 6px;font-size:12px;margin-left:4px}
+main{flex:1;padding:12px 12px 90px}
+.hide{display:none!important}
+label.feld{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--grau);margin:0 0 4px}
+input,select,textarea{font:inherit;font-size:17px;padding:11px;border:1px solid var(--linie);border-radius:8px;background:#fff;color:var(--tinte);width:100%;-webkit-user-select:text;user-select:text}
+.knopf{border:1px solid var(--watt);background:var(--watt);color:#fff;border-radius:10px;padding:12px 14px;font-weight:600;font-size:16px}
+.knopf.hell{background:#fff;color:var(--watt)}.knopf.gelb{background:var(--messing);border-color:var(--messing)}.knopf.rot{background:var(--ziegel);border-color:var(--ziegel)}
+.knopf.klein{padding:7px 10px;font-size:14px;border-radius:8px}.knopf:disabled{opacity:.4}
+.reihe{display:flex;gap:8px;align-items:center}.umbruch{flex-wrap:wrap}
+.gruppen{display:flex;margin:10px 0 6px}.gruppen button{flex:1;padding:10px;border:1px solid var(--messing);background:#fff;color:var(--messing);font-weight:700}
+.gruppen button:first-child{border-radius:8px 0 0 8px}.gruppen button:last-child{border-radius:0 8px 8px 0}.gruppen button[aria-pressed=true]{background:var(--messing);color:#fff}
+.raster{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.raster button{position:relative;min-height:64px;border:1px solid var(--gold);background:var(--hell);color:var(--tinte);border-radius:9px;font-size:15px;line-height:1.15;padding:6px 4px}
+.raster button:active{transform:translateY(1px)}.raster .zahl{position:absolute;top:2px;right:4px;background:var(--messing);color:#fff;border-radius:9px;padding:0 7px;font-size:13px}
+.korb{margin:12px 0;border:1px solid var(--linie);border-radius:10px;background:#fff}
+.zeile{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #eadfc3}.zeile:last-child{border-bottom:0}
+.zeile .name{flex:1;line-height:1.25}.zeile small{display:block;color:var(--ziegel);font-weight:600}.zeile .mp{display:flex;align-items:center;gap:5px}
+.mp button{width:34px;height:34px;border-radius:8px;border:1px solid var(--linie);background:#fff;font-size:18px;font-weight:700}
+.leer{color:var(--grau);padding:12px}
+#senden{position:fixed;left:0;right:0;bottom:0;padding:10px 12px max(12px,env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--papier) 30%);z-index:2}
+#senden .knopf{width:100%;padding:16px;font-size:18px}
+.banner{padding:10px 12px;border-radius:8px;margin:0 0 10px;font-size:15px}.banner.ok{background:#E2F0E7;border-left:5px solid var(--watt)}.banner.warn{background:#F7E7E2;border-left:5px solid var(--ziegel)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 0}.chips button{padding:6px 11px;border:1px solid var(--linie);background:#fff;border-radius:14px;font-size:14px}
+.karte{border:1px solid var(--linie);border-radius:11px;background:#fff;margin:0 0 10px;overflow:hidden}
+.karte .kopfz{display:flex;gap:8px;align-items:baseline;padding:9px 12px;background:var(--hell);border-bottom:1px solid var(--linie)}
+.karte .kopfz b{font-size:20px;flex:1}.karte .kopfz span{color:var(--grau);font-size:13px}
+.gr{padding:8px 12px;border-bottom:1px solid #eadfc3}.gr:last-child{border-bottom:0}
+.gr .titel{display:flex;gap:8px;align-items:center;margin-bottom:3px}.gr .titel b{flex:1}
+.st{font-size:12px;font-weight:700;padding:2px 8px;border-radius:9px;color:#fff;background:#8a8f8b}.st.arbeit{background:var(--messing)}.st.fertig{background:var(--watt)}.st.serviert{background:#8a8f8b}
+.pos{line-height:1.35}.pos em{color:var(--ziegel);font-style:normal;font-weight:600}.notiz{padding:7px 12px;background:#FFF3C9;font-weight:600;font-size:14px}
+/* Anzeige */
+body.anzeige{background:#14231a;color:var(--papier)}body.anzeige main{padding:10px 10px 30px}
+#filter{display:flex;gap:6px;flex:0 0 auto}#filter button{padding:8px 14px;border:1px solid #3d5a49;background:transparent;color:var(--papier);border-radius:8px;font-weight:700;font-size:15px}
+#filter button[aria-pressed=true]{background:var(--papier);color:var(--kopf)}
+#tickets{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px;align-items:start}
+.ticket{background:var(--papier);color:var(--tinte);border-radius:11px;overflow:hidden;border-top:8px solid var(--watt)}
+.ticket.mittel{border-top-color:var(--gold)}.ticket.alt{border-top-color:var(--ziegel)}.ticket.fertig{opacity:.6}
+.ticket .kopfz{display:flex;align-items:baseline;gap:8px;padding:8px 12px}.ticket .kopfz b{font-size:30px;flex:1;line-height:1.05}.ticket .kopfz span{font-size:14px;color:var(--grau)}
+.ticket .gr .pos{font-size:19px}.ticket .aktion{width:100%;margin-top:8px;padding:14px;font-size:18px}
+.ticket.neu{animation:blink 1.2s ease 3}@keyframes blink{50%{box-shadow:0 0 0 6px rgba(176,141,60,.8)}}
+#leerhinweis{text-align:center;color:#9fb3a6;font-size:22px;margin-top:20vh}
+#einricht{position:fixed;inset:0;background:rgba(5,12,8,.92);display:none;align-items:center;justify-content:center;z-index:9;padding:16px;overflow:auto}
+#einricht.zeigt{display:flex}#einricht form{background:var(--papier);color:var(--tinte);border-radius:12px;padding:18px;width:min(94vw,440px);display:flex;flex-direction:column;gap:10px}
+#einrichtMeldung{color:var(--ziegel);font-size:14px;min-height:1.2em}
+.funktionen{display:flex;gap:6px}.funktionen label{flex:1;border:1px solid var(--linie);border-radius:8px;padding:10px;font-size:15px;display:flex;gap:6px;align-items:flex-start}.funktionen input{width:auto;margin-top:3px}
+.nb{font-size:13px;color:var(--grau)}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="kopf"><h1 id="titel">Bestellung</h1><span class="chip" id="status">…</span><span id="filter" class="hide"></span>
+    <button class="knopf klein hell hide" id="ton" type="button" title="Ton">🔔</button><button class="knopf klein hell hide" id="voll" type="button" title="Vollbild">⛶</button></div>
+  <div id="reiter" class="hide"><button data-r="neu" aria-pressed="true">Neu</button><button data-r="liste" aria-pressed="false">Bestellungen<span class="zahl hide" id="offenZahl"></span></button></div>
+  <main id="haupt"></main>
+  <div id="senden" class="hide"><button class="knopf" id="sendenKnopf" type="button">Bestellung senden</button></div>
+</div>
+<div id="einricht"><form id="einrichtForm" autocomplete="off">
+  <h2 style="margin:0;font-family:Georgia,serif">Einrichten</h2>
+  <div><label class="feld">Wofür dient dieses Gerät?</label><div class="funktionen">
+    <label><input type="radio" name="fkt" value="aufnehmen" checked><span><b>Bestellung aufnehmen</b><br><span class="nb">Bedienung, Handy</span></span></label>
+    <label><input type="radio" name="fkt" value="anzeige"><span><b>Bestellungen anzeigen</b><br><span class="nb">Theke / Küche</span></span></label></div></div>
+  <div><label class="feld">Adresse der Ablage</label><input id="eAdresse" placeholder="https://…/api oder …/exec" spellcheck="false" autocapitalize="off"></div>
+  <div><label class="feld" id="eWortLabel">Zugangswort</label><input id="eWort" spellcheck="false" autocapitalize="off"></div>
+  <div id="eNameBox"><label class="feld">Name der Bedienung</label><input id="eName" maxlength="30" placeholder="zum Beispiel Anna"></div>
+  <div id="einrichtMeldung"></div>
+  <div class="reihe"><button type="button" class="knopf hell" id="eZu" style="flex:1">Schließen</button><button type="submit" class="knopf" style="flex:1">Speichern</button></div>
+</form></div>
+<script>
+"use strict";
+var KEY = "guthabenkasse.bestellung.v1", VERSION = "3.0.0";
+var GRUPPEN = {G: "Getränke", S: "Speisen"};
+var cfg = {adresse: "", wort: "", funktion: "", name: "", ton: true, filter: "alle"};
+try { var gs = JSON.parse(localStorage.getItem(KEY) || "{}"); for (var k in gs) cfg[k] = gs[k]; } catch (e) {}
+if (!cfg.adresse && window.GK_ABLAGE) cfg.adresse = window.GK_ABLAGE;
+function sichern() { try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch (e) {} }
+var ausgang = []; try { ausgang = JSON.parse(localStorage.getItem(KEY + ".aus") || "[]") || []; } catch (e) { ausgang = []; }
+function ausSichern() { try { localStorage.setItem(KEY + ".aus", JSON.stringify(ausgang)); } catch (e) {} }
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]; }); }
+function bereit() { return !!(cfg.adresse && cfg.wort && cfg.funktion); }
+function zeit(ms) { var d = new Date(ms); return ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2); }
+var versatz = 0;   /* Uhr der Ablage minus Uhr dieses Geräts: so stimmen „vor x min“ auch, wenn die Geräteuhr falsch geht */
+function jetzt() { return Date.now() + versatz; }
+function vor(ms) { var m = Math.max(0, Math.round((jetzt() - ms) / 60000)); return m < 1 ? "jetzt" : "vor " + m + " min"; }
+
+/* ---------- Verbindung ---------- */
+var daten = {orders: {}, cursor: 0, epoche: null, artikel: [], rolle: ""}, online = false, laeuftGerade = false, fehlerText = "";
+function api(q) {
+  q.aktion = "bestellung"; q.wort = cfg.wort;
+  var frist = new Promise(function (_, nein) { setTimeout(function () { nein(new Error("Zeitüberschreitung")); }, 12000); });
+  var ruf = fetch(cfg.adresse, {method: "POST", headers: {"Content-Type": "text/plain;charset=utf-8"}, redirect: "follow", body: JSON.stringify(q)})
+    .then(function (r) { return r.text(); }).then(function (t) { var a; try { a = JSON.parse(t); } catch (e) { throw new Error("Keine gültige Antwort"); } return a; });
+  return Promise.race([ruf, frist]);
+}
+var tonStand = {}, kontext = null;
+function piep(art) {
+  if (!cfg.ton) return;
+  try {
+    kontext = kontext || new (window.AudioContext || window.webkitAudioContext)();
+    var o = kontext.createOscillator(), g = kontext.createGain(); o.connect(g); g.connect(kontext.destination);
+    o.frequency.value = art === "fertig" ? 660 : 880; g.gain.value = 0.15; o.start(); o.stop(kontext.currentTime + (art === "fertig" ? 0.35 : 0.18));
+    if (art === "neu") setTimeout(function () { try { var o2 = kontext.createOscillator(), g2 = kontext.createGain(); o2.connect(g2); g2.connect(kontext.destination); o2.frequency.value = 1100; g2.gain.value = 0.15; o2.start(); o2.stop(kontext.currentTime + 0.18); } catch (e) {} }, 230);
+  } catch (e) {}
+  try { if (navigator.vibrate) navigator.vibrate(art === "neu" ? [80, 60, 80] : 60); } catch (e) {}
+}
+var ersterAbgleich = true;
+function verarbeite(a) {
+  if (a.reset) daten.orders = {};
+  var neu = false, fertig = false;
+  (a.bestellungen || []).forEach(function (o) {
+    var alt = daten.orders[o.id];
+    if (!ersterAbgleich) {
+      if (!alt && !o.x) neu = true;
+      if (alt && o.st) for (var g in o.st) if (alt.st[g] !== "fertig" && o.st[g] === "fertig" && meine(o)) fertig = true;
+    }
+    daten.orders[o.id] = o;
+  });
+  if (a.serverZeit) versatz = a.serverZeit - Date.now();
+  daten.cursor = a.cursor; daten.epoche = a.epoche; daten.artikel = a.artikel || []; daten.rolle = a.rolle || daten.rolle;
+  ersterAbgleich = false;
+  if (cfg.funktion === "anzeige" && neu) { piep("neu"); neueMarke = true; }
+  if (cfg.funktion === "aufnehmen" && fertig) piep("fertig");
+}
+var neueMarke = false;
+function abgleichen() {
+  if (!bereit() || laeuftGerade) return;
+  laeuftGerade = true;
+  senden().then(function () { return api({was: "liste", cursor: daten.cursor, epoche: daten.epoche}); }).then(function (a) {
+    laeuftGerade = false;
+    if (a.fehler) { online = false; fehlerText = a.fehler; } else { online = true; fehlerText = ""; verarbeite(a); }
+    zeichneAlles();
+  }, function (f) { laeuftGerade = false; online = false; fehlerText = f.message || "Keine Verbindung"; zeichneAlles(); });
+}
+function senden() {
+  if (!ausgang.length) return Promise.resolve();
+  var o = ausgang[0];
+  return api({was: "neu", id: o.id, tisch: o.tisch, notiz: o.notiz, pos: o.pos, wer: cfg.name}).then(function (a) {
+    if (a.ok || a.fehler) { ausgang.shift(); ausSichern(); if (a.fehler) { banner("Bestellung abgelehnt: " + a.fehler, "warn"); } if (ausgang.length) return senden(); }
+  });
+}
+
+/* ---------- Hilfen ---------- */
+function meine(o) { return !cfg.name || String(o.wer || "").toLowerCase() === cfg.name.toLowerCase(); }
+function gruppen(o) { return Object.keys(o.st || {}).sort(); }   /* G (Getränke) vor S (Speisen) */
+function offen(o) { return !o.x && gruppen(o).some(function (g) { return o.st[g] !== "serviert"; }); }
+function posVon(o, g) { return (o.pos || []).filter(function (p) { return p.g === g; }); }
+function posHtml(l) { return l.map(function (p) { return '<div class="pos"><b>' + p.a + '×</b> ' + esc(p.n) + (p.w ? ' <em>' + esc(p.w) + '</em>' : '') + '</div>'; }).join(""); }
+var STATUS_TEXT = {neu: "neu", arbeit: "in Arbeit", fertig: "fertig", serviert: "serviert"};
+function banner(t, art) { var b = $("meldung"); if (!b) return; b.className = "banner " + (art || "ok"); b.textContent = t; b.classList.remove("hide"); }
+
+/* ---------- Bestellung aufnehmen ---------- */
+var korb = [], tisch = "", notiz = "", gruppeZeigen = "G", reiter = "neu", gesendetHinweis = "";
+function kuerzel() {
+  var l = []; Object.keys(daten.orders).map(function (k) { return daten.orders[k]; }).sort(function (a, b) { return b.zeit - a.zeit; }).forEach(function (o) { if (l.indexOf(o.tisch) < 0 && l.length < 8) l.push(o.tisch); });
+  return l;
+}
+function korbSumme() { return korb.reduce(function (s, x) { return s + x.a; }, 0); }
+function zeichneNeu() {
+  artikelSig = JSON.stringify(daten.artikel) + "|" + ausgang.length;
+  var h = $("haupt"), art = daten.artikel || [];
+  var liste = art.filter(function (x) { return (x.g || "G") === gruppeZeigen; });
+  var anz = function (n) { var c = 0; korb.forEach(function (x) { if (x.n === n && !x.w) c += x.a; }); return c; };
+  h.innerHTML = '<div id="meldung" class="banner hide"></div>' +
+    (ausgang.length ? '<div class="banner warn">' + ausgang.length + ' Bestellung(en) warten auf die Verbindung und werden gesendet, sobald sie da ist.</div>' : '') +
+    '<label class="feld" for="tischFeld">Tisch oder Bezeichnung</label><input id="tischFeld" value="' + esc(tisch) + '" maxlength="16" placeholder="zum Beispiel 12 oder Terrasse" autocomplete="off">' +
+    '<div class="chips">' + kuerzel().map(function (k) { return '<button type="button" data-tisch="' + esc(k) + '">' + esc(k) + '</button>'; }).join("") + '</div>' +
+    '<div class="gruppen"><button data-gr="G" aria-pressed="' + (gruppeZeigen === "G") + '">Getränke</button><button data-gr="S" aria-pressed="' + (gruppeZeigen === "S") + '">Speisen</button></div>' +
+    (liste.length ? '<div class="raster">' + liste.map(function (x) { var c = anz(x.n); return '<button type="button" data-art="' + esc(x.n) + '">' + esc(x.n) + (c ? '<span class="zahl">' + c + '</span>' : '') + '</button>'; }).join("") + '</div>'
+      : '<p class="leer">Keine Artikel in dieser Gruppe. Die Liste wird am Terminal gepflegt (Verwaltung → Artikel und Preise).</p>') +
+    '<div class="reihe" style="margin-top:8px"><button type="button" class="knopf klein hell" id="sonstiges">+ Anderes</button></div>' +
+    '<div class="korb" id="korb"></div>' +
+    '<label class="feld" for="notizFeld">Hinweis zur Bestellung (freiwillig)</label><input id="notizFeld" value="' + esc(notiz) + '" maxlength="60" placeholder="zum Beispiel Allergie, eilig">';
+  korbZeichnen();
+}
+function korbZeichnen() {
+  var k = $("korb"); if (!k) return;
+  k.innerHTML = korb.length ? korb.map(function (x, i) {
+    return '<div class="zeile"><div class="name"><b>' + esc(x.n) + '</b> <span class="nb">' + GRUPPEN[x.g] + '</span>' + (x.w ? '<small>' + esc(x.w) + '</small>' : '') + '</div>' +
+      '<div class="mp"><button data-minus="' + i + '">−</button><b>' + x.a + '</b><button data-plus="' + i + '">+</button></div><button class="knopf klein hell" data-wunsch="' + i + '">Wunsch</button></div>';
+  }).join("") : '<div class="leer">Artikel antippen, um sie zur Bestellung zu legen.</div>';
+  var s = $("sendenKnopf"); s.disabled = !korb.length; s.textContent = korb.length ? "Bestellung senden (" + korbSumme() + ")" : "Bestellung senden";
+}
+function korbHinzu(n, g, w) {
+  var v = korb.filter(function (x) { return x.n === n && (x.w || "") === (w || ""); })[0];
+  if (v) v.a++; else korb.push({n: n, g: g, a: 1, w: w || ""});
+}
+function bestellungSenden() {
+  tisch = ($("tischFeld") ? $("tischFeld").value : tisch).trim(); notiz = ($("notizFeld") ? $("notizFeld").value : notiz).trim();
+  if (!tisch) { banner("Bitte Tisch oder Bezeichnung eintragen.", "warn"); if ($("tischFeld")) $("tischFeld").focus(); return; }
+  if (!korb.length) return;
+  var o = {id: "o" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), tisch: tisch, notiz: notiz,
+    pos: korb.map(function (x) { var p = {n: x.n, a: x.a, g: x.g}; if (x.w) p.w = x.w; return p; })};
+  ausgang.push(o); ausSichern();
+  var t = tisch; korb = []; tisch = ""; notiz = "";
+  gesendetHinweis = "Bestellung für „" + t + "“ wird gesendet …";
+  zeichneNeu(); banner(gesendetHinweis, "ok");
+  laeuftGerade = false; abgleichen();
+  setTimeout(function () { if (!ausgang.length) banner("Bestellung für „" + t + "“ ist angekommen.", "ok"); else banner("Bestellung für „" + t + "“ wartet auf die Verbindung.", "warn"); }, 1500);
+}
+
+/* ---------- Meine Bestellungen ---------- */
+var alleZeigen = false;
+function aktionenHtml(o, g) {
+  var s = o.st[g];
+  if (s === "fertig") return '<button class="knopf klein" data-st="serviert" data-id="' + esc(o.id) + '" data-g="' + g + '">Serviert ✔</button>';
+  return "";
+}
+function zeichneListe() {
+  var l = Object.keys(daten.orders).map(function (k) { return daten.orders[k]; }).filter(function (o) { return !o.x && (alleZeigen || meine(o)) && true; })
+    .filter(function (o) { return offen(o) || jetzt() - o.zeit < 900000; }).sort(function (a, b) { return b.zeit - a.zeit; }).slice(0, 60);
+  $("haupt").innerHTML = '<div class="reihe umbruch" style="margin-bottom:8px"><button class="knopf klein hell" id="meineAlle">' + (alleZeigen ? "Nur meine zeigen" : "Alle zeigen") + '</button><span class="nb">' + (cfg.name ? "Angemeldet als " + esc(cfg.name) : "") + '</span></div><div id="meldung" class="banner hide"></div>' +
+    (l.length ? l.map(function (o) {
+      var kann = gruppen(o).every(function (g) { return o.st[g] === "neu"; });
+      return '<div class="karte"><div class="kopfz"><b>' + esc(o.tisch) + '</b><span>#' + o.nr + ' · ' + zeit(o.zeit) + ' · ' + vor(o.zeit) + (o.wer ? ' · ' + esc(o.wer) : '') + '</span></div>' +
+        (o.notiz ? '<div class="notiz">' + esc(o.notiz) + '</div>' : '') +
+        gruppen(o).map(function (g) { return '<div class="gr"><div class="titel"><b>' + GRUPPEN[g] + '</b><span class="st ' + o.st[g] + '">' + STATUS_TEXT[o.st[g]] + '</span>' + aktionenHtml(o, g) + '</div>' + posHtml(posVon(o, g)) + '</div>'; }).join("") +
+        (kann && offen(o) ? '<div class="gr"><button class="knopf klein rot" data-storno="' + esc(o.id) + '">Bestellung stornieren</button></div>' : '') + '</div>';
+    }).join("") : '<p class="leer">Keine Bestellungen.</p>');
+}
+
+/* ---------- Anzeige (Theke / Küche) ---------- */
+function zeichneAnzeige() {
+  var f = cfg.filter || "alle", teile = [["alle", "Alle"], ["G", "Getränke"], ["S", "Speisen"]];
+  $("filter").innerHTML = teile.map(function (t) { return '<button data-filter="' + t[0] + '" aria-pressed="' + (f === t[0]) + '">' + t[1] + '</button>'; }).join("");
+  var l = Object.keys(daten.orders).map(function (k) { return daten.orders[k]; }).filter(function (o) {
+    if (o.x) return false; var gs = gruppen(o).filter(function (g) { return f === "alle" || f === g; });
+    return gs.some(function (g) { return o.st[g] !== "serviert"; });
+  });
+  var fertigAlle = function (o) { return gruppen(o).filter(function (g) { return f === "alle" || f === g; }).every(function (g) { return o.st[g] === "fertig" || o.st[g] === "serviert"; }); };
+  l.sort(function (a, b) { var fa = fertigAlle(a) ? 1 : 0, fb = fertigAlle(b) ? 1 : 0; return fa - fb || a.zeit - b.zeit; });
+  var offenZahl = l.filter(function (o) { return !fertigAlle(o); }).length;
+  $("titel").textContent = "Bestellungen · " + offenZahl + " offen";
+  var markiere = neueMarke; neueMarke = false;
+  $("haupt").innerHTML = l.length ? '<div id="tickets">' + l.map(function (o, i) {
+    var min = (jetzt() - o.zeit) / 60000, alter = min > 10 ? "alt" : (min > 5 ? "mittel" : "");
+    var gs = gruppen(o).filter(function (g) { return f === "alle" || f === g; });
+    return '<div class="ticket ' + alter + (fertigAlle(o) ? ' fertig' : '') + (markiere && jetzt() - o.zeit < 8000 ? ' neu' : '') + '"><div class="kopfz"><b>' + esc(o.tisch) + '</b><span>#' + o.nr + ' · ' + zeit(o.zeit) + ' · ' + vor(o.zeit) + '</span></div>' +
+      (o.notiz ? '<div class="notiz">' + esc(o.notiz) + '</div>' : '') +
+      gs.map(function (g) {
+        var s = o.st[g], knopf = s === "neu" ? ['arbeit', 'Anfangen', ''] : s === "arbeit" ? ['fertig', 'Fertig', 'gelb'] : s === "fertig" ? ['serviert', 'Abgeholt', 'hell'] : null;
+        var zurueck = s === "arbeit" ? "neu" : s === "fertig" ? "arbeit" : null;
+        return '<div class="gr"><div class="titel"><b>' + (f === "alle" ? GRUPPEN[g] : "") + '</b><span class="st ' + s + '">' + STATUS_TEXT[s] + '</span>' + (zurueck ? '<button class="knopf klein hell" data-st="' + zurueck + '" data-id="' + esc(o.id) + '" data-g="' + g + '" title="zurück">↶</button>' : '') + '</div>' + posHtml(posVon(o, g)) +
+          (knopf && s !== "serviert" ? '<button class="knopf aktion ' + knopf[2] + '" data-st="' + knopf[0] + '" data-id="' + esc(o.id) + '" data-g="' + g + '">' + knopf[1] + '</button>' : '') + '</div>';
+      }).join("") + '</div>';
+  }).join("") + '</div>' : '<div id="leerhinweis">Keine offenen Bestellungen</div>';
+}
+function statusSetzen(id, g, st) {
+  var o = daten.orders[id]; if (!o) return;
+  var alt = o.st[g]; o.st[g] = st; zeichneAlles();   /* sofort zeigen, die Ablage bestätigt gleich */
+  api({was: "status", id: id, gruppe: g, status: st}).then(function (a) { if (a.fehler) { o.st[g] = alt; banner(a.fehler, "warn"); } else if (a.bestellung) daten.orders[id] = a.bestellung; zeichneAlles(); }, function () { o.st[g] = alt; zeichneAlles(); banner("Keine Verbindung – nicht geändert.", "warn"); });
+}
+
+/* ---------- Zeichnen ---------- */
+function zeichneStatus() {
+  var c = $("status"); c.textContent = online ? "online" : (bereit() ? "ohne Verbindung" : "nicht eingerichtet"); c.className = "chip " + (online ? "on" : "off");
+  if (cfg.funktion === "aufnehmen") {
+    var n = Object.keys(daten.orders).map(function (k) { return daten.orders[k]; }).filter(function (o) { return meine(o) && offen(o); }).length;
+    var z = $("offenZahl"); z.textContent = n; z.classList.toggle("hide", !n);
+  }
+}
+function zeichneAlles() {
+  zeichneStatus();
+  if (!bereit()) return;
+  if (cfg.funktion === "anzeige") { zeichneAnzeige(); return; }
+  if (reiter === "liste") zeichneListe();
+  else {   /* die Eingabe bleibt stehen; neu gezeichnet wird nur, wenn sich die Artikelliste oder der Ausgang geändert hat */
+    var sig = JSON.stringify(daten.artikel) + "|" + ausgang.length;
+    if (sig !== artikelSig) { artikelSig = sig; if ($("tischFeld")) tisch = $("tischFeld").value; if ($("notizFeld")) notiz = $("notizFeld").value; zeichneNeu(); }
+  }
+}
+var artikelSig = "";
+function modusSetzen() {
+  document.body.classList.toggle("anzeige", cfg.funktion === "anzeige");
+  var anz = cfg.funktion === "anzeige", auf = cfg.funktion === "aufnehmen";
+  $("filter").classList.toggle("hide", !anz); $("ton").classList.toggle("hide", !(anz || auf)); $("voll").classList.toggle("hide", !(anz || auf));
+  $("reiter").classList.toggle("hide", !auf); $("senden").classList.toggle("hide", !(auf && reiter === "neu"));
+  $("titel").textContent = anz ? "Bestellungen" : "Bestellung";
+  $("ton").textContent = cfg.ton ? "🔔" : "🔕";
+  if (!bereit()) { $("haupt").innerHTML = '<p class="leer" style="color:inherit">Noch nicht eingerichtet. Fünfmal schnell auf den Titel tippen.</p>'; }
+  else if (auf) { if (reiter === "neu") zeichneNeu(); else zeichneListe(); }
+  else zeichneAnzeige();
+  Array.prototype.forEach.call(document.querySelectorAll("#reiter button"), function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-r") === reiter); });
+}
+
+/* ---------- Bedienung ---------- */
+document.addEventListener("click", function (e) {
+  var t = e.target.closest ? e.target.closest("button") : null; if (!t) return;
+  if (t.getAttribute("data-r")) { reiter = t.getAttribute("data-r"); modusSetzen(); return; }
+  if (t.getAttribute("data-tisch") !== null && t.getAttribute("data-tisch") !== undefined && $("tischFeld")) { $("tischFeld").value = t.getAttribute("data-tisch"); tisch = t.getAttribute("data-tisch"); return; }
+  if (t.getAttribute("data-gr")) { if ($("tischFeld")) tisch = $("tischFeld").value; if ($("notizFeld")) notiz = $("notizFeld").value; gruppeZeigen = t.getAttribute("data-gr"); zeichneNeu(); return; }
+  if (t.getAttribute("data-art") !== null && t.getAttribute("data-art") !== undefined && t.parentNode.className === "raster") {
+    korbHinzu(t.getAttribute("data-art"), gruppeZeigen, ""); if ($("tischFeld")) tisch = $("tischFeld").value; if ($("notizFeld")) notiz = $("notizFeld").value; zeichneNeu(); return;
+  }
+  if (t.getAttribute("data-plus") !== null && t.hasAttribute("data-plus")) { korb[Number(t.getAttribute("data-plus"))].a++; korbZeichnen(); return; }
+  if (t.hasAttribute("data-minus")) { var i = Number(t.getAttribute("data-minus")); if (--korb[i].a <= 0) korb.splice(i, 1); zeichneNeu(); return; }
+  if (t.hasAttribute("data-wunsch")) { var x = korb[Number(t.getAttribute("data-wunsch"))], w = prompt("Wunsch zu „" + x.n + "“ (zum Beispiel ohne Zwiebeln):", x.w || ""); if (w !== null) { x.w = w.trim().slice(0, 40); var gleich = korb.filter(function (y) { return y !== x && y.n === x.n && y.w === x.w; })[0]; if (gleich) { gleich.a += x.a; korb.splice(korb.indexOf(x), 1); } zeichneNeu(); } return; }
+  if (t.id === "sonstiges") { var n = prompt("Name des Artikels:"); if (n && n.trim()) { korbHinzu(n.trim().slice(0, 24), gruppeZeigen, ""); if ($("tischFeld")) tisch = $("tischFeld").value; zeichneNeu(); } return; }
+  if (t.id === "sendenKnopf") { bestellungSenden(); return; }
+  if (t.id === "meineAlle") { alleZeigen = !alleZeigen; zeichneListe(); return; }
+  if (t.hasAttribute("data-storno")) { if (confirm("Bestellung wirklich stornieren?")) api({was: "storno", id: t.getAttribute("data-storno")}).then(function (a) { if (a.fehler) banner(a.fehler, "warn"); else abgleichen(); }, function () { banner("Keine Verbindung.", "warn"); }); return; }
+  if (t.hasAttribute("data-st")) { statusSetzen(t.getAttribute("data-id"), t.getAttribute("data-g"), t.getAttribute("data-st")); return; }
+  if (t.hasAttribute("data-filter")) { cfg.filter = t.getAttribute("data-filter"); sichern(); zeichneAnzeige(); return; }
+  if (t.id === "ton") { cfg.ton = !cfg.ton; sichern(); $("ton").textContent = cfg.ton ? "🔔" : "🔕"; if (cfg.ton) piep("fertig"); return; }
+  if (t.id === "voll") { try { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen(); } catch (er) {} return; }
+});
+var tipps = [];
+$("titel").addEventListener("click", function () {
+  var j = Date.now(); tipps = tipps.filter(function (z) { return j - z < 3000; }); tipps.push(j);
+  if (tipps.length >= 5) { tipps = []; einrichtungOeffnen(); }
+});
+function einrichtungOeffnen() {
+  $("eAdresse").value = cfg.adresse || ""; $("eWort").value = cfg.wort || ""; $("eName").value = cfg.name || "";
+  var r = document.querySelector('input[name=fkt][value=' + (cfg.funktion || "aufnehmen") + ']'); if (r) r.checked = true;
+  fktAnpassen(); $("einrichtMeldung").textContent = ""; $("einricht").classList.add("zeigt");
+}
+function fktAnpassen() {
+  var f = document.querySelector('input[name=fkt]:checked').value;
+  $("eNameBox").style.display = f === "aufnehmen" ? "" : "none";
+  $("eWortLabel").textContent = f === "aufnehmen" ? "Zugangswort (Bestellung aufnehmen)" : "Zugangswort (Bestellanzeige)";
+}
+Array.prototype.forEach.call(document.querySelectorAll("input[name=fkt]"), function (r) { r.addEventListener("change", fktAnpassen); });
+$("eZu").addEventListener("click", function () { $("einricht").classList.remove("zeigt"); });
+$("einrichtForm").addEventListener("submit", function (e) {
+  e.preventDefault();
+  var f = document.querySelector('input[name=fkt]:checked').value, a = $("eAdresse").value.trim(), w = $("eWort").value.trim();
+  if (!/^https?:\/\/[^\/\s]+\/(api|.*\/exec)$/.test(a)) { $("einrichtMeldung").textContent = "Die Adresse muss auf /api (lokale Ablage) oder /exec (Google) enden."; return; }
+  if (!w) { $("einrichtMeldung").textContent = "Das Zugangswort fehlt."; return; }
+  $("einrichtMeldung").textContent = "…prüft";
+  var alt = {adresse: cfg.adresse, wort: cfg.wort}; cfg.adresse = a; cfg.wort = w;
+  api({was: "liste", cursor: 0}).then(function (r) {
+    if (!r.ok) { cfg.adresse = alt.adresse; cfg.wort = alt.wort; $("einrichtMeldung").textContent = /Zugangswort/.test(r.fehler || "") ? "Das Zugangswort stimmt nicht." : "Die Ablage lehnt ab: " + (r.fehler || "?"); return; }
+    if (f === "anzeige" && r.rolle === "order") { cfg.adresse = alt.adresse; cfg.wort = alt.wort; $("einrichtMeldung").textContent = "Mit diesem Wort kann man Bestellungen nur aufnehmen, nicht abhaken. Bitte das Wort für die Bestellanzeige nehmen."; return; }
+    if (f === "aufnehmen" && r.rolle === "kueche") { cfg.adresse = alt.adresse; cfg.wort = alt.wort; $("einrichtMeldung").textContent = "Mit diesem Wort kann man Bestellungen nur ansehen und abhaken. Bitte das Wort für die Bestellaufnahme nehmen."; return; }
+    cfg.funktion = f; cfg.name = $("eName").value.trim().slice(0, 30); sichern(); daten = {orders: {}, cursor: 0, epoche: null, artikel: [], rolle: r.rolle}; ersterAbgleich = true;
+    $("einricht").classList.remove("zeigt"); modusSetzen(); abgleichen();
+  }, function (er) { cfg.adresse = alt.adresse; cfg.wort = alt.wort; $("einrichtMeldung").textContent = "Die Ablage ist nicht erreichbar (" + er.message + ")."; });
+});
+function wachhalten() { try { if (navigator.wakeLock && !document.hidden && cfg.funktion) navigator.wakeLock.request("screen").then(function (w) {}, function () {}); } catch (e) {} }
+document.addEventListener("visibilitychange", function () { if (!document.hidden) { wachhalten(); abgleichen(); } });
+try { if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register("sw.js").then(null, function () {}); } catch (e) {}
+modusSetzen(); wachhalten();
+setInterval(abgleichen, 3000);
+setInterval(function () { if (cfg.funktion === "anzeige") zeichneAnzeige(); else if (cfg.funktion === "aufnehmen" && reiter === "liste") zeichneListe(); }, 30000);
+abgleichen();
+</script>
+</body>
+</html>

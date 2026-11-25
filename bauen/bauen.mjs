@@ -3,7 +3,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 const wurzel = new URL('../', import.meta.url).pathname;
 const lies = p => readFileSync(wurzel + p, 'utf8');
-const VERSION = '2.11.0';
+const VERSION = '3.0.0';
 const kern = lies('quelle/kern.html');
 const schicht = lies('quelle/v2-schicht.js');
 
@@ -140,9 +140,17 @@ for (const m of ['terminal', 'verkauf']) {
   mf.description = 'Anzeigegerät für Gäste: Karte vorhalten, Guthaben sehen'; mf.orientation = 'any';
   writeFileSync(wurzel + 'manifest-anzeige.webmanifest', JSON.stringify(mf, null, 2) + '\n');
 }
+// Bestellung (Orderman und Bestellanzeige): eigenständige Seite
+{
+  writeFileSync(wurzel + 'guthabenkasse-bestellung.html', lies('quelle/bestellung.html').replace('__VERSION__', VERSION));
+  const mf = JSON.parse(lies('manifest.webmanifest'));
+  mf.name = 'Guthabenkasse Bestellung'; mf.short_name = 'GK Bestellung'; mf.start_url = './guthabenkasse-bestellung.html'; mf.id = './guthabenkasse-bestellung.html';
+  mf.description = 'Bestellungen aufnehmen und auf Theke oder Küche anzeigen'; mf.orientation = 'any';
+  writeFileSync(wurzel + 'manifest-bestellung.webmanifest', JSON.stringify(mf, null, 2) + '\n');
+}
 const sw = `// Service Worker: hält die zwei Programme offline bereit. Seiten: erst Netz, sonst Zwischenspeicher.
 const NAME = 'guthabenkasse-${VERSION}';
-const DATEIEN = ['guthabenkasse-terminal.html','guthabenkasse-verkauf.html','guthabenkasse-anzeige.html','manifest-anzeige.webmanifest','manifest-terminal.webmanifest','manifest-verkauf.webmanifest','icon-192.png','icon-512.png','icon-verkauf-192.png','icon-verkauf-512.png','favicon.svg'];
+const DATEIEN = ['guthabenkasse-terminal.html','guthabenkasse-verkauf.html','guthabenkasse-anzeige.html','guthabenkasse-bestellung.html','manifest-bestellung.webmanifest','manifest-anzeige.webmanifest','manifest-terminal.webmanifest','manifest-verkauf.webmanifest','icon-192.png','icon-512.png','icon-verkauf-192.png','icon-verkauf-512.png','favicon.svg'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(NAME).then(c => c.addAll(DATEIEN).catch(() => {})).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== NAME).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {
