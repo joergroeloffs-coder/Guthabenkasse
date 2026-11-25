@@ -389,6 +389,7 @@ function verarbeiteSync(a, gesendet) {
   if (a.einst) db.einst = a.einst;
   if (a.geraete) db.geraeteListe = a.geraete;
   if (a.nummernNeu !== undefined) db.nummernNeu = a.nummernNeu;
+  try { artikelZeichnen(); } catch (e) {}
   return angenommen;
 }
 
@@ -714,6 +715,7 @@ function abbuchenAusfuehren(nr, cent) {
       klingen("nein"); return false;
     }
     var verkauf = buchen(nr, -cent, "ab", null, null, true), tb = null;
+    if (wk.length && wkSumme() === cent) verkauf.pos = wk.map(function (x) { return { n: x.n, p: x.p, a: x.a }; });
     if (anschreibenAn && vorher - cent < 0) verkauf.an = 1;
     if (tip > 0) { tb = buchen(nr, -tip, "trinkgeld", null, null, true); tb.zu = verkauf.id; if (verkauf.an) tb.an = 1; }
     return sichernBestaetigt().then(function (gespeichert) {
@@ -727,7 +729,7 @@ function abbuchenAusfuehren(nr, cent) {
         if (saldo(nr) < 0) begleichAnbieten("ab", nr);
         ergebnisAb(nr, cent, tip, notiz || (nichtGereicht ? _t("zum Aufrunden reichte das Guthaben nicht") : ""));
         klingen("ab"); erfahrungZaehlen();
-        $("abBetrag").value = ""; anschreibenAn = false; schreibHinweisZeigen(); rundeHinweisZeigen();
+        $("abBetrag").value = ""; wkLeeren(); anschreibenAn = false; schreibHinweisZeigen(); rundeHinweisZeigen();
         ergebnisAbschluss("ab");
       };
       if (ohneAblage()) { zeigen(""); return true; }
@@ -1034,6 +1036,7 @@ function zeichneVerwaltung() {
       '<div class="reihe umbruch" style="margin-top:8px"><button class="knopf" id="vGastgeber">Zusammenfassung für den Gastgeber</button><button class="knopf" id="vGastgeberCsv">als Tabelle (CSV)</button></div>' +
       '<div id="vBericht" style="margin-top:12px">' + geh + '</div></div></div>' +
 
+    (MODUS === "terminal" ? artikelBearbeitenHtml() : '') +
     '<div class="karte"><div class="titel"><h2>Sicherungen</h2></div><div class="inhalt">' +
       '<div class="reihe umbruch"><button class="knopf voll" id="sNeu">Sicherung der Ablage jetzt</button><button class="knopf" id="sListe">Liste laden</button><button class="knopf" id="sLokal">Datei auf dieses Gerät speichern</button></div>' +
       '<div id="sListeKasten" style="margin-top:10px">' + sicherungsListeHtml() + '</div>' +
@@ -1053,7 +1056,7 @@ function zeichneVerwaltung() {
       '<div class="reihe umbruch" style="margin-top:10px"><button class="knopf" id="gEntfernen">Gerät aus der Liste entfernen</button><button class="knopf" id="vNeuLaden">Karten und Stand neu von der Ablage laden</button></div>' +
       '<p class="muted">„Neu laden“ verwirft wartende Kartenänderungen dieses Geräts und holt Karten und Buchungen frisch aus der Ablage. Noch nicht übertragene Buchungen bleiben erhalten.</p>' +
     '</div></div>';
-  zeichneEinstellungen();
+  zeichneEinstellungen(); artikelTextFuellen();
 }
 
 function geldFeld(id) { var c = centAus(document.getElementById(id).value); return isNaN(c) ? null : c; }
@@ -1069,10 +1072,128 @@ function berichtHtmlV2(b) {
     (b.fundkarte && b.fundkarte.summe ? '<div class="feldTitel" style="margin-top:10px">Trinkgeld aus Fundkarten: ' + eur(b.fundkarte.summe) + '</div>' +
       (b.fundkarte.beteiligte.length ? '<p class="muted" style="margin:0 0 4px">Bei ' + b.fundkarte.beteiligte.length + ' Beteiligten je ' + eur(b.fundkarte.anteil) + (b.fundkarte.rest ? ', Rest ' + b.fundkarte.rest + ' Cent der Reihe nach' : '') + '</p><table class="tab">' +
         b.fundkarte.verteilung.map(function (v) { return '<tr><td>' + esc(v.name) + '</td><td class="n">' + eur(v.cent) + '</td></tr>'; }).join("") + '</table>' : '<p class="muted">Keine Beteiligten gebucht – noch nicht verteilbar.</p>') : '') +
-    '<div class="feldTitel" style="margin-top:10px">Je Gerät</div><table class="tab">' + b.proGeraet.map(function (g) { return '<tr><td>' + esc(g.geraet + " " + g.name) + '</td><td class="n">' + eur(g.abgebucht) + '</td><td class="n">TG ' + eur(g.trinkgeld) + '</td></tr>'; }).join("") + '</table>' +
+    artikelTabelle(b.artikel) + '<div class="feldTitel" style="margin-top:10px">Je Gerät</div><table class="tab">' + b.proGeraet.map(function (g) { return '<tr><td>' + esc(g.geraet + " " + g.name) + '</td><td class="n">' + eur(g.abgebucht) + '</td><td class="n">TG ' + eur(g.trinkgeld) + '</td></tr>'; }).join("") + '</table>' +
     '<div class="feldTitel" style="margin-top:10px">Je Bediener</div><table class="tab">' + b.proBedienung.map(function (g) { return '<tr><td>' + esc(g.name) + '</td><td class="n">' + eur(g.abgebucht) + '</td><td class="n">TG ' + eur(g.trinkgeld) + '</td></tr>'; }).join("") + '</table>' +
     '<p class="muted">Stand ' + esc(zeitpunkt(Date.parse(b.zeit))) + '</p>';
 }
+/* ======================= Artikel-Tasten ======================= */
+var wk = [], artikelZiffern = false;
+function artikelListe() { return (db.einst && db.einst.artikel) || []; }
+function wkSumme() { return wk.reduce(function (s, x) { return s + x.p * x.a; }, 0); }
+function wkLeeren() { wk = []; artikelZeichnen(); }
+function wkSetzen() { $("abBetrag").value = wk.length ? eur(wkSumme()).replace(/\./g, "") : ""; try { rundeHinweisZeigen(); } catch (e) {} artikelZeichnen(); }
+function wkPruefen() {   /* wurde der Betrag von Hand geändert, gilt der Warenkorb nicht mehr */
+  if (wk.length && centAus($("abBetrag").value) !== wkSumme()) { wk = []; artikelZeichnen(); }
+}
+function artikelZeichnen() {
+  var reiter = document.getElementById("reiter-ab"); if (!reiter) return;
+  var panel = document.getElementById("artikelPanel"), liste = artikelListe();
+  if (!panel) {
+    var ziel = reiter.querySelector('.tasten[data-fuer="abBetrag"]'); if (!ziel) return;
+    panel = document.createElement("div"); panel.id = "artikelPanel";
+    ziel.parentNode.insertBefore(panel, ziel);
+  }
+  if (!liste.length) { panel.style.display = "none"; reiter.classList.remove("ohneZiffern"); wk = []; return; }
+  panel.style.display = "";
+  reiter.classList.toggle("ohneZiffern", !artikelZiffern);
+  var anz = {}; wk.forEach(function (x) { anz[x.n] = x.a; });
+  panel.innerHTML = '<div class="artikelRaster">' + liste.map(function (x, i) {
+    return '<button type="button" data-art="' + i + '">' + esc(x.n) + '<small>' + esc(euro(x.p)) + '</small>' + (anz[x.n] ? '<span class="zahl">' + anz[x.n] + '</span>' : '') + '</button>';
+  }).join("") + '</div>' +
+    '<div class="warenkorb"><span>' + (wk.length ? esc(wk.map(function (x) { return x.a + "× " + x.n; }).join(", ")) : '<span class="muted">Artikel antippen, dann Karte scannen</span>') + '</span>' +
+    '<button type="button" class="knopf klein" data-artzurueck="1"' + (wk.length ? '' : ' disabled') + '>↶</button>' +
+    '<button type="button" class="knopf klein" data-artziffern="1" aria-pressed="' + artikelZiffern + '">123</button></div>';
+}
+function artikelKlick(e) {
+  var t = e.target.closest ? e.target.closest("button") : null; if (!t || !document.getElementById("artikelPanel") || !document.getElementById("artikelPanel").contains(t)) return;
+  var art = t.getAttribute("data-art");
+  if (art !== null) {
+    var x = artikelListe()[Number(art)]; if (!x) return;
+    var vorh = wk.filter(function (w) { return w.n === x.n && w.p === x.p; })[0];
+    if (vorh) vorh.a++; else wk.push({ n: x.n, p: x.p, a: 1 });
+    wkSetzen(); return;
+  }
+  if (t.getAttribute("data-artzurueck")) { var l = wk[wk.length - 1]; if (l) { if (--l.a <= 0) wk.pop(); } wkSetzen(); return; }
+  if (t.getAttribute("data-artziffern")) { artikelZiffern = !artikelZiffern; artikelZeichnen(); }
+}
+function artikelSumme(buchungen) {   /* je Artikel: Anzahl und Summe, Rücknahmen abgezogen */
+  var idx = {}, sum = {};
+  buchungen.forEach(function (b) { idx[b.id] = b; });
+  var buchen = function (pos, f) { pos.forEach(function (x) { var k = x.n + "|" + x.p, z = sum[k] || (sum[k] = { name: x.n, preis: x.p, anzahl: 0, summe: 0 }); z.anzahl += f * x.a; z.summe += f * x.a * x.p; }); };
+  buchungen.forEach(function (b) { if (b.art === "ab" && b.pos) buchen(b.pos, 1); else if (b.art === "storno") { var o = idx[b.ref]; if (o && o.art === "ab" && o.pos) buchen(o.pos, -1); } });
+  return Object.keys(sum).map(function (k) { return sum[k]; }).filter(function (z) { return z.anzahl > 0; }).sort(function (x, y) { return y.summe - x.summe; });
+}
+function artikelTabelle(liste) {
+  return liste && liste.length ? '<div class="feldTitel" style="margin-top:10px">Verkauf nach Artikel</div><table class="tab">' + liste.map(function (z) { return '<tr><td>' + z.anzahl + ' × ' + esc(z.name) + ' (' + eur(z.preis) + ')</td><td class="n">' + eur(z.summe) + '</td></tr>'; }).join("") + '</table>' : "";
+}
+/* Die Artikel einer Karte: Summen und jede Abbuchung mit ihren Artikeln (ausklappbar) */
+function artikelText(pos) { return pos.map(function (x) { return x.a + "× " + x.n; }).join(", "); }
+function artikelZeile(b) {
+  if (b.art !== "ab" || !b.pos) return "";
+  return '<div class="muted" style="padding:0 0 5px 54px;font-size:13px">' + esc(artikelText(b.pos)) + '</div>';
+}
+function kartenArtikelHtml(nr, offen) {
+  var alle = db.buchungen.filter(function (b) { return b.karte === nr; }), zur = {};
+  db.buchungen.forEach(function (b) { if (b.art === "storno" && b.ref) zur[b.ref] = 1; });
+  var abs = alle.filter(function (b) { return b.art === "ab"; });
+  if (!abs.some(function (b) { return b.pos; })) return "";
+  var summen = artikelSumme(alle);
+  var zeilen = abs.slice().reverse().slice(0, 40).map(function (b) {
+    return '<div class="zeile"' + (zur[b.id] ? ' style="text-decoration:line-through;opacity:.6"' : '') + '><span class="zeit">' + uhrzeit(b.zeit) + '</span><span class="grow">' + (b.pos ? esc(artikelText(b.pos)) : '<span class="muted">Betrag ohne Artikel</span>') + (zur[b.id] ? ' <span class="muted">(zurückgenommen)</span>' : '') + '</span><span class="betrag">' + euro(-b.cent) + '</span></div>';
+  }).join("");
+  return '<details class="mehr karteArtikel"' + (offen ? ' open' : '') + ' style="margin:6px 0 10px"><summary>Artikel dieser Karte</summary>' +
+    '<table class="tab" style="margin-top:6px">' + summen.map(function (z) { return '<tr><td>' + z.anzahl + ' × ' + esc(z.name) + '</td><td class="n">' + eur(z.summe) + '</td></tr>'; }).join("") + '</table>' +
+    '<div class="verlauf" style="margin-top:6px">' + zeilen + '</div></details>';
+}
+function kartenArtikelWeg(tab) { var e = document.getElementById("kartenArtikel-" + tab); if (e && e.parentNode) e.parentNode.removeChild(e); }
+function kartenArtikelZeigen(tab, nr) {
+  kartenArtikelWeg(tab);
+  var h = kartenArtikelHtml(nr, false); if (!h) return;
+  var feld = document.getElementById(tab === "ab" ? "befund2" : "befund"); if (!feld || !feld.parentNode) return;
+  var d = document.createElement("div"); d.id = "kartenArtikel-" + tab; d.innerHTML = h;
+  feld.parentNode.insertBefore(d, feld.nextSibling);
+}
+var _urteil = urteil;
+urteil = function (tab) { kartenArtikelWeg(tab); return _urteil.apply(this, arguments); };
+var _urteilZwei = urteilZwei;
+urteilZwei = function (tab) { kartenArtikelWeg(tab); return _urteilZwei.apply(this, arguments); };
+var _bestandZeigen = bestandZeigen;
+bestandZeigen = function (tab, nr) { _bestandZeigen(tab, nr); kartenArtikelZeigen(tab, nr); };
+
+function artikelBearbeitenHtml() {
+  return '<div class="karte"><div class="titel"><h2>Artikel und Preise</h2></div><div class="inhalt">' +
+    '<p class="muted" style="margin-top:0">Eine Zeile je Artikel: Name, Strichpunkt, Preis. Zum Beispiel <span class="mono">Bier 0,3 l; 3,80</span>. Höchstens 30. Die Tasten erscheinen auf allen Geräten im Reiter Abbuchen. Leer lassen = nur Beträge eintippen.</p>' +
+    '<textarea id="artikelText" rows="8" spellcheck="false" style="width:100%;font:14px/1.4 monospace;padding:8px;border:1px solid var(--linie);border-radius:6px"></textarea>' +
+    '<div class="reihe umbruch" style="margin-top:8px"><button class="knopf voll" id="artikelSpeichern">Speichern</button></div><div id="artikelMeldung" class="muted" style="margin-top:6px"></div></div></div>';
+}
+function artikelTextFuellen() {
+  var f = document.getElementById("artikelText"); if (!f || document.activeElement === f) return;
+  f.value = artikelListe().map(function (x) { return x.n + "; " + eur(x.p).replace(/\./g, ""); }).join("\n");
+}
+function artikelAusText(text) {
+  var aus = [], fehler = "";
+  String(text || "").split(/\r?\n/).forEach(function (z, i) {
+    z = z.trim(); if (!z || fehler) return;
+    var m = /^(.*\S)\s*;\s*([\d.,]+)\s*€?$/.exec(z) || /^(.*\S)\s+(\d+(?:[.,]\d{1,2})?)\s*€?$/.exec(z);
+    var p = m ? centAus(m[2]) : NaN;
+    if (!m || !(p >= 0)) { fehler = "Zeile " + (i + 1) + " verstehe ich nicht: „" + z + "“. Richtig: Name; Preis"; return; }
+    aus.push({ n: m[1].trim(), p: p });
+  });
+  return { liste: aus, fehler: fehler };
+}
+function artikelSpeichern() {
+  var m = document.getElementById("artikelMeldung"), r = artikelAusText(document.getElementById("artikelText").value);
+  var zeige = function (t) { if (m) m.textContent = t; };
+  if (r.fehler) { zeige(r.fehler); return; }
+  if (!wolkeBereit()) { zeige("Das geht nur mit Verbindung zur Ablage."); return; }
+  zeige("Speichert …");
+  rufeAblage({ aktion: "artikel", artikel: r.liste }).then(function (a) {
+    if (!a.ok) { zeige(a.fehler || "Nicht gespeichert"); return; }
+    db.einst = Object.assign({}, db.einst || {}, { artikel: a.artikel, artikelV: a.artikelV }); sichern(); wk = []; artikelZeichnen();
+    zeige(a.artikel.length ? a.artikel.length + " Artikel gespeichert – erscheinen auf allen Geräten nach dem nächsten Abgleich." : "Liste geleert."); 
+  }).then(null, function (f) { zeige("Keine Verbindung: " + (f && f.message || f)); });
+}
+
 /* ======================= Zusammenfassung für den Gastgeber ======================= */
 function gastgeberDaten() {
   var idx = {}, pro = {};
@@ -1104,6 +1225,7 @@ function gastgeberHtml() {
   return '<style>.gh td,.gh th{border-bottom:1px solid #CDB77E;padding:1.4mm 2mm;font-size:9.5pt;text-align:left}.gh th{background:#F5EEDC;border-top:1px solid #8a7a52}.gh .r{text-align:right;white-space:nowrap}.gh tr{page-break-inside:avoid}.gh thead{display:table-header-group}</style>' +
     '<div style="font-family:Georgia,serif;padding:14mm 16mm;font-size:11pt;color:#10251A">' + kopf + summen +
     (offen ? '<p style="background:#F7E7E2;padding:2mm 3mm;border-radius:2mm;font-size:9.5pt;margin:2mm 0">Achtung: ' + offen + ' Buchung(en) dieses Geräts sind noch nicht in der Ablage. Die Zahlen können sich noch ändern.</p>' : '') +
+    (function () { var l = artikelSumme(db.buchungen); return l.length ? '<table class="gh" style="width:60%;border-collapse:collapse;margin:2mm 0 4mm"><thead><tr><th colspan="2">Verbrauch nach Artikel</th></tr></thead><tbody>' + l.map(function (z) { return '<tr><td>' + z.anzahl + ' × ' + esc(z.name) + ' (' + euro(z.preis) + ')</td><td class="r">' + euro(z.summe) + '</td></tr>'; }).join("") + '</tbody></table>' : ''; })() +
     '<table class="gh" style="width:100%;border-collapse:collapse;margin-top:2mm"><thead><tr><th>Karte</th><th>Name</th><th class="r">Geladen</th><th class="r">Verbraucht</th><th class="r">Ausgezahlt</th><th class="r">Rest</th></tr></thead><tbody>' + zeilen + '</tbody></table>' +
     '<p style="font-size:8.5pt;color:#57685C;margin-top:4mm">„Geladen“ enthält Übertrag, Korrekturen und umgebuchte Beträge. „Verbraucht“ enthält Trinkgeld. Zurückgenommene Buchungen sind abgezogen.</p></div>';
 }
@@ -1165,6 +1287,7 @@ function v2Verwaltung(e) {
     case "btnWolkeJetzt": ab(syncJetzt(15000).then(function () { zeichneWolke(); })); break;
     case "vPruefen": ab(rufeAblage({ aktion: "pruefen", ids: [] }).then(function (a) { vMeld(a.ok ? "Die Ablage antwortet richtig (Folgenummer " + a.seq + ")" : "Ablage: " + (a.fehler || "?")); })); break;
     case "btnAbend": abendAbschliessen(); break;
+    case "artikelSpeichern": artikelSpeichern(); break;
     case "vGastgeber": gastgeberZeigen(false); break;
     case "vGastgeberCsv": gastgeberZeigen(true); break;
     case "vAuswerten": ab(berichtHolen(false)); break;
@@ -1225,6 +1348,7 @@ detailHtml = function (nr) {
     (!k.ersetztDurch ? '<button class="knopf" data-tat="ersetzen">Karte ersetzen</button>' : '') +
     (saldo(nr) > 0 && !k.ersetztDurch ? '<button class="knopf" data-tat="einziehen">Karte einziehen (Fundkarte)</button>' : '') +
     (k.status === "gesperrt" ? (k.ersetztDurch ? '' : '<button class="knopf" data-tat="freigeben">Freigeben</button>') : '<button class="knopf" data-tat="sperren">Sperren</button>') + '</div>';
+  h = h.replace('<div class="verlauf">', kartenArtikelHtml(nr, true) + '<div class="verlauf">');
   return h.replace('<div class="reihe umbruch">', zusatz + '<div class="reihe umbruch">');
 };
 function kartenAktion(was, nr) {
@@ -1547,6 +1671,9 @@ function v2Start() {
   document.addEventListener("input", function (e) { if (e.target && e.target.id === "azFilter") azListeZeichnen(); });
   document.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target && e.target.id === "azCode") { var c = e.target; if (c.value.trim()) { auszahlungKarte(c.value); c.select(); } } });
   document.addEventListener("click", v2Verwaltung);
+  document.addEventListener("click", artikelKlick);
+  document.addEventListener("click", function (e) { if (e.target && e.target.closest && e.target.closest("#reiter-ab")) setTimeout(wkPruefen, 0); });
+  artikelZeichnen();
   document.addEventListener("click", function (e) {
     var t = e.target.closest ? e.target.closest("button") : null;
     if (t && t.id === "btnMeineDrucken") meineDrucken();
@@ -1586,4 +1713,4 @@ function v2Start() {
 
 /* Fassung und Status in der Kopfzeile */
 var _zeichneAlles = zeichneAlles;
-zeichneAlles = function () { _zeichneAlles(); zeichneStatus(); if (MODUS === "terminal" && aktiverReiter === "auszahlung") zeichneAuszahlung(); if (MODUS === "verkauf" && aktiverReiter === "meine") zeichneMeine(); };
+zeichneAlles = function () { _zeichneAlles(); zeichneStatus(); artikelZeichnen(); if (MODUS === "terminal" && aktiverReiter === "auszahlung") zeichneAuszahlung(); if (MODUS === "verkauf" && aktiverReiter === "meine") zeichneMeine(); };

@@ -55,7 +55,7 @@
        Änderungen, die letzten 12 bleiben) und auf Wunsch.
 ======================================================================== */
 
-var SKRIPT_VERSION = "2.1";
+var SKRIPT_VERSION = "2.2";
 var WORT_VERKAUF = "";
 var WORT_KASSE   = "";
 var WORT_ADMIN   = "";
@@ -111,7 +111,7 @@ function darf(rolle, was) {
   var stufe = { verkauf: 1, kasse: 2, admin: 3 }[rolle] || 0;
   var noetig = {
     lesen: 1, sync: 1, abbuchen: 1, abfragen: 1, meineAbrechnung: 1, pruefen: 1,
-    aufbuchen: 2, karten: 2, rueckbuchen: 2, kassenbuch: 2, bericht: 2, sicherung: 2, quittieren: 2, abschluss: 2, legen: 2,
+    aufbuchen: 2, artikel: 2, karten: 2, rueckbuchen: 2, kassenbuch: 2, bericht: 2, sicherung: 2, quittieren: 2, abschluss: 2, legen: 2,
     geraete: 3, einstellungen: 3, neubeginn: 3, wiederherstellen: 3, freigeben: 3, befunde: 3
   }[was];
   return noetig !== undefined && stufe >= noetig;
@@ -187,6 +187,9 @@ function aktion(inhalt, ctx, a) {
     case "abschluss":
       if (!darf(r, "abschluss")) return NEIN("Abschluss");
       return abschlussSetzen(inhalt, ctx, a);
+    case "artikel":
+      if (!darf(r, "artikel")) return NEIN("Artikel");
+      return artikelSetzen(inhalt, ctx, a);
     case "einstellungen":
       if (!darf(r, "einstellungen")) return NEIN("Einstellungen");
       return einstellungenSetzen(inhalt, ctx, a);
@@ -394,7 +397,7 @@ function sync(inhalt, ctx, a) {
     ok: true, seq: inhalt.seq, cursor: inhalt.seq, ergebnisse: ergebnisse,
     buchungen: inhalt.daten.buchungen.filter(function (b) { return b.s > cursor; }),
     kv: inhalt.kv, serverZeit: ctx.jetzt, epoche: inhalt.daten.epoche,
-    einst: { offlineLimit: inhalt.einst.offlineLimit, anschreiben: inhalt.einst.anschreiben, anschreibenGrenze: inhalt.einst.anschreibenGrenze },
+    einst: { offlineLimit: inhalt.einst.offlineLimit, anschreiben: inhalt.einst.anschreiben, anschreibenGrenze: inhalt.einst.anschreibenGrenze, artikel: inhalt.einst.artikel || [], artikelV: inhalt.einst.artikelV || 0 },
     v: 2
   };
   if (cursor > inhalt.seq) { antwort.zurueckgesetzt = true; antwort.buchungen = inhalt.daten.buchungen; }
@@ -521,14 +524,42 @@ function buchungAnnehmen(inhalt, ctx, x, geraetId) {
 
 function annehmen(inhalt, ctx, x, extra) {
   var b = {};
-  var felder = ["id", "karte", "cent", "art", "zeit", "geraet", "wer", "ref", "stapel", "zu", "n", "k", "off", "an", "mig", "nach"];
+  var felder = ["id", "karte", "cent", "art", "zeit", "geraet", "wer", "ref", "stapel", "zu", "n", "k", "off", "an", "mig", "nach", "pos"];
   felder.forEach(function (f) { if (x[f] !== undefined) b[f] = x[f]; });
   if (extra) for (var k in extra) b[k] = extra[k];
+  if (b.pos !== undefined) { var pos = posPruefen(b); if (pos) b.pos = pos; else delete b.pos; }
   b.s = ++inhalt.seq;
   b.sz = ctx.jetzt;
   inhalt.daten.buchungen.push(b);
   if (b.ueber) vermerk(inhalt, "ueberziehung", b.geraet, "Offline gebuchte Abbuchung überzieht die Karte " + b.karte, { id: b.id });
   return { st: "ok", s: b.s, ueber: !!b.ueber, saldo: salden(inhalt)[b.karte] || 0 };
+}
+
+/* Artikel einer Abbuchung: nur gültig, wenn die Summe genau zum Betrag passt; sonst wird die Liste weggelassen, die Buchung bleibt */
+function posPruefen(b) {
+  if (b.art !== "ab" || !Array.isArray(b.pos) || !b.pos.length || b.pos.length > 40) return null;
+  var summe = 0, aus = [];
+  for (var i = 0; i < b.pos.length; i++) {
+    var x = b.pos[i];
+    if (!x || typeof x.n !== "string" || !x.n || x.n.length > 24 || !(x.p >= 0 && x.p <= 1000000) || !(x.a >= 1 && x.a <= 999) || x.p !== Math.floor(x.p) || x.a !== Math.floor(x.a)) return null;
+    summe += x.p * x.a; aus.push({ n: x.n, p: x.p, a: x.a });
+  }
+  return summe === -b.cent ? aus : null;
+}
+function artikelSetzen(inhalt, ctx, a) {
+  var liste = Array.isArray(a.artikel) ? a.artikel : [], aus = [], vorhanden = {};
+  if (liste.length > 30) return { fehler: "Höchstens 30 Artikel." };
+  for (var i = 0; i < liste.length; i++) {
+    var x = liste[i], n = String((x && x.n) || "").replace(/\s+/g, " ").trim().slice(0, 24), p = Number(x && x.p);
+    if (!n) return { fehler: "Ein Artikel hat keinen Namen." };
+    if (!(p >= 0 && p <= 1000000) || p !== Math.floor(p)) return { fehler: "Der Preis von „" + n + "“ ist ungültig." };
+    if (vorhanden[n.toLowerCase()]) return { fehler: "„" + n + "“ steht doppelt." };
+    vorhanden[n.toLowerCase()] = 1; aus.push({ n: n, p: p });
+  }
+  inhalt.einst.artikel = aus; inhalt.einst.artikelV = (inhalt.einst.artikelV || 0) + 1;
+  vermerk(inhalt, "einstellung", geraetVon(a), "Artikelliste geändert (" + aus.length + " Artikel)");
+  ctx.geaendert = true;
+  return { ok: true, artikel: aus, artikelV: inhalt.einst.artikelV };
 }
 
 function stornoAnnehmen(inhalt, ctx, x, idx, geraetId) {
@@ -976,7 +1007,8 @@ function ueberziehungen(inhalt) {
 function berichtRechnen(inhalt, ctx, nurGeraet) {
   var d = inhalt.daten, B = d.buchungen, idx = indexAus(B);
   var u = { aufgebucht: 0, aufStorno: 0, abgebucht: 0, abZurueck: 0, trinkgeld: 0, trinkgeldZurueck: 0, ausgezahlt: 0, korrektur: 0, stornos: 0, summeStorno: 0, ersatz: 0, uebertrag: 0, fund: 0 };
-  var pro = {}, proGeraet = {}, nachAnz = 0, nachSumme = 0, beteiligte = {};
+  var pro = {}, proGeraet = {}, nachAnz = 0, nachSumme = 0, beteiligte = {}, artikelSum = {};
+  function artikelBuchen(pos, faktor) { pos.forEach(function (x) { var k = x.n + "|" + x.p, z = artikelSum[k] || (artikelSum[k] = { name: x.n, preis: x.p, anzahl: 0, summe: 0 }); z.anzahl += faktor * x.a; z.summe += faktor * x.a * x.p; }); }
   function zeile(map, key, name) { return map[key] || (map[key] = { name: name, ab: 0, abZurueck: 0, trinkgeld: 0, anzahl: 0 }); }
   B.forEach(function (b) {
     if (b.art === "uebertrag") { u.uebertrag += b.cent; return; }
@@ -987,7 +1019,7 @@ function berichtRechnen(inhalt, ctx, nurGeraet) {
     var z = zeile(pro, wer, wer), zg = zeile(proGeraet, b.geraet, (inhalt.geraete[b.geraet] && inhalt.geraete[b.geraet].name) || ("Gerät " + b.geraet));
     z.anzahl++; zg.anzahl++;
     if (b.art === "auf") u.aufgebucht += b.cent;
-    else if (b.art === "ab") { u.abgebucht += -b.cent; z.ab += -b.cent; zg.ab += -b.cent; }
+    else if (b.art === "ab") { u.abgebucht += -b.cent; z.ab += -b.cent; zg.ab += -b.cent; if (b.pos) artikelBuchen(b.pos, 1); }
     else if (b.art === "trinkgeld") { u.trinkgeld += -b.cent; z.trinkgeld += -b.cent; zg.trinkgeld += -b.cent; }
     else if (b.art === "auszahlung") u.ausgezahlt += -b.cent;
     else if (b.art === "korrektur") u.korrektur += b.cent;
@@ -998,6 +1030,7 @@ function berichtRechnen(inhalt, ctx, nurGeraet) {
       if (o && o.art === "fundkarte") u.fund -= b.cent;   /* eingezogene Karte wieder freigegeben */
       else if (o && o.art === "ab") { u.abZurueck += b.cent; zeile(pro, o.wer || ("Gerät " + o.geraet), "").abZurueck += b.cent; zeile(proGeraet, o.geraet, "").abZurueck += b.cent; }
       else if (o && o.art === "trinkgeld") { u.trinkgeldZurueck += b.cent; }
+      if (o && o.art === "ab" && o.pos) artikelBuchen(o.pos, -1);
       else if (o && o.art === "auf") u.aufStorno += -b.cent;
     }
   });
@@ -1030,6 +1063,7 @@ function berichtRechnen(inhalt, ctx, nurGeraet) {
     stornos: { anzahl: u.stornos, summe: u.summeStorno },
     nochAufKarten: rest, minus: minus,
     epocheArt: d.epocheArt || "fest",
+    artikel: Object.keys(artikelSum).map(function (k) { return artikelSum[k]; }).filter(function (z) { return z.anzahl > 0; }).sort(function (x, y) { return y.summe - x.summe; }),
     uebertrag: u.uebertrag, minusKarten: { anzahl: minusKarten, summe: minusSumme },
     fundkarte: { summe: u.fund, beteiligte: namen, verteilung: fundVerteilung, anteil: namen.length ? Math.floor(u.fund / namen.length) : 0, rest: namen.length ? u.fund % namen.length : u.fund },
     nachgereicht: { anzahl: nachAnz, summe: nachSumme },
@@ -1156,6 +1190,7 @@ function berichtText(b) {
     t.push("Trinkgeld aus Fundkarten: " + euroText(b.fundkarte.summe) + (b.fundkarte.beteiligte.length ? ", bei " + b.fundkarte.beteiligte.length + " Beteiligten je " + euroText(b.fundkarte.anteil) + (b.fundkarte.rest ? ", Rest " + b.fundkarte.rest + " Cent" : "") : ", keine Beteiligten"));
     b.fundkarte.verteilung.forEach(function (v) { t.push("  " + v.name + ": " + euroText(v.cent)); });
   }
+  if (b.artikel && b.artikel.length) { t.push(""); t.push("Verkauf nach Artikel:"); b.artikel.forEach(function (z) { t.push("  " + z.anzahl + " × " + z.name + " (" + euroText(z.preis) + "): " + euroText(z.summe)); }); }
   t.push(""); t.push("Je Bedienung:");
   b.proBedienung.forEach(function (z) { t.push("  " + z.name + ": " + euroText(z.abgebucht) + ", Trinkgeld " + euroText(z.trinkgeld)); });
   if (b.ausstehend) { t.push(""); t.push("Hinweis: " + b.ausstehend + " Buchung(en) waren auf Geräten noch nicht übertragen."); }
@@ -1181,6 +1216,7 @@ function berichtHtml(b) {
     (b.nachgereicht && b.nachgereicht.anzahl ? "<tr><td>Nachgereicht vom Vorabend</td><td style=\"text-align:right;padding-left:18px\">" + b.nachgereicht.anzahl + " Buchung(en), " + euroText(b.nachgereicht.summe) + "</td></tr>" : "") +
     (b.fundkarte && b.fundkarte.summe ? "<tr><td>Trinkgeld aus Fundkarten</td><td style=\"text-align:right;padding-left:18px\">" + euroText(b.fundkarte.summe) + "</td></tr>" + b.fundkarte.verteilung.map(function (v) { return "<tr><td style=\"padding-left:14px\">" + htmlSicher(v.name) + "</td><td style=\"text-align:right;padding-left:18px\">" + euroText(v.cent) + "</td></tr>"; }).join("") : "") +
     "</table>" +
+    (b.artikel && b.artikel.length ? "<table style=\"border-collapse:collapse;margin:6px 0;font-size:13px\"><tr><td colspan=\"2\"><b>Verkauf nach Artikel</b></td></tr>" + b.artikel.map(function (z) { return "<tr><td>" + z.anzahl + " × " + htmlSicher(z.name) + " (" + euroText(z.preis) + ")</td><td style=\"text-align:right;padding-left:18px\">" + euroText(z.summe) + "</td></tr>"; }).join("") + "</table>" : "") +
     (b.ausstehend ? "<p style=\"font-size:12px\">Hinweis: " + b.ausstehend + " Buchung(en) waren auf Geräten noch nicht übertragen.</p>" : "") + "</div>";
 }
 

@@ -97,6 +97,15 @@ Die Startseite (`index.html`) bietet **Terminal, Verkauf und Anzeige** zur Auswa
 ## Zusammenfassung für den Gastgeber (2.9.0)
 **Terminal → Verwaltung → Abrechnung → „Zusammenfassung für den Gastgeber“** druckt eine Übersicht (mehrere Seiten bei vielen Karten): oben Geladen, Verbraucht (davon Trinkgeld), Ausgezahlt (dazu eingezogen), Rest auf Karten, darunter je Karte Geladen, Verbraucht, Ausgezahlt und Rest. „Geladen“ enthält Übertrag, Korrekturen und umgebuchte Beträge, zurückgenommene Buchungen sind abgezogen, und es gilt Geladen = Verbraucht + Ausgezahlt + Eingezogen + Rest. **„als Tabelle (CSV)“** speichert dieselben Zahlen für Excel. Vorher gleicht das Terminal mit der Ablage ab; sind noch Buchungen offen, steht ein Hinweis auf dem Blatt.
 
+## Artikel-Tasten (2.10.0, Skriptfassung 2.2; Anzeige je Karte 2.11.0)
+**Terminal → Verwaltung → „Artikel und Preise“:** eine Zeile je Artikel, Name, Strichpunkt, Preis (zum Beispiel `Bier 0,3 l; 3,80`), höchstens 30. „Speichern“ (nur mit Verbindung zur Ablage, Kassenwort genügt). Danach erscheinen auf **allen Geräten im Reiter Abbuchen** Tasten mit Name und Preis, nach dem nächsten Abgleich.
+- Antippen zählt hoch (Zahl an der Taste), der Betrag steht oben, **↶** nimmt den letzten Artikel weg, **Leeren** räumt alles. **123** blendet den Ziffernblock ein.
+- Dann die Karte scannen wie gewohnt. Die Buchung merkt sich die Artikel; die Abrechnung zeigt **Verkauf nach Artikel** (Anzahl und Summe, Rücknahmen abgezogen), ebenso die Zusammenfassung für den Gastgeber und die Abrechnungsmail.
+- Ändert jemand den Betrag danach von Hand, gilt der Warenkorb nicht mehr; die Buchung läuft dann ohne Artikel. Das Eintippen von Beträgen funktioniert weiter wie bisher. Offline gebuchte Artikel werden später mit übertragen.
+- **Artikel einer Karte (2.11.0):** Im Terminal steht im Kartendetail (Karten → Alle Karten → Karte antippen) ein ausklappbarer Block „Artikel dieser Karte“ mit den Summen je Artikel und jeder Abbuchung mit ihren Artikeln; im Verlauf steht die Artikelzeile unter jeder Abbuchung. Auch wenn am Terminal oder Verkaufsgerät nur das Guthaben abgefragt wird (Karte scannen, kein Betrag), erscheint unter dem Bestand der ausklappbare Block „Artikel dieser Karte“. Zurückgenommene Abbuchungen sind durchgestrichen.
+- Die Liste bleibt bei „Abend abschließen“ und „Neues Fest“ erhalten. Preise ändern sich nur für künftige Buchungen; alte behalten ihren Preis.
+- **Wichtig:** Dafür braucht die Ablage die neue Fassung (Google: `ablage.gs` einfügen, Wörter neu eintragen, „Neue Version“ veröffentlichen; die Infoseite zeigt dann „Skriptfassung 2.2“; lokal: neues Paket).
+
 ## Rollen
 Die Rolle ergibt sich aus dem Zugangswort und wird **in der Ablage** geprüft, nicht nur in den Menüs: Verkauf darf abbuchen/abfragen/eigene letzte Buchung zurücknehmen; Kasse zusätzlich aufbuchen, Karten verwalten, Kassenbuch, Abschluss, Sicherung; Administrator zusätzlich Geräte, Einstellungen (Anschreiben, Offline-Limit), Wiederherstellen, neues Fest.
 

@@ -179,4 +179,30 @@ r=s.post('ad',{aktion:'neubeginn'}); t('neubeginn admin',r.ok);
   r=s7.post('ad',{aktion:'neubeginn',geraet:{id:'T'}}); const h3=s7.post('ka',{aktion:'holen'}).daten;
   t('Neues Fest löscht Karten',Object.keys(h3.karten).length===0&&h3.buchungen.length===0);
 }
+// Artikel
+{ const s8=server2(); const T=dev(s8,'T','kt','Anna'), V=dev(s8,'V','kv','Ben');
+  s8.post('ka',{aktion:'karten',was:'anlegen',karten:[{nr:'A0001',code:'K7Q2'}]});
+  T.sync('ka',[T.buche('A0001',5000,'auf',{kc:'K7Q2'})]);
+  t('Artikel: Verkauf darf keine Liste setzen',s8.post('vk',{aktion:'artikel',artikel:[{n:'Bier',p:380}],geraet:{id:'V'}}).verweigert);
+  let r=s8.post('ka',{aktion:'artikel',artikel:[{n:'Bier 0,3',p:380},{n:'Cola',p:300},{n:'Schnitzel',p:1450}],geraet:{id:'T'}}); t('Artikel: Kasse setzt Liste',r.ok&&r.artikel.length===3&&r.artikelV===1);
+  t('Artikel: doppelt abgelehnt',!!s8.post('ka',{aktion:'artikel',artikel:[{n:'Bier',p:1},{n:'bier',p:2}]}).fehler);
+  t('Artikel: Preis ungültig abgelehnt',!!s8.post('ka',{aktion:'artikel',artikel:[{n:'X',p:-5}]}).fehler&&!!s8.post('ka',{aktion:'artikel',artikel:[{n:'X',p:1.5}]}).fehler);
+  r=V.sync('vk',[]); t('Artikel: Verkaufsgerät bekommt die Liste per Abgleich',r.einst.artikel.length===3&&r.einst.artikelV===1);
+  // Buchung mit Artikeln
+  const b1=V.buche('A0001',-1060,'ab',{kc:'K7Q2',wer:'Ben',pos:[{n:'Bier 0,3',p:380,a:2},{n:'Cola',p:300,a:1}]}); r=V.sync('vk',[b1]);
+  t('Artikelbuchung angenommen',r.ergebnisse[b1.id].st==='ok');
+  const gespeichert=s8.post('ka',{aktion:'holen'}).daten.buchungen.find(x=>x.id===b1.id); t('Artikel stehen an der Buchung',gespeichert.pos&&gespeichert.pos.length===2);
+  const b2=V.buche('A0001',-500,'ab',{kc:'K7Q2',wer:'Ben',pos:[{n:'Bier 0,3',p:380,a:1}]}); V.sync('vk',[b2]);
+  t('Summe passt nicht: Buchung bleibt, Artikel entfallen',!s8.post('ka',{aktion:'holen'}).daten.buchungen.find(x=>x.id===b2.id).pos);
+  const b3=V.buche('A0001',-1450,'ab',{kc:'K7Q2',wer:'Ben',pos:[{n:'Schnitzel',p:1450,a:1}]}); V.sync('vk',[b3]);
+  let b=s8.post('ka',{aktion:'bericht'}).bericht;
+  t('Bericht nach Artikel',b.artikel.length===3&&b.artikel.find(z=>z.name==='Bier 0,3').anzahl===2&&b.artikel.find(z=>z.name==='Schnitzel').summe===1450,JSON.stringify(b.artikel));
+  const sto=V.buche('A0001',1450,'storno',{ref:b3.id,id:'st-'+b3.id}); V.sync('vk',[sto]);
+  b=s8.post('ka',{aktion:'bericht'}).bericht; t('Rücknahme zieht Artikel ab',!b.artikel.find(z=>z.name==='Schnitzel'),JSON.stringify(b.artikel));
+  t('Artikelbericht im Mailtext',/Verkauf nach Artikel/.test(s8.sb.berichtText(b))&&/Bier 0,3/.test(s8.sb.berichtHtml(b)));
+  const fa=V.buche('A0001',-100,'ab',{kc:'K7Q2',pos:[{n:'x'.repeat(40),p:100,a:1}]}); V.sync('vk',[fa]);
+  t('Zu langer Name: keine Artikel gespeichert',!s8.post('ka',{aktion:'holen'}).daten.buchungen.find(x=>x.id===fa.id).pos);
+  r=s8.post('ad',{aktion:'neubeginn',behalten:true,geraet:{id:'T'}}); t('Liste bleibt nach Abend und Fest',V.sync('vk',[]).einst.artikel.length===3&&(s8.post('ad',{aktion:'neubeginn',geraet:{id:'T'}}),V.sync('vk',[]).einst.artikel.length===3));
+  t('Version der Skriptfassung',/2\.2/.test(s8.sb.doGet().text));
+}
 console.log(ok+' ok, '+bad+' Fehler');

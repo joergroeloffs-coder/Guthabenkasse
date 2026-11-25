@@ -3,7 +3,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 const wurzel = new URL('../', import.meta.url).pathname;
 const lies = p => readFileSync(wurzel + p, 'utf8');
-const VERSION = '2.9.0';
+const VERSION = '2.11.0';
 const kern = lies('quelle/kern.html');
 const schicht = lies('quelle/v2-schicht.js');
 
@@ -17,6 +17,12 @@ const css = `
 .s-ok{color:#1f6b3f}.s-warte{color:#8a6a12}.s-offline{color:#a0560f}.s-fehler{color:#9a2b22}
 div.rolle{overflow-x:auto}table.tab{width:100%;border-collapse:collapse;font-size:13px}table.tab td,table.tab th{padding:5px 6px;border-bottom:1px solid var(--linieFein);text-align:left;vertical-align:top}table.tab td.n{text-align:right;white-space:nowrap}
 .schmalKopf .syncChip{font-size:11px;padding:2px 7px}
+.artikelRaster{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px}
+.artikelRaster button{position:relative;min-height:58px;border:1px solid var(--messingRand);background:var(--messingHell);color:var(--tinte);border-radius:8px;font-size:14px;line-height:1.15;padding:6px 4px;cursor:pointer}
+.artikelRaster button:active{transform:translateY(1px)}.artikelRaster button small{display:block;color:var(--messing);font-weight:600;margin-top:2px}
+.artikelRaster .zahl{position:absolute;top:2px;right:4px;background:var(--messing);color:#fff;border-radius:9px;padding:0 6px;font-size:12px}
+.warenkorb{margin-top:6px;font-size:14px;display:flex;gap:8px;align-items:center;justify-content:space-between}.warenkorb span{flex:1}
+.ohneZiffern .tasten,.ohneZiffern .schnell{display:none}
 details.mehr{margin-top:14px}details.mehr>summary{cursor:pointer;font-weight:600;padding:8px 0}
 @media print{#syncChip,#syncChip2{display:none}}
 `;
@@ -105,6 +111,8 @@ function bau(modus) {
   }
   ersetze('Einrichtung steht oben in der Datei\n        <span class="mono">ablage.gs</span>.', 'Einrichtung: Datei <span class="mono">ablage.gs</span>.');
 
+  // Verlauf einer Karte: Artikel unter der Abbuchung
+  ersetze("'<span class=\"betrag\">'+(b.cent>0?\"+\":\"\")+euro(b.cent)+'</span>'+knopf+'</div>';", "'<span class=\"betrag\">'+(b.cent>0?\"+\":\"\")+euro(b.cent)+'</span>'+knopf+'</div>'+artikelZeile(b);");
   // Schicht einsetzen
   const standardPng = 'data:image/png;base64,' + readFileSync(wurzel + 'docs/kartenrueckseite/szenen/Rueckseite-Nur-Anleitung.png').toString('base64');
   const s = schicht.replace('"__MODUS__"', JSON.stringify(modus)).replace('"__RUECK_STANDARD__"', () => JSON.stringify(standardPng));
