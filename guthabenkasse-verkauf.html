@@ -1078,7 +1078,7 @@ function qrSvg(text){
 /* Die Nummer steht oben in der Kopfzeile und ist dazu da, zwei Geräte
    nebeneinanderlegen zu können. Bei jeder Änderung, die man merkt,
    weiterdrehen. */
-var VERSION = "2.8.0";
+var VERSION = "2.9.0";
 
 /* ============================== Daten ==============================
 
@@ -5167,6 +5167,7 @@ function zeichneVerwaltung() {
 
     '<div class="karte"><div class="titel"><h2>Abrechnung</h2></div><div class="inhalt">' +
       '<div class="reihe umbruch"><button class="knopf voll" id="vAuswerten">Auswerten</button><button class="knopf" id="vAbschlussDruck">Drucken</button><button class="knopf" id="vAbschlussMail">Per Mail senden</button></div>' +
+      '<div class="reihe umbruch" style="margin-top:8px"><button class="knopf" id="vGastgeber">Zusammenfassung für den Gastgeber</button><button class="knopf" id="vGastgeberCsv">als Tabelle (CSV)</button></div>' +
       '<div id="vBericht" style="margin-top:12px">' + geh + '</div></div></div>' +
 
     '<div class="karte"><div class="titel"><h2>Sicherungen</h2></div><div class="inhalt">' +
@@ -5207,6 +5208,55 @@ function berichtHtmlV2(b) {
     '<div class="feldTitel" style="margin-top:10px">Je Gerät</div><table class="tab">' + b.proGeraet.map(function (g) { return '<tr><td>' + esc(g.geraet + " " + g.name) + '</td><td class="n">' + eur(g.abgebucht) + '</td><td class="n">TG ' + eur(g.trinkgeld) + '</td></tr>'; }).join("") + '</table>' +
     '<div class="feldTitel" style="margin-top:10px">Je Bediener</div><table class="tab">' + b.proBedienung.map(function (g) { return '<tr><td>' + esc(g.name) + '</td><td class="n">' + eur(g.abgebucht) + '</td><td class="n">TG ' + eur(g.trinkgeld) + '</td></tr>'; }).join("") + '</table>' +
     '<p class="muted">Stand ' + esc(zeitpunkt(Date.parse(b.zeit))) + '</p>';
+}
+/* ======================= Zusammenfassung für den Gastgeber ======================= */
+function gastgeberDaten() {
+  var idx = {}, pro = {};
+  db.buchungen.forEach(function (b) { idx[b.id] = b; });
+  function z(nr) { return pro[nr] || (pro[nr] = { nr: nr, verbrauch: 0, tg: 0, ausg: 0, fund: 0, rest: 0 }); }
+  db.buchungen.forEach(function (b) {
+    var k = z(b.karte), art = b.art; k.rest += b.cent;
+    if (art === "storno") { var o = idx[b.ref]; if (!o) return; art = o.art; }
+    if (art === "ab") k.verbrauch += -b.cent;
+    else if (art === "trinkgeld") { k.verbrauch += -b.cent; k.tg += -b.cent; }
+    else if (art === "auszahlung") k.ausg += -b.cent;
+    else if (art === "fundkarte") { k.ausg += -b.cent; k.fund += -b.cent; }
+  });
+  var liste = Object.keys(pro).sort().map(function (nr) { var k = pro[nr]; k.eingang = k.rest + k.verbrauch + k.ausg; k.name = kartenName(nr) || ""; return k; })
+    .filter(function (k) { return k.eingang || k.verbrauch || k.ausg || k.rest; });
+  var t = { eingang: 0, verbrauch: 0, tg: 0, ausg: 0, fund: 0, rest: 0, minus: 0, anzahl: liste.length };
+  liste.forEach(function (k) { t.eingang += k.eingang; t.verbrauch += k.verbrauch; t.tg += k.tg; t.ausg += k.ausg - k.fund; t.fund += k.fund; if (k.rest > 0) t.rest += k.rest; else t.minus += -k.rest; });
+  return { karten: liste, summe: t };
+}
+function gastgeberHtml() {
+  var d = gastgeberDaten(), t = d.summe, a = db.anlass || {}, offen = ausstehende().length;
+  var kopf = '<h1 style="margin:0;font-size:22pt">Zusammenfassung</h1><p style="margin:2mm 0 4mm;color:#57685C">' + esc([a.name, a.verein].filter(Boolean).join(" · ")) + (a.name || a.verein ? " · " : "") + esc(zeitpunkt(Date.now())) + '</p>';
+  var zahl = function (txt, wert, klein) { return '<div style="flex:1;border:1px solid #8a7a52;background:#F5EEDC;padding:3mm;border-radius:2mm"><div style="font-size:9pt;color:#57685C">' + txt + '</div><div style="font-size:17pt;font-weight:700">' + wert + '</div>' + (klein ? '<div style="font-size:8.5pt;color:#57685C">' + klein + '</div>' : '') + '</div>'; };
+  var summen = '<div style="display:flex;gap:3mm;margin-bottom:3mm">' + zahl("Geladen", euro(t.eingang), t.anzahl + " Karten") + zahl("Verbraucht", euro(t.verbrauch), "davon Trinkgeld " + euro(t.tg)) +
+    zahl("Ausgezahlt", euro(t.ausg), t.fund ? "dazu eingezogen " + euro(t.fund) : "") + zahl("Rest auf Karten", euro(t.rest), t.minus ? "offen (Minus): " + euro(t.minus) : "") + '</div>';
+  var zeilen = d.karten.map(function (k) {
+    return '<tr><td>' + esc(k.nr) + '</td><td>' + esc(k.name) + '</td><td class="r">' + euro(k.eingang) + '</td><td class="r">' + euro(k.verbrauch) + '</td><td class="r">' + euro(k.ausg) + '</td><td class="r"><b>' + euro(k.rest) + '</b></td></tr>';
+  }).join("");
+  return '<style>.gh td,.gh th{border-bottom:1px solid #CDB77E;padding:1.4mm 2mm;font-size:9.5pt;text-align:left}.gh th{background:#F5EEDC;border-top:1px solid #8a7a52}.gh .r{text-align:right;white-space:nowrap}.gh tr{page-break-inside:avoid}.gh thead{display:table-header-group}</style>' +
+    '<div style="font-family:Georgia,serif;padding:14mm 16mm;font-size:11pt;color:#10251A">' + kopf + summen +
+    (offen ? '<p style="background:#F7E7E2;padding:2mm 3mm;border-radius:2mm;font-size:9.5pt;margin:2mm 0">Achtung: ' + offen + ' Buchung(en) dieses Geräts sind noch nicht in der Ablage. Die Zahlen können sich noch ändern.</p>' : '') +
+    '<table class="gh" style="width:100%;border-collapse:collapse;margin-top:2mm"><thead><tr><th>Karte</th><th>Name</th><th class="r">Geladen</th><th class="r">Verbraucht</th><th class="r">Ausgezahlt</th><th class="r">Rest</th></tr></thead><tbody>' + zeilen + '</tbody></table>' +
+    '<p style="font-size:8.5pt;color:#57685C;margin-top:4mm">„Geladen“ enthält Übertrag, Korrekturen und umgebuchte Beträge. „Verbraucht“ enthält Trinkgeld. Zurückgenommene Buchungen sind abgezogen.</p></div>';
+}
+function gastgeberZeigen(csv) {
+  var los = function () {
+    if (!Object.keys(db.karten).length && !db.buchungen.length) { vMeld("Noch keine Karten und Buchungen"); return; }
+    if (csv) {
+      var d = gastgeberDaten(), f = function (c) { return (c / 100).toFixed(2).replace(".", ","); };
+      var zeilen = ["Karte;Name;Geladen;Verbraucht;davon Trinkgeld;Ausgezahlt;Eingezogen;Rest"].concat(d.karten.map(function (k) {
+        return [k.nr, '"' + String(k.name).replace(/"/g, '""') + '"', f(k.eingang), f(k.verbrauch), f(k.tg), f(k.ausg - k.fund), f(k.fund), f(k.rest)].join(";");
+      }));
+      var blob = new Blob(["\ufeff" + zeilen.join("\r\n")], { type: "text/csv;charset=utf-8" }), l = document.createElement("a"), n = new Date();
+      l.href = URL.createObjectURL(blob); l.download = "gastgeber-zusammenfassung-" + n.getFullYear() + zwei(n.getMonth() + 1) + zwei(n.getDate()) + ".csv";
+      document.body.appendChild(l); l.click(); document.body.removeChild(l); setTimeout(function () { URL.revokeObjectURL(l.href); }, 1000);
+    } else drucken(gastgeberHtml());
+  };
+  if (wolkeBereit()) syncJetzt(10000).then(los, los); else los();
 }
 function sicherungsListeHtml() {
   var l = verwaltungStand.sicherungen;
@@ -5251,6 +5301,8 @@ function v2Verwaltung(e) {
     case "btnWolkeJetzt": ab(syncJetzt(15000).then(function () { zeichneWolke(); })); break;
     case "vPruefen": ab(rufeAblage({ aktion: "pruefen", ids: [] }).then(function (a) { vMeld(a.ok ? "Die Ablage antwortet richtig (Folgenummer " + a.seq + ")" : "Ablage: " + (a.fehler || "?")); })); break;
     case "btnAbend": abendAbschliessen(); break;
+    case "vGastgeber": gastgeberZeigen(false); break;
+    case "vGastgeberCsv": gastgeberZeigen(true); break;
     case "vAuswerten": ab(berichtHolen(false)); break;
     case "vAbschlussMail": ab(berichtHolen(true)); break;
     case "vAbschlussDruck": if (verwaltungStand.bericht) berichtDruckenV2(verwaltungStand.bericht); else vMeld("Erst auswerten"); break;
