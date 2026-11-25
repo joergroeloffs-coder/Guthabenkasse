@@ -128,6 +128,8 @@ function piep(art) {
   } catch (e) {}
   try { if (navigator.vibrate) navigator.vibrate(art === "neu" ? [80, 60, 80] : 60); } catch (e) {}
 }
+/* Browser erlauben Ton erst nach einer Berührung: beim ersten Antippen wird er freigeschaltet */
+document.addEventListener("click", function () { try { kontext = kontext || new (window.AudioContext || window.webkitAudioContext)(); if (kontext.state === "suspended") kontext.resume(); } catch (e) {} }, true);
 var ersterAbgleich = true;
 function verarbeite(a) {
   if (a.reset) daten.orders = {};

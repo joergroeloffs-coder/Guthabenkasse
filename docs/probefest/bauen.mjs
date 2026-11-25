@@ -15,6 +15,9 @@ const szenen = [
   ['Gerät fällt aus', 'Handy ausschalten, Ersatzgerät einrichten, weiterbuchen', 'Keine Buchung fehlt, nichts doppelt'],
   ['Auszahlung', 'Restguthaben einer Karte auszahlen, Karte nochmal scannen', '„Nichts auszuzahlen“'],
   ['Abend abschließen', 'Am Ende „Abend abschließen“ ausführen, danach Karte abfragen', 'Guthaben bleibt, Abrechnung beginnt neu'],
+  ['Bestellung aufnehmen', 'Am Handy Tisch eintragen, Getränke und Speisen mit einem Wunsch bestellen', 'Ticket erscheint auf der Anzeige mit Ton, Wunsch gut lesbar'],
+  ['Bestellung abarbeiten', 'Theke: Getränke Anfangen → Fertig. Küche: Speisen. Bedienung: Serviert', 'Bedienung hört „fertig“, Status stimmt je Gruppe'],
+  ['Bestellung ohne Verbindung', 'Am Handy WLAN aus, bestellen, WLAN an. Eine Bestellung stornieren, bevor die Küche anfängt', 'Bestellung kommt später an, Storno klappt'],
 ].map((s, i) => zeile(i + 1, s[0] + ': ' + s[1], s[2])).join('');
 const html = `<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Probefest-Plan Guthabenkasse</title><style>
 @page{size:A4;margin:0}*{box-sizing:border-box}
@@ -37,7 +40,8 @@ table{width:100%;border-collapse:collapse;margin-top:1mm;font-size:9.3pt}th{back
  'Gästeliste einlesen (falls Namen auf die Karten sollen).',
  'Notfallplan und Papierliste ausdrucken (je 1 Stück je Gerät und am Terminal).',
  'Powerbanks, Kabel, Ersatznetzteil, Stativ oder Ständer für die Anzeige, Stifte für die Papierliste.',
- 'Wenn ein eigener Router genutzt wird: Probe mit allen Geräten, auch im Saal, nicht nur im Büro.'])}
+ 'Wenn ein eigener Router genutzt wird: Probe mit allen Geräten, auch im Saal, nicht nur im Büro.',
+ 'Falls Bestellung genutzt wird: Artikelliste mit Gruppen (Getränk/Speise) am Terminal gepflegt, ein Handy je Bedienung und ein Tablet für Theke/Küche eingerichtet (Seite 1 der Betreuungsanleitung).'])}
 <h2>B · Aufbau, 1–2 Stunden vorher</h2>${pk([
  'Router und Ablage laufen, alle Geräte zeigen „Online“ und sind in der Geräteliste sichtbar.',
  'Kamera-Probe <b>im abgedunkelten Saal</b>: mit „Licht“ und ohne. Wo steht die Anzeige so, dass sie niemand blendet?',
@@ -68,6 +72,7 @@ table{width:100%;border-collapse:collapse;margin-top:1mm;font-size:9.3pt}th{back
 <tr><td>Dauer pro Abbuchung (Median)</td><td></td><td>unter 5 Sekunden</td></tr>
 <tr><td>Dauer pro Aufbuchung</td><td></td><td>unter 10 Sekunden</td></tr>
 <tr><td>Doppelbuchungen</td><td></td><td>0</td></tr>
+<tr><td>Bestellung bis zum Ticket auf der Anzeige</td><td></td><td>unter 5 Sekunden</td></tr>
 <tr><td>Offline- und „Unklar“-Fälle</td><td></td><td>selten, alle geklärt</td></tr>
 <tr><td>Unleserliche Karten</td><td></td><td>unter 2 von 100</td></tr>
 <tr><td>Abrechnung stimmt auf den Cent</td><td></td><td>ja</td></tr></table>

@@ -1,0 +1,49 @@
+// Baut die Kurzanleitung der App „Bestellung“ (A4, eine Seite) als HTML und PDF.   Aufruf: node docs/bestellung/bauen.mjs
+import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+import { writeFileSync } from 'node:fs';
+const HIER = new URL('./', import.meta.url).pathname;
+const nr = (n, t) => `<div class="schritt"><span class="nr">${n}</span><div>${t}</div></div>`;
+const html = `<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Bestellung – Kurzanleitung</title><style>
+@page{size:A4;margin:0}*{box-sizing:border-box}
+body{margin:0;font-family:'Liberation Sans',Arial,sans-serif;color:#10251A;font-size:10.3pt;line-height:1.35}
+.seite{width:210mm;height:297mm;padding:13mm 15mm;overflow:hidden;position:relative}
+h1{font-family:Georgia,serif;font-size:21pt;margin:0 0 2mm}h1 small{display:block;font-size:10pt;font-family:'Liberation Sans',Arial,sans-serif;color:#57685C;font-weight:400;margin-top:1mm}
+h2{font-size:12.5pt;margin:0 0 2mm;border-bottom:2px solid #1E5C3E;padding-bottom:.5mm}
+.zwei{display:flex;gap:7mm;margin-top:4mm}.zwei>div{flex:1;min-width:0}
+.schritt{display:flex;gap:3mm;margin:1.8mm 0}.nr{flex:0 0 6mm;height:6mm;border-radius:50%;background:#1E5C3E;color:#fff;font-weight:700;text-align:center;line-height:6mm;font-size:9pt}.schritt div{flex:1}
+.status{display:flex;gap:2mm;margin:2mm 0;flex-wrap:wrap}.st{padding:1mm 3mm;border-radius:4mm;color:#fff;font-weight:700;font-size:9pt}
+table{width:100%;border-collapse:collapse;margin-top:2mm;font-size:9.4pt}th{background:#F5EEDC;text-align:left;padding:1.6mm;border:1px solid #8a7a52}td{border:1px solid #8a7a52;padding:1.5mm;vertical-align:top}
+.box{background:#F5EEDC;border-left:4mm solid #B08D3C;padding:2.5mm 4mm;margin:3mm 0;border-radius:2mm}
+.fuss{position:absolute;left:15mm;right:15mm;bottom:10mm;font-size:9pt;color:#57685C;border-top:1px solid #CDB77E;padding-top:2mm}
+</style></head><body><section class="seite"><h1>Bestellung – Kurzanleitung<small>Bestellungen am Handy aufnehmen, auf Theke und Küche anzeigen.</small></h1>
+<div class="status"><span class="st" style="background:#8a8f8b">neu</span><span class="st" style="background:#80621C">in Arbeit</span><span class="st" style="background:#1E5C3E">fertig</span><span class="st" style="background:#8a8f8b">serviert</span><span style="font-size:9pt;color:#57685C;align-self:center">Stand je Gruppe (Getränke, Speisen)</span></div>
+<div class="zwei"><div><h2>Bedienung (Handy)</h2>
+${nr(1, 'Reiter <b>Neu</b>: <b>Tisch oder Bezeichnung</b> eintragen (zum Beispiel 12 oder Terrasse). Die letzten Tische stehen als Knöpfe bereit.')}
+${nr(2, 'Oben <b>Getränke</b> oder <b>Speisen</b> wählen, Artikel <b>antippen</b>. Jedes Antippen zählt eins hoch. In der Liste unten mit − und + ändern.')}
+${nr(3, '<b>Wunsch</b> neben dem Artikel für Sonderwünsche (ohne Zwiebeln). <b>+ Anderes</b> für etwas, das nicht auf der Liste steht. Der Hinweis gilt für die ganze Bestellung (Allergie, eilig).')}
+${nr(4, '<b>Bestellung senden</b>. Die Meldung „angekommen“ bestätigt es. Ohne Verbindung wartet die Bestellung auf dem Handy und geht später von selbst raus. <b>Nicht nochmal bestellen.</b>')}
+${nr(5, 'Reiter <b>Bestellungen</b>: Stand je Gruppe. Ein Ton meldet <b>fertig</b>. Dann abholen, ausliefern, <b>Serviert ✔</b> antippen.')}
+${nr(6, '<b>Stornieren</b> geht nur, solange die Küche noch nicht angefangen hat. Danach in der Küche absagen.')}</div>
+<div><h2>Theke und Küche (Tablet)</h2>
+${nr(1, 'Oben den Filter wählen: <b>Getränke</b> an der Theke, <b>Speisen</b> in der Küche, <b>Alle</b> für beides.')}
+${nr(2, 'Neue Bestellung: <b>Ton</b>, das Ticket blinkt. Oben im Titel steht die Zahl der offenen Bestellungen.')}
+${nr(3, '<b>Anfangen</b> antippen, wenn ihr beginnt. Danach <b>Fertig</b>, wenn es abholbereit ist. Die Bedienung hört das Signal.')}
+${nr(4, '<b>Abgeholt</b>, wenn es weg ist. Das Ticket verschwindet, sobald alle Gruppen im Filter abgeholt sind.')}
+${nr(5, 'Falsch gedrückt? Mit <b>↶</b> geht es einen Schritt zurück.')}
+${nr(6, 'Farbe oben am Ticket: <b style="color:#1E5C3E">grün</b> unter 5 Minuten, <b style="color:#B08D3C">gelb</b> bis 10, <b style="color:#93382B">rot</b> darüber. Fertige Tickets stehen gedämpft am Ende.')}</div></div>
+<h2 style="margin-top:5mm">Wenn etwas klemmt</h2>
+<table><tr><th style="width:55mm">Du siehst</th><th>Das hilft</th></tr>
+<tr><td>„ohne Verbindung“ oben rechts</td><td>WLAN prüfen. Bestellungen bleiben auf dem Handy und werden gesendet, sobald „online“ da ist. Wartende Bestellungen bleiben auch nach einem Neuladen der Seite erhalten.</td></tr>
+<tr><td>Es kommt kein Ton</td><td>Glocke oben (🔔 an), Lautstärke und Stummschalter am Gerät prüfen. Browser schalten den Ton erst nach einer Berührung frei: einmal auf die Seite tippen.</td></tr>
+<tr><td>Die Anzeige bleibt leer</td><td>Passt das Wort zur Funktion? Anzeige braucht das <b>Bestellanzeige-Wort</b>, das Handy das <b>Bestellwort</b>. Einrichtung: Titel 5-mal antippen.</td></tr>
+<tr><td>Artikel fehlen</td><td>Die Liste wird am Terminal gepflegt (<i>Verwaltung → Artikel und Preise</i>) und braucht für jede Zeile eine Gruppe (Getränk oder Speise).</td></tr>
+<tr><td>Bestellung falsch oder doppelt</td><td>Falsche Bestellung vor Beginn stornieren, danach in der Küche absagen. Doppelte bei der Küche melden, nicht abarbeiten.</td></tr>
+<tr><td>Gar nichts geht</td><td>Bestellung auf Zettel schreiben und direkt hinbringen (Notfallplan).</td></tr></table>
+<div class="box"><p style="margin:0"><b>Wichtig:</b> Die Bestellung ist nur eine Meldung an die Küche. Bezahlt wird wie bisher mit der Guthabenkarte an den Verkaufsgeräten.</p></div>
+<div class="fuss">Guthabenkasse · Bestellung</div></section></body></html>`;
+writeFileSync(HIER + 'Bestellung-Kurzanleitung.html', html);
+const b = await chromium.launch(); const p = await b.newPage();
+await p.goto('file://' + HIER + 'Bestellung-Kurzanleitung.html');
+await p.pdf({ path: HIER + 'Bestellung-Kurzanleitung.pdf', format: 'A4', printBackground: true, preferCSSPageSize: true });
+console.log('Seite läuft über:', await p.evaluate(() => { const s = document.querySelector('.seite'); return s.scrollHeight > s.clientHeight + 1; }));
+await b.close();

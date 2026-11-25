@@ -38,7 +38,7 @@ ${nr(2, 'Auf der Startseite die Aufgabe antippen: <b>Terminal</b>, <b>Verkauf</b
 ${nr(3, '<b>Terminal und Verkauf:</b> <i>Optionen → Dieses Gerät → Gerätezeichen</i>: Terminal <b>T</b>, Verkauf 1 <b>V</b>, Verkauf 2 <b>W</b>. Bei „Name der Bedienung“ den Vornamen eintragen.')}
 ${nr(4, '<i>Optionen → Ablage</i>: Die Adresse steht schon da. Das <b>Zugangswort</b> eintragen (Terminal: Kassenwort, Verkauf: Verkaufswort). Oben rechts muss „Online“ stehen.')}
 ${nr(5, '<b>Anzeige:</b> 5-mal schnell auf den Titel tippen. Es öffnet sich die Einrichtung: Wort der Anzeige, Sprache und Kamera (hinten) eintragen, Speichern.')}
-${nr(6, 'Kontrolle am Terminal: <i>Verwaltung → Abgleich und Geräte</i>. Jedes Gerät steht dort mit „● online“.')}
+${nr(6, '<b>Bestellung</b> (falls genutzt): Startseite → <b>Bestellung</b>, Titel 5-mal antippen, Funktion wählen (<b>aufnehmen</b> am Handy mit Namen der Bedienung, <b>anzeigen</b> am Tablet der Theke/Küche), das passende Wort eintragen. Diese Geräte stehen nicht in der Geräteliste.')}\n${nr(7, 'Kontrolle am Terminal: <i>Verwaltung → Abgleich und Geräte</i>. Jedes Gerät steht dort mit „● online“.')}
 <div class="fuss"><span>Guthabenkasse · Betreuung</span><span>Seite 1 von 4</span></div></section>
 
 <section class="seite"><h1>Vor dem Fest, am Fest, danach</h1>
@@ -53,6 +53,7 @@ ${tab(['Aufgabe', 'Wie'], [
  ['Aufladen', 'Terminal, Reiter <b>Aufbuchen</b>: Betrag eintippen, Karte scannen.'],
  ['Abbuchen', 'Verkaufsgerät (oder Terminal, Reiter <b>Abbuchen</b>): Betrag eintippen, Karte scannen. Falsche Buchung: 2 Minuten am Verkaufsgerät zurücknehmen, sonst am Terminal in <i>Karten → Karte → zurücknehmen</i>.'],
  ['Karte verloren', 'Terminal: Karte öffnen → <b>Sperren</b>, dann <b>Karte ersetzen</b> (Guthaben zieht um).'],
+ ['Bestellungen', 'Bedienung: Tisch, Artikel, senden. Theke/Küche: <b>Anfangen → Fertig → Abgeholt</b>. Bedienung: <b>Serviert ✔</b>. Die Artikel mit Gruppe (Getränk/Speise) pflegst du am Terminal unter <i>Verwaltung → Artikel und Preise</i>.'],
  ['Geräte prüfen', '<i>Verwaltung → Abgleich und Geräte</i>: Alle „● online“, offene Buchungen bei 0.']])}
 <h2>E · Am Ende</h2>
 ${nr(1, 'Alle Geräte verbinden, einen Moment warten, bis bei „Offen“ überall 0 steht.')}
@@ -75,6 +76,7 @@ ${tab(['Du siehst', 'Das hilft'], [
  ['Laptop abgestürzt oder neu gestartet', 'Programm neu starten (start.bat). Die Daten sind im Ordner <b>daten</b> sicher. Geräte verbinden sich selbst wieder.'],
  ['Ablage ist kaputt, Laptop tot', 'Ordner <b>daten</b> auf einen anderen Rechner kopieren, dort das Programm starten, die neue Adresse in den Geräten eintragen (<i>Optionen → Ablage</i>). Oder: Sicherung einspielen (<i>Verwaltung → Sicherungen</i>, braucht das Adminwort).'],
  ['Buchungen fehlen oder sind doppelt', 'Nicht erneut buchen. Am Terminal die Karte öffnen und den Verlauf ansehen. <i>Verwaltung → Auswerten</i> zeigt Auffälligkeiten.'],
+ ['Bestellung kommt nicht an oder die Anzeige bleibt leer', 'Chip oben rechts prüfen („online“?). Passt das Wort zur Funktion (Bestellwort nur zum Aufnehmen, Anzeigewort nur zum Anzeigen)? Wartende Bestellungen (Hinweis im Reiter „Neu“) gehen bei Verbindung von selbst raus. Nichts doppelt bestellen.'],
  ['Gar nichts geht mehr', 'Notfallplan-Blatt benutzen (Papierliste), später nachbuchen.']])}
 <div class="box rot"><p><b>Wichtig:</b> Das Adminwort nur selbst eintippen und niemandem weitergeben. Mit ihm lassen sich Geräte entfernen, Abende abschließen und alle Karten löschen.</p></div>
 <div class="fuss"><span>Guthabenkasse · Betreuung</span><span>Seite 3 von 4</span></div></section>
