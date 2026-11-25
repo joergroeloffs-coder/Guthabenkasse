@@ -1,0 +1,68 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Betreuung der Guthabenkasse</title><style>
+@page{size:A4;margin:0}*{box-sizing:border-box}
+body{margin:0;font-family:'Liberation Sans',Arial,sans-serif;color:#10251A;font-size:10pt;line-height:1.35}
+.seite{width:210mm;height:297mm;padding:13mm 15mm;page-break-after:always;overflow:hidden;position:relative}
+h1{font-family:Georgia,serif;font-size:21pt;margin:0 0 2mm}h1 small{display:block;font-size:10pt;font-family:'Liberation Sans',Arial,sans-serif;color:#57685C;font-weight:400;margin-top:1mm}
+h2{font-size:12.5pt;margin:4.5mm 0 1.5mm;border-bottom:2px solid #1E5C3E;padding-bottom:.5mm}
+.schritt{display:flex;gap:3mm;margin:1.6mm 0}.nr{flex:0 0 6mm;height:6mm;border-radius:50%;background:#1E5C3E;color:#fff;font-weight:700;text-align:center;line-height:6mm;font-size:9pt}
+.schritt div{flex:1}p{margin:1mm 0}
+table{width:100%;border-collapse:collapse;margin-top:1.5mm;font-size:9.3pt}th{background:#F5EEDC;text-align:left;padding:1.6mm;border:1px solid #8a7a52}td{border:1px solid #8a7a52;padding:1.5mm;vertical-align:top}
+.box{background:#F5EEDC;border-left:4mm solid #B08D3C;padding:2.5mm 4mm;margin:3mm 0;border-radius:2mm}.box.rot{border-color:#93382B;background:#F7E7E2}
+.fuss{position:absolute;left:15mm;right:15mm;bottom:10mm;display:flex;justify-content:space-between;font-size:9pt;color:#57685C;border-top:1px solid #CDB77E;padding-top:2mm}
+.feld{border-bottom:1px solid #10251A;height:8mm}.z td{height:9mm}
+</style></head><body>
+
+<section class="seite"><h1>Betreuung der Guthabenkasse<small>Für die Person, die Geräte einrichtet und bei Problemen hilft. Du brauchst keine Technik-Kenntnisse, nur diese Seiten und die Zugangsdaten von Seite 4.</small></h1>
+<h2>Was gehört zusammen</h2>
+<table><tr><th>Teil</th><th>Aufgabe</th></tr><tr><td><b>Terminal</b> (1 Gerät)</td><td>Aufbuchen, Karten drucken, Auszahlung, Abrechnung, Verwaltung. Zugang mit dem <b>Kassenwort</b>.</td></tr><tr><td><b>Verkauf</b> (meist 2 Handys)</td><td>Nur Abbuchen. Zugang mit dem <b>Verkaufswort</b>.</td></tr><tr><td><b>Anzeige</b> (1 Tablet)</td><td>Gäste halten die Karte davor und sehen ihr Guthaben. Zugang mit dem <b>Anzeigewort</b>.</td></tr><tr><td><b>Ablage</b> (Laptop mit Programm)</td><td>Hier liegt der Bestand. Läuft im WLAN. Zugang als <b>Administrator</b> mit dem <b>Adminwort</b> für heikle Dinge (Gerät entfernen, Abend abschließen, Neues Fest).</td></tr></table>
+<div class="box"><p><b>Merke:</b> Jedes Gerät braucht sein eigenes <b>Gerätezeichen</b> (ein Buchstabe, siehe unten). Zwei Geräte mit demselben Zeichen verwechselt die Ablage.</p></div>
+<h2>A · Laptop und WLAN am Festtag</h2>
+<div class="schritt"><span class="nr">1</span><div>Router einstecken (Netzteil oder Powerbank) und 2 Minuten warten.</div></div>
+<div class="schritt"><span class="nr">2</span><div>Laptop ans Netz, mit dem Router verbinden (Kabel oder WLAN), <b>Energiesparen ausschalten</b>.</div></div>
+<div class="schritt"><span class="nr">3</span><div>Programm starten: Windows <b>start.bat</b> doppelklicken (Mac/Linux: <b>start.sh</b>). Das Fenster zeigt die Adressen und Zugangswörter. <b>Fenster offen lassen.</b></div></div>
+<div class="schritt"><span class="nr">4</span><div>Prüfen: Adresse mit <b>https://…:8443/</b> im Browser des Laptops öffnen. Es erscheint die Startseite mit den drei Knöpfen.</div></div>
+<h2>B · Ein Gerät einrichten (jedes Gerät einmal)</h2>
+<div class="schritt"><span class="nr">1</span><div>Das Gerät ins gleiche WLAN bringen. Im Browser die Adresse <b>https://…:8443/</b> öffnen. Kommt eine Warnung zum Zertifikat: <b>Erweitert → Weiter</b> (iPhone: Details → Website besuchen).</div></div>
+<div class="schritt"><span class="nr">2</span><div>Auf der Startseite die Aufgabe antippen: <b>Terminal</b>, <b>Verkauf</b> oder <b>Anzeige</b>.</div></div>
+<div class="schritt"><span class="nr">3</span><div><b>Terminal und Verkauf:</b> <i>Optionen → Dieses Gerät → Gerätezeichen</i>: Terminal <b>T</b>, Verkauf 1 <b>V</b>, Verkauf 2 <b>W</b>. Bei „Name der Bedienung“ den Vornamen eintragen.</div></div>
+<div class="schritt"><span class="nr">4</span><div><i>Optionen → Ablage</i>: Die Adresse steht schon da. Das <b>Zugangswort</b> eintragen (Terminal: Kassenwort, Verkauf: Verkaufswort). Oben rechts muss „Online“ stehen.</div></div>
+<div class="schritt"><span class="nr">5</span><div><b>Anzeige:</b> 5-mal schnell auf den Titel tippen. Es öffnet sich die Einrichtung: Wort der Anzeige, Sprache und Kamera (hinten) eintragen, Speichern.</div></div>
+<div class="schritt"><span class="nr">6</span><div>Kontrolle am Terminal: <i>Verwaltung → Abgleich und Geräte</i>. Jedes Gerät steht dort mit „● online“.</div></div>
+<div class="fuss"><span>Guthabenkasse · Betreuung</span><span>Seite 1 von 4</span></div></section>
+
+<section class="seite"><h1>Vor dem Fest, am Fest, danach</h1>
+<h2>C · Karten erstellen (am Terminal)</h2>
+<div class="schritt"><span class="nr">1</span><div><i>Karten → Neue Karten drucken</i>: Anzahl eintippen, oder Namen (eine Zeile je Gast), oder eine Gästeliste (Excel, ODS, CSV) hineinziehen.</div></div>
+<div class="schritt"><span class="nr">2</span><div><b>Vorschau</b> ansehen und prüfen (Anzahl, Namen, Nummern). Erst danach <b>anlegen und drucken</b>. Auf A4 passen 8 Karten (2 × 4).</div></div>
+<div class="schritt"><span class="nr">3</span><div>Rückseite: im Druckdialog das Blatt umdrehen und noch einmal drucken (Abschnitt „Rückseite der Karten“). Vorher mit einem Blatt Papier probieren.</div></div>
+<div class="schritt"><span class="nr">4</span><div>Karten sind ausgedruckt und beschnitten? <b>Einen Scan testen</b>, bevor alle verteilt werden.</div></div>
+<div class="schritt"><span class="nr">5</span><div>Karten nachdrucken: <i>Karten → Bestehende Karten nochmal drucken</i>. Karten vorab aufladen: <i>Karten → Karten vorab aufladen</i>.</div></div>
+<h2>D · Während des Festes</h2>
+<table><tr><th>Aufgabe</th><th>Wie</th></tr><tr><td>Aufladen</td><td>Terminal, Reiter <b>Aufbuchen</b>: Betrag eintippen, Karte scannen.</td></tr><tr><td>Abbuchen</td><td>Verkaufsgerät (oder Terminal, Reiter <b>Abbuchen</b>): Betrag eintippen, Karte scannen. Falsche Buchung: 2 Minuten am Verkaufsgerät zurücknehmen, sonst am Terminal in <i>Karten → Karte → zurücknehmen</i>.</td></tr><tr><td>Karte verloren</td><td>Terminal: Karte öffnen → <b>Sperren</b>, dann <b>Karte ersetzen</b> (Guthaben zieht um).</td></tr><tr><td>Geräte prüfen</td><td><i>Verwaltung → Abgleich und Geräte</i>: Alle „● online“, offene Buchungen bei 0.</td></tr></table>
+<h2>E · Am Ende</h2>
+<div class="schritt"><span class="nr">1</span><div>Alle Geräte verbinden, einen Moment warten, bis bei „Offen“ überall 0 steht.</div></div>
+<div class="schritt"><span class="nr">2</span><div><i>Auszahlung</i>: Karte scannen, Betrag auszahlen. So kommt jeder Gast zu seinem Rest.</div></div>
+<div class="schritt"><span class="nr">3</span><div><i>Verwaltung → Abrechnung → Auswerten</i>, dann <b>Zusammenfassung für den Gastgeber</b> drucken (oder als Tabelle speichern). Auch die Abrechnung <b>Drucken</b> oder <b>Per Mail senden</b>.</div></div>
+<div class="schritt"><span class="nr">4</span><div><b>Zweiter Abend mit denselben Karten:</b> <i>Optionen → Abend abschließen</i>. Eintippen: ABEND ABSCHLIESSEN, dann das Adminwort. Karten und Guthaben bleiben.</div></div>
+<div class="schritt"><span class="nr">5</span><div><b>Alles vorbei:</b> <i>Optionen → Betrieb auf Null setzen</i> (Adminwort). Das löscht die Karten. Vorher legt die Ablage ein Archiv an.</div></div>
+<div class="schritt"><span class="nr">6</span><div><b>Sicherung:</b> den Ordner <b>daten</b> auf dem Laptop auf einen USB-Stick kopieren und sicher aufbewahren.</div></div>
+<div class="box"><p><b>Nicht tun:</b> Das Programmfenster auf dem Laptop schließen, solange noch Geräte gebucht werden. Dann ist die Ablage weg, und die Geräte buchen nur offline weiter.</p></div>
+<div class="fuss"><span>Guthabenkasse · Betreuung</span><span>Seite 2 von 4</span></div></section>
+
+<section class="seite"><h1>Wenn etwas klemmt</h1>
+<table><tr><th>Du siehst</th><th>Das hilft</th></tr><tr><td>Gerät zeigt „Offline“ oder „Keine Ablage“</td><td>WLAN prüfen (richtiges Netz?). Läuft der Laptop und das Programmfenster? Adresse im Browser öffnen: kommt die Infoseite? Wenn ja, die Seite im Gerät neu laden. Wenn nein, Router und Laptop prüfen.</td></tr><tr><td>„Das Zugangswort stimmt nicht“</td><td>Wort neu eintippen (Seite 4). Kleine und große Buchstaben beachten. Das richtige Wort für die Aufgabe nehmen (Verkauf ≠ Kasse).</td></tr><tr><td>„Der Gerätebuchstabe … ist schon an ein anderes Gerät vergeben“ oder „Mehr als 3 Geräte sind nicht vorgesehen“</td><td>Ein Zeichen wurde doppelt benutzt, oder ein altes Gerät steht noch in der Liste (erlaubt sind 3 Geräte: Terminal und zwei Verkaufsgeräte; die Anzeige zählt nicht). Am Terminal <i>Verwaltung → Gerät aus der Liste entfernen</i> (Adminwort), dann das neue Gerät einrichten.</td></tr><tr><td>Ein Handy ist kaputt, Ersatz einrichten</td><td>Altes Gerät entfernen (siehe oben), neues mit gleichem Zeichen einrichten. Buchungen des alten Geräts bleiben erhalten, sofern sie zuletzt übertragen wurden. Noch offene Buchungen sind im alten Gerät.</td></tr><tr><td>Zertifikatswarnung kommt wieder</td><td>Nochmal <i>Erweitert → Weiter</i>. Ändert sich die Adresse des Laptops, muss das Gerät die neue Adresse öffnen.</td></tr><tr><td>Karte wird nicht gelesen</td><td>Licht an, Karte gerade halten, Nummer samt Prüfnummer eintippen. Die Karte sollte nicht glänzen oder zerknittert sein.</td></tr><tr><td>Laptop abgestürzt oder neu gestartet</td><td>Programm neu starten (start.bat). Die Daten sind im Ordner <b>daten</b> sicher. Geräte verbinden sich selbst wieder.</td></tr><tr><td>Ablage ist kaputt, Laptop tot</td><td>Ordner <b>daten</b> auf einen anderen Rechner kopieren, dort das Programm starten, die neue Adresse in den Geräten eintragen (<i>Optionen → Ablage</i>). Oder: Sicherung einspielen (<i>Verwaltung → Sicherungen</i>, braucht das Adminwort).</td></tr><tr><td>Buchungen fehlen oder sind doppelt</td><td>Nicht erneut buchen. Am Terminal die Karte öffnen und den Verlauf ansehen. <i>Verwaltung → Auswerten</i> zeigt Auffälligkeiten.</td></tr><tr><td>Gar nichts geht mehr</td><td>Notfallplan-Blatt benutzen (Papierliste), später nachbuchen.</td></tr></table>
+<div class="box rot"><p><b>Wichtig:</b> Das Adminwort nur selbst eintippen und niemandem weitergeben. Mit ihm lassen sich Geräte entfernen, Abende abschließen und alle Karten löschen.</p></div>
+<div class="fuss"><span>Guthabenkasse · Betreuung</span><span>Seite 3 von 4</span></div></section>
+
+<section class="seite"><h1>Zugangsdaten und Kontakte<small>Ausfüllen, ausdrucken und an einem sicheren Ort aufbewahren. Nicht im Saal liegen lassen.</small></h1>
+<table class="z"><tr><th style="width:62mm">Was</th><th>Eintrag</th></tr>
+<tr><td>Name des WLAN (Router)</td><td></td></tr><tr><td>WLAN-Passwort</td><td></td></tr><tr><td>Adresse der Ablage (https://…:8443/)</td><td></td></tr>
+<tr><td>Wort Terminal (Kasse)</td><td></td></tr><tr><td>Wort Verkauf</td><td></td></tr><tr><td>Wort Anzeige</td><td></td></tr><tr><td>Wort Administrator</td><td></td></tr>
+<tr><td>Gerätezeichen Terminal</td><td>T</td></tr><tr><td>Gerätezeichen Verkauf 1 / 2</td><td>V / W</td></tr>
+<tr><td>Ordner mit den Daten (Laptop)</td><td></td></tr><tr><td>Ansprechperson und Telefon</td><td></td></tr><tr><td>Ansprechperson Router/WLAN</td><td></td></tr></table>
+<h2>Vor jedem Fest: Kurzliste für die Betreuung</h2>
+<p>☐ Laptop geladen, Programm startet &nbsp; ☐ Router läuft, Adresse stimmt &nbsp; ☐ alle Geräte online &nbsp; ☐ Gerätezeichen verschieden</p>
+<p>☐ Karten gedruckt und gescannt &nbsp; ☐ Notfallplan und Papierliste ausgedruckt &nbsp; ☐ Powerbanks und Kabel &nbsp; ☐ Stick für die Sicherung</p>
+<h2>Wenn die Google-Ablage benutzt wird</h2>
+<p>Statt Laptop und Router läuft die Ablage bei Google (Adresse endet auf <b>/exec</b>). Die Geräte werden gleich eingerichtet, nur die Adresse wird von Hand eingetragen. Änderungen am Skript und das Veröffentlichen einer neuen Version beschreibt <i>docs/EINRICHTUNG-V2.md</i>.</p>
+<div class="fuss"><span>Datum: ____________ · Betreuung: ____________</span><span>Seite 4 von 4</span></div></section></body></html>
