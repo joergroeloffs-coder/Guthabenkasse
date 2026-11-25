@@ -1477,6 +1477,13 @@ gaesteLaden = function (datei) {
 
 /* ======================= Start ======================= */
 function v2Start() {
+  /* Wird die Seite von der lokalen Ablage ausgeliefert, steht deren Adresse schon bereit */
+  try {
+    if (window.GK_ABLAGE && !(db.ablage && db.ablage.adresse)) {
+      db.ablage = { adresse: window.GK_ABLAGE, wort: (db.ablage && db.ablage.wort) || "", intervall: (db.ablage && db.ablage.intervall) || 0 };
+      sichern(); var af = document.getElementById("wolkeAdresse"); if (af) af.value = window.GK_ABLAGE;
+    }
+  } catch (e) {}
   NAMEN.uebertrag = "Übertrag vom Vorabend"; NAMEN.fundkarte = "Fundkarte (Trinkgeld)"; NAMEN.ersatz = NAMEN.ersatz || "Kartenersatz";
   if (v2Meldung) setTimeout(function () { melden(v2Meldung); }, 800);
   document.addEventListener("click", v2Klick);

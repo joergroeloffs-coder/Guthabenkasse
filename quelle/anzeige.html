@@ -123,9 +123,10 @@ html,body{margin:0;height:100%;background:var(--kopf);color:var(--papier);font-f
 <script>
 "use strict";
 var KEY = "guthabenkasse.anzeige.v1";
-var VERSION = "2.7.0";
+var VERSION = "2.8.0";
 var cfg = {adresse: "", wort: "", sprache: "de", rueck: "", kamera: "environment"};
 try { var gespeichert = JSON.parse(localStorage.getItem(KEY) || "{}"); for (var k in gespeichert) cfg[k] = gespeichert[k]; } catch (e) {}
+if (!cfg.adresse && window.GK_ABLAGE) cfg.adresse = window.GK_ABLAGE;   /* von der lokalen Ablage ausgeliefert */
 function sichern() { try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch (e) {} }
 function $(id) { return document.getElementById(id); }
 
@@ -261,7 +262,7 @@ $("eZu").addEventListener("click", function () { $("einricht").classList.remove(
 $("einrichtForm").addEventListener("submit", function (e) {
   e.preventDefault();
   var a = $("eAdresse").value.trim(), w = $("eWort").value.trim();
-  if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(a)) { $("einrichtMeldung").textContent = "Die Adresse muss mit https://script.google.com/ beginnen und auf /exec enden."; return; }
+  if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(a) && !/^https?:\/\/[^\/\s]+\/api$/.test(a)) { $("einrichtMeldung").textContent = "Die Adresse muss mit https://script.google.com/ beginnen und auf /exec enden (lokale Ablage: …/api)."; return; }
   if (!w) { $("einrichtMeldung").textContent = "Das Zugangswort fehlt."; return; }
   cfg.adresse = a; cfg.wort = w; cfg.sprache = $("eSprache").value; cfg.rueck = $("eRueck").value.trim(); var neueKamera = $("eKamera").value; var kameraGewechselt = neueKamera !== (cfg.kamera || "environment"); cfg.kamera = neueKamera; sichern();
   if (kameraGewechselt) { try { if (strom) strom.getTracks().forEach(function (x) { x.stop(); }); } catch (f) {} strom = null; kameraStart(); }
